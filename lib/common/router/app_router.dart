@@ -5,6 +5,7 @@ import '../../features/auth/domain/auth_notifier.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/encounter/presentation/encounter_result_screen.dart';
 import '../../main_screen.dart';
 import '../widgets/placeholder_screen.dart';
 
@@ -23,7 +24,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnAuthPage =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
-          state.matchedLocation == '/';
+          state.matchedLocation == '/' ||
+          state.matchedLocation == '/encounter-result';
 
       // ログイン済みで認証ページにいる場合 → ホームへ
       if (isLoggedIn && isOnAuthPage) return '/home';
@@ -36,6 +38,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       // スプラッシュ画面（初期画面）
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+
+      // すれ違い結果画面（Mii広場風）
+      GoRoute(
+        path: '/encounter-result',
+        builder: (context, state) => const EncounterResultScreen(),
+      ),
 
       // ログイン画面
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
