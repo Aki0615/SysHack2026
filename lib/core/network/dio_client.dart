@@ -2,17 +2,17 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// セキュアストレージのプロバイダー（トークン保存に使用）
+/// セキュアストレージのプロバイダー（ユーザーID保存に使用）
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage();
 });
 
 /// Dioインスタンスのプロバイダー
-/// 全APIリクエストに共通のベースURLとAuthorizationヘッダーを付与する
+/// バックエンドはJWT認証未実装のため、Bearerトークンのインターセプターは無効化
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      // TODO: 実際のAPIサーバーURLに変更すること
+      // TODO: 実際のRenderデプロイURLに変更すること
       baseUrl: 'https://api.streetpass.example.com',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
@@ -20,20 +20,13 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  final storage = ref.read(secureStorageProvider);
-
-  // インターセプターで全リクエストにBearerトークンを自動付与する
+  // ログ出力用インターセプター（デバッグ用）
   dio.interceptors.add(
     InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await storage.read(key: 'auth_token');
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
+      onRequest: (options, handler) {
         handler.next(options);
       },
       onError: (error, handler) {
-        // 401エラー（認証切れ）の場合にトークンを削除してログイン画面へ戻す処理を追加可能
         handler.next(error);
       },
     ),
