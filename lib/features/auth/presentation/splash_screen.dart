@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../domain/auth_notifier.dart';
+import '../../encounter/domain/encounter_notifier.dart';
 
 /// スプラッシュ画面Widget
 /// 2秒間ロゴを表示した後、認証状態に応じて適切な画面へ遷移する
@@ -44,8 +45,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     authState.when(
       data: (user) {
         if (user != null) {
-          // ログイン済み → ホーム画面
-          context.go('/home');
+          // ログイン済み → 未確認すれ違いデータをチェック
+          _checkPendingEncounters();
         } else {
           // 未ログイン → ログイン画面
           context.go('/login');
@@ -58,6 +59,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       error: (_, _) {
         // エラー時はログイン画面へ
         context.go('/login');
+      },
+    );
+  }
+
+  /// 未確認のすれ違いデータをチェックし、あれば結果画面へ遷移
+  Future<void> _checkPendingEncounters() async {
+    final encounterState = ref.read(encounterNotifierProvider);
+    encounterState.when(
+      data: (encounters) {
+        if (encounters.isNotEmpty) {
+          // 未確認データあり → すれ違い結果画面
+          context.go('/encounter-result');
+        } else {
+          // 未確認データなし → ホーム画面
+          context.go('/home');
+        }
+      },
+      loading: () {
+        // ロード中なら少し待ってリトライ
+        Future.delayed(
+          const Duration(milliseconds: 500),
+          _checkPendingEncounters,
+        );
+      },
+      error: (_, _) {
+        // エラー時はホームへ
+        context.go('/home');
       },
     );
   }
