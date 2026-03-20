@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../domain/encounter_model.dart';
 import '../domain/encounter_notifier.dart';
-import '../../../common/widgets/role_avatar_widget.dart';
 
 /// Mii広場風のすれ違い結果画面
 /// 未確認のすれ違いユーザーをアニメーション付きで順番に紹介する
@@ -32,10 +31,7 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
       duration: const Duration(milliseconds: 600),
     );
     _slideAnimation =
-        Tween<Offset>(
-          begin: const Offset(1.0, 0.0), // 画面外右
-          end: Offset.zero, // 画面中央
-        ).animate(
+        Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
           CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
         );
 
@@ -49,7 +45,6 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
       curve: Curves.easeIn,
     );
 
-    // 初回アニメーション開始
     _slideController.forward();
     _fadeController.forward();
   }
@@ -82,7 +77,6 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
   /// メインコンテンツの構築
   Widget _buildContent(List<EncounterModel> encounters) {
     if (encounters.isEmpty) {
-      // 未確認データなし → ホームへ
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.go('/home');
       });
@@ -100,7 +94,6 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
           totalCount: encounters.length,
         ),
         const Spacer(),
-        // ユーザーカードをアニメーション付きで表示
         SlideTransition(
           position: _slideAnimation,
           child: FadeTransition(
@@ -122,13 +115,9 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
   /// 次のユーザーを表示する
   void _showNextUser(int totalCount) {
     if (_currentIndex >= totalCount - 1) return;
-
-    // アニメーションをリセットして再生
     _slideController.reset();
     _fadeController.reset();
-
     setState(() => _currentIndex++);
-
     _slideController.forward();
     _fadeController.forward();
   }
@@ -141,10 +130,10 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
 }
 
 // ─────────────────────────────────────────────────
-// 以下、3個の子Widget（ネスト防止のため分割）
+// 以下、子Widget群（ネスト防止のため分割）
 // ─────────────────────────────────────────────────
 
-/// ヘッダー部分（「〇人とすれ違いました！」テキスト＋進捗）
+/// ヘッダー部分（進捗表示）
 class _EncounterHeader extends StatelessWidget {
   final int currentIndex;
   final int totalCount;
@@ -172,7 +161,6 @@ class _EncounterHeader extends StatelessWidget {
           style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
         ),
         const SizedBox(height: 16),
-        // 進捗バー
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: LinearProgressIndicator(
@@ -196,7 +184,6 @@ class _EncounterUserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = encounter.encounteredUser;
-    final roleIcon = RoleAvatarWidget.iconForRole(user.role.name);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -216,8 +203,8 @@ class _EncounterUserCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // アバター
-          RoleAvatarWidget(roleIcon: roleIcon, size: 80),
+          // アバター（アイコンURLがある場合は画像、なければデフォルトアイコン）
+          _buildAvatar(user.iconUrl),
           const SizedBox(height: 16),
           // 名前
           Text(
@@ -230,31 +217,20 @@ class _EncounterUserCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           // 一言コメント
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade800.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+          if (user.oneWord.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade800.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '「${user.oneWord}」',
+                style: TextStyle(color: Colors.grey.shade300, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
             ),
-            child: Text(
-              '「${user.comment}」',
-              style: TextStyle(color: Colors.grey.shade300, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ),
           const SizedBox(height: 16),
-          // ロールと所属
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _InfoChip(icon: Icons.code, label: user.role.name),
-              if (user.organization != null) ...[
-                const SizedBox(width: 8),
-                _InfoChip(icon: Icons.business, label: user.organization!),
-              ],
-            ],
-          ),
-          const SizedBox(height: 12),
           // すれ違い時刻
           Text(
             _formatTime(encounter.encounteredAt),
@@ -265,39 +241,27 @@ class _EncounterUserCard extends StatelessWidget {
     );
   }
 
+  /// アバターを構築する
+  Widget _buildAvatar(String iconUrl) {
+    if (iconUrl.isNotEmpty) {
+      return CircleAvatar(radius: 40, backgroundImage: NetworkImage(iconUrl));
+    }
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [Colors.blueAccent, Colors.blue.shade800],
+        ),
+      ),
+      child: const Icon(Icons.person, size: 40, color: Colors.white),
+    );
+  }
+
   /// 時刻をフォーマットする
   String _formatTime(DateTime dt) {
     return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} にすれ違い';
-  }
-}
-
-/// 情報チップ（ロールや所属を表示する小さなバッジ）
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.blueAccent.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.blueAccent),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.blueAccent, fontSize: 12),
-          ),
-        ],
-      ),
-    );
   }
 }
 

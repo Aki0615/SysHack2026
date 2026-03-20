@@ -1,29 +1,44 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../user/domain/user_model.dart';
 
 part 'encounter_model.freezed.dart';
 part 'encounter_model.g.dart';
 
 /// すれ違い通信の1件の記録を表すドメインモデル
+/// バックエンドの encounters テーブル + JOINされたユーザー情報に対応
 @freezed
 abstract class EncounterModel with _$EncounterModel {
   const factory EncounterModel({
     /// すれ違い記録の一意なID
-    required String id,
+    @Default('') String id,
 
-    /// すれ違ったユーザーの情報
-    required UserModel encounteredUser,
+    /// すれ違ったユーザーの情報（JOINで取得された部分情報）
+    required EncounteredUserInfo encounteredUser,
 
     /// イベントID（イベント中のすれ違いの場合のみ）
-    String? eventId,
+    @JsonKey(name: 'event_id') int? eventId,
 
     /// すれ違った日時
-    required DateTime encounteredAt,
+    @JsonKey(name: 'encountered_at') required DateTime encounteredAt,
 
     /// ユーザーがこのすれ違いを確認済みかどうか
-    required bool isConfirmed,
+    @JsonKey(name: 'is_confirmed') @Default(false) bool isConfirmed,
   }) = _EncounterModel;
 
   factory EncounterModel.fromJson(Map<String, dynamic> json) =>
       _$EncounterModelFromJson(json);
+}
+
+/// すれ違ったユーザーの部分情報
+/// GET /users/:id/encounters のJOINレスポンスに合わせた構造
+@freezed
+abstract class EncounteredUserInfo with _$EncounteredUserInfo {
+  const factory EncounteredUserInfo({
+    required String id,
+    @Default('???') String name,
+    @JsonKey(name: 'icon_url') @Default('') String iconUrl,
+    @JsonKey(name: 'one_word') @Default('') String oneWord,
+  }) = _EncounteredUserInfo;
+
+  factory EncounteredUserInfo.fromJson(Map<String, dynamic> json) =>
+      _$EncounteredUserInfoFromJson(json);
 }
