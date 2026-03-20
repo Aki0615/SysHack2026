@@ -13,34 +13,50 @@ final authNotifierProvider = AsyncNotifierProvider<AuthNotifier, UserModel?>(
 class AuthNotifier extends AsyncNotifier<UserModel?> {
   @override
   FutureOr<UserModel?> build() async {
-    // アプリ起動時にトークンの存在をチェックする
+    // アプリ起動時にセッションの存在をチェックする
     final repo = ref.read(authRepositoryProvider);
-    final hasToken = await repo.hasToken();
-    // トークンがなければ未ログイン（null）
-    if (!hasToken) return null;
-    // トークンがあればログイン済みとみなす（本来はユーザー情報取得APIを叩く）
-    return null; // TODO: GET /users/me 等で復元する
+    final hasSession = await repo.hasSession();
+    if (!hasSession) return null;
+
+    // セッションがあればユーザー情報を復元する
+    final userId = await repo.getSavedUserId();
+    if (userId == null) return null;
+
+    try {
+      return await repo.login(userId: userId, password: '');
+    } catch (_) {
+      // ユーザー情報取得に失敗した場合は未ログインとする
+      return null;
+    }
   }
 
-  /// ログイン処理
-  Future<void> login({required String email, required String password}) async {
+  /// ログイン処理（ユーザーIDで認証）
+  Future<void> login({required String userId, required String password}) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final repo = ref.read(authRepositoryProvider);
-      return await repo.login(email: email, password: password);
+      return await repo.login(userId: userId, password: password);
     });
   }
 
   /// サインアップ処理
   Future<void> signUp({
+    required String id,
     required String name,
     required String email,
     required String password,
+    String? role,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final repo = ref.read(authRepositoryProvider);
-      return await repo.signUp(name: name, email: email, password: password);
+      return await repo.signUp(
+        id: id,
+        name: name,
+        email: email,
+        password: password,
+        role: role,
+      );
     });
   }
 
@@ -50,4 +66,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     await repo.logout();
     state = const AsyncValue.data(null);
   }
+
+  /// 現在のユーザーIDを取得する
+  String? get currentUserId => state.value?.id;
 }
