@@ -9,19 +9,21 @@ part of 'user_model.dart';
 _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   id: json['id'] as String,
   name: json['name'] as String,
-  email: json['email'] as String,
-  avatarUrl: json['avatarUrl'] as String,
-  comment: json['comment'] as String,
-  role: $enumDecode(_$UserRoleEnumMap, json['role']),
-  techStack: (json['techStack'] as List<dynamic>)
-      .map((e) => e as String)
-      .toList(),
-  twitter: json['twitter'] as String?,
-  github: json['github'] as String?,
-  portfolio: json['portfolio'] as String?,
-  organization: json['organization'] as String?,
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  email: json['email'] as String? ?? '',
+  iconUrl: json['icon_url'] as String? ?? '',
+  oneWord: json['one_word'] as String? ?? '',
+  role: $enumDecodeNullable(_$UserRoleEnumMap, json['role']) ?? UserRole.other,
+  techStack: json['tech_stack'] as String? ?? '',
+  twitterUrl: json['twitter_url'] as String? ?? '',
+  githubUrl: json['github_url'] as String? ?? '',
+  portfolioUrl: json['portfolio_url'] as String? ?? '',
+  affiliation: json['affiliation'] as String? ?? '',
+  createdAt: json['created_at'] == null
+      ? null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
+      ? null
+      : DateTime.parse(json['updated_at'] as String),
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -29,16 +31,16 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'id': instance.id,
       'name': instance.name,
       'email': instance.email,
-      'avatarUrl': instance.avatarUrl,
-      'comment': instance.comment,
+      'icon_url': instance.iconUrl,
+      'one_word': instance.oneWord,
       'role': _$UserRoleEnumMap[instance.role]!,
-      'techStack': instance.techStack,
-      'twitter': instance.twitter,
-      'github': instance.github,
-      'portfolio': instance.portfolio,
-      'organization': instance.organization,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'tech_stack': instance.techStack,
+      'twitter_url': instance.twitterUrl,
+      'github_url': instance.githubUrl,
+      'portfolio_url': instance.portfolioUrl,
+      'affiliation': instance.affiliation,
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };
 
 const _$UserRoleEnumMap = {

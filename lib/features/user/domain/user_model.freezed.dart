@@ -15,7 +15,15 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
- String get id; String get name; String get email; String get avatarUrl; String get comment; UserRole get role; List<String> get techStack; String? get twitter; String? get github; String? get portfolio; String? get organization; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get name; String get email;/// アバター画像URL（バックエンド: icon_url）
+@JsonKey(name: 'icon_url') String get iconUrl;/// 一言コメント（バックエンド: one_word）
+@JsonKey(name: 'one_word') String get oneWord;/// ロール（frontend / backend / fullstack / other）
+ UserRole get role;/// 技術スタック（バックエンド: tech_stack、単一テキスト）
+@JsonKey(name: 'tech_stack') String get techStack;/// Twitter URL（バックエンド: twitter_url）
+@JsonKey(name: 'twitter_url') String get twitterUrl;/// GitHub URL（バックエンド: github_url）
+@JsonKey(name: 'github_url') String get githubUrl;/// ポートフォリオURL（バックエンド: portfolio_url）
+@JsonKey(name: 'portfolio_url') String get portfolioUrl;/// 所属（バックエンド: affiliation）
+ String get affiliation;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +36,16 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.comment, comment) || other.comment == comment)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.techStack, techStack)&&(identical(other.twitter, twitter) || other.twitter == twitter)&&(identical(other.github, github) || other.github == github)&&(identical(other.portfolio, portfolio) || other.portfolio == portfolio)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.iconUrl, iconUrl) || other.iconUrl == iconUrl)&&(identical(other.oneWord, oneWord) || other.oneWord == oneWord)&&(identical(other.role, role) || other.role == role)&&(identical(other.techStack, techStack) || other.techStack == techStack)&&(identical(other.twitterUrl, twitterUrl) || other.twitterUrl == twitterUrl)&&(identical(other.githubUrl, githubUrl) || other.githubUrl == githubUrl)&&(identical(other.portfolioUrl, portfolioUrl) || other.portfolioUrl == portfolioUrl)&&(identical(other.affiliation, affiliation) || other.affiliation == affiliation)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,avatarUrl,comment,role,const DeepCollectionEquality().hash(techStack),twitter,github,portfolio,organization,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,email,iconUrl,oneWord,role,techStack,twitterUrl,githubUrl,portfolioUrl,affiliation,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'UserModel(id: $id, name: $name, email: $email, avatarUrl: $avatarUrl, comment: $comment, role: $role, techStack: $techStack, twitter: $twitter, github: $github, portfolio: $portfolio, organization: $organization, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'UserModel(id: $id, name: $name, email: $email, iconUrl: $iconUrl, oneWord: $oneWord, role: $role, techStack: $techStack, twitterUrl: $twitterUrl, githubUrl: $githubUrl, portfolioUrl: $portfolioUrl, affiliation: $affiliation, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +56,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email, String avatarUrl, String comment, UserRole role, List<String> techStack, String? twitter, String? github, String? portfolio, String? organization, DateTime createdAt, DateTime updatedAt
+ String id, String name, String email,@JsonKey(name: 'icon_url') String iconUrl,@JsonKey(name: 'one_word') String oneWord, UserRole role,@JsonKey(name: 'tech_stack') String techStack,@JsonKey(name: 'twitter_url') String twitterUrl,@JsonKey(name: 'github_url') String githubUrl,@JsonKey(name: 'portfolio_url') String portfolioUrl, String affiliation,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -65,22 +73,22 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? avatarUrl = null,Object? comment = null,Object? role = null,Object? techStack = null,Object? twitter = freezed,Object? github = freezed,Object? portfolio = freezed,Object? organization = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? email = null,Object? iconUrl = null,Object? oneWord = null,Object? role = null,Object? techStack = null,Object? twitterUrl = null,Object? githubUrl = null,Object? portfolioUrl = null,Object? affiliation = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,avatarUrl: null == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
-as String,comment: null == comment ? _self.comment : comment // ignore: cast_nullable_to_non_nullable
+as String,iconUrl: null == iconUrl ? _self.iconUrl : iconUrl // ignore: cast_nullable_to_non_nullable
+as String,oneWord: null == oneWord ? _self.oneWord : oneWord // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as UserRole,techStack: null == techStack ? _self.techStack : techStack // ignore: cast_nullable_to_non_nullable
-as List<String>,twitter: freezed == twitter ? _self.twitter : twitter // ignore: cast_nullable_to_non_nullable
-as String?,github: freezed == github ? _self.github : github // ignore: cast_nullable_to_non_nullable
-as String?,portfolio: freezed == portfolio ? _self.portfolio : portfolio // ignore: cast_nullable_to_non_nullable
-as String?,organization: freezed == organization ? _self.organization : organization // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as String,twitterUrl: null == twitterUrl ? _self.twitterUrl : twitterUrl // ignore: cast_nullable_to_non_nullable
+as String,githubUrl: null == githubUrl ? _self.githubUrl : githubUrl // ignore: cast_nullable_to_non_nullable
+as String,portfolioUrl: null == portfolioUrl ? _self.portfolioUrl : portfolioUrl // ignore: cast_nullable_to_non_nullable
+as String,affiliation: null == affiliation ? _self.affiliation : affiliation // ignore: cast_nullable_to_non_nullable
+as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -165,10 +173,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String avatarUrl,  String comment,  UserRole role,  List<String> techStack,  String? twitter,  String? github,  String? portfolio,  String? organization,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord,  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.comment,_that.role,_that.techStack,_that.twitter,_that.github,_that.portfolio,_that.organization,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_that.role,_that.techStack,_that.twitterUrl,_that.githubUrl,_that.portfolioUrl,_that.affiliation,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -186,10 +194,10 @@ return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.comment,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email,  String avatarUrl,  String comment,  UserRole role,  List<String> techStack,  String? twitter,  String? github,  String? portfolio,  String? organization,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord,  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.comment,_that.role,_that.techStack,_that.twitter,_that.github,_that.portfolio,_that.organization,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_that.role,_that.techStack,_that.twitterUrl,_that.githubUrl,_that.portfolioUrl,_that.affiliation,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +214,10 @@ return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.comment,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email,  String avatarUrl,  String comment,  UserRole role,  List<String> techStack,  String? twitter,  String? github,  String? portfolio,  String? organization,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord,  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.comment,_that.role,_that.techStack,_that.twitter,_that.github,_that.portfolio,_that.organization,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_that.role,_that.techStack,_that.twitterUrl,_that.githubUrl,_that.portfolioUrl,_that.affiliation,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -221,28 +229,30 @@ return $default(_that.id,_that.name,_that.email,_that.avatarUrl,_that.comment,_t
 @JsonSerializable()
 
 class _UserModel implements UserModel {
-  const _UserModel({required this.id, required this.name, required this.email, required this.avatarUrl, required this.comment, required this.role, required final  List<String> techStack, this.twitter, this.github, this.portfolio, this.organization, required this.createdAt, required this.updatedAt}): _techStack = techStack;
+  const _UserModel({required this.id, required this.name, this.email = '', @JsonKey(name: 'icon_url') this.iconUrl = '', @JsonKey(name: 'one_word') this.oneWord = '', this.role = UserRole.other, @JsonKey(name: 'tech_stack') this.techStack = '', @JsonKey(name: 'twitter_url') this.twitterUrl = '', @JsonKey(name: 'github_url') this.githubUrl = '', @JsonKey(name: 'portfolio_url') this.portfolioUrl = '', this.affiliation = '', @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override final  String id;
 @override final  String name;
-@override final  String email;
-@override final  String avatarUrl;
-@override final  String comment;
-@override final  UserRole role;
- final  List<String> _techStack;
-@override List<String> get techStack {
-  if (_techStack is EqualUnmodifiableListView) return _techStack;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_techStack);
-}
-
-@override final  String? twitter;
-@override final  String? github;
-@override final  String? portfolio;
-@override final  String? organization;
-@override final  DateTime createdAt;
-@override final  DateTime updatedAt;
+@override@JsonKey() final  String email;
+/// アバター画像URL（バックエンド: icon_url）
+@override@JsonKey(name: 'icon_url') final  String iconUrl;
+/// 一言コメント（バックエンド: one_word）
+@override@JsonKey(name: 'one_word') final  String oneWord;
+/// ロール（frontend / backend / fullstack / other）
+@override@JsonKey() final  UserRole role;
+/// 技術スタック（バックエンド: tech_stack、単一テキスト）
+@override@JsonKey(name: 'tech_stack') final  String techStack;
+/// Twitter URL（バックエンド: twitter_url）
+@override@JsonKey(name: 'twitter_url') final  String twitterUrl;
+/// GitHub URL（バックエンド: github_url）
+@override@JsonKey(name: 'github_url') final  String githubUrl;
+/// ポートフォリオURL（バックエンド: portfolio_url）
+@override@JsonKey(name: 'portfolio_url') final  String portfolioUrl;
+/// 所属（バックエンド: affiliation）
+@override@JsonKey() final  String affiliation;
+@override@JsonKey(name: 'created_at') final  DateTime? createdAt;
+@override@JsonKey(name: 'updated_at') final  DateTime? updatedAt;
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
@@ -257,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.comment, comment) || other.comment == comment)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._techStack, _techStack)&&(identical(other.twitter, twitter) || other.twitter == twitter)&&(identical(other.github, github) || other.github == github)&&(identical(other.portfolio, portfolio) || other.portfolio == portfolio)&&(identical(other.organization, organization) || other.organization == organization)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.email, email) || other.email == email)&&(identical(other.iconUrl, iconUrl) || other.iconUrl == iconUrl)&&(identical(other.oneWord, oneWord) || other.oneWord == oneWord)&&(identical(other.role, role) || other.role == role)&&(identical(other.techStack, techStack) || other.techStack == techStack)&&(identical(other.twitterUrl, twitterUrl) || other.twitterUrl == twitterUrl)&&(identical(other.githubUrl, githubUrl) || other.githubUrl == githubUrl)&&(identical(other.portfolioUrl, portfolioUrl) || other.portfolioUrl == portfolioUrl)&&(identical(other.affiliation, affiliation) || other.affiliation == affiliation)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,email,avatarUrl,comment,role,const DeepCollectionEquality().hash(_techStack),twitter,github,portfolio,organization,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,name,email,iconUrl,oneWord,role,techStack,twitterUrl,githubUrl,portfolioUrl,affiliation,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'UserModel(id: $id, name: $name, email: $email, avatarUrl: $avatarUrl, comment: $comment, role: $role, techStack: $techStack, twitter: $twitter, github: $github, portfolio: $portfolio, organization: $organization, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'UserModel(id: $id, name: $name, email: $email, iconUrl: $iconUrl, oneWord: $oneWord, role: $role, techStack: $techStack, twitterUrl: $twitterUrl, githubUrl: $githubUrl, portfolioUrl: $portfolioUrl, affiliation: $affiliation, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -277,7 +287,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email, String avatarUrl, String comment, UserRole role, List<String> techStack, String? twitter, String? github, String? portfolio, String? organization, DateTime createdAt, DateTime updatedAt
+ String id, String name, String email,@JsonKey(name: 'icon_url') String iconUrl,@JsonKey(name: 'one_word') String oneWord, UserRole role,@JsonKey(name: 'tech_stack') String techStack,@JsonKey(name: 'twitter_url') String twitterUrl,@JsonKey(name: 'github_url') String githubUrl,@JsonKey(name: 'portfolio_url') String portfolioUrl, String affiliation,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -294,22 +304,22 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? avatarUrl = null,Object? comment = null,Object? role = null,Object? techStack = null,Object? twitter = freezed,Object? github = freezed,Object? portfolio = freezed,Object? organization = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? email = null,Object? iconUrl = null,Object? oneWord = null,Object? role = null,Object? techStack = null,Object? twitterUrl = null,Object? githubUrl = null,Object? portfolioUrl = null,Object? affiliation = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_UserModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,avatarUrl: null == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
-as String,comment: null == comment ? _self.comment : comment // ignore: cast_nullable_to_non_nullable
+as String,iconUrl: null == iconUrl ? _self.iconUrl : iconUrl // ignore: cast_nullable_to_non_nullable
+as String,oneWord: null == oneWord ? _self.oneWord : oneWord // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as UserRole,techStack: null == techStack ? _self._techStack : techStack // ignore: cast_nullable_to_non_nullable
-as List<String>,twitter: freezed == twitter ? _self.twitter : twitter // ignore: cast_nullable_to_non_nullable
-as String?,github: freezed == github ? _self.github : github // ignore: cast_nullable_to_non_nullable
-as String?,portfolio: freezed == portfolio ? _self.portfolio : portfolio // ignore: cast_nullable_to_non_nullable
-as String?,organization: freezed == organization ? _self.organization : organization // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as UserRole,techStack: null == techStack ? _self.techStack : techStack // ignore: cast_nullable_to_non_nullable
+as String,twitterUrl: null == twitterUrl ? _self.twitterUrl : twitterUrl // ignore: cast_nullable_to_non_nullable
+as String,githubUrl: null == githubUrl ? _self.githubUrl : githubUrl // ignore: cast_nullable_to_non_nullable
+as String,portfolioUrl: null == portfolioUrl ? _self.portfolioUrl : portfolioUrl // ignore: cast_nullable_to_non_nullable
+as String,affiliation: null == affiliation ? _self.affiliation : affiliation // ignore: cast_nullable_to_non_nullable
+as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

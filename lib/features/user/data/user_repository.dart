@@ -9,6 +9,7 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 });
 
 /// ユーザー情報のAPI通信を担当するリポジトリ
+/// バックエンドの GET /users/:id に合わせた実装
 class UserRepository {
   final Dio _dio;
 
@@ -24,35 +25,6 @@ class UserRepository {
     }
   }
 
-  /// プロフィールを更新する（PATCH /users/:id）
-  Future<UserModel> updateProfile({
-    required String id,
-    String? name,
-    String? comment,
-    String? role,
-    String? twitter,
-    String? github,
-    String? portfolio,
-    String? organization,
-    List<String>? techStack,
-    String? avatarUrl,
-  }) async {
-    try {
-      final data = <String, dynamic>{};
-      if (name != null) data['name'] = name;
-      if (comment != null) data['comment'] = comment;
-      if (role != null) data['role'] = role;
-      if (twitter != null) data['twitter'] = twitter;
-      if (github != null) data['github'] = github;
-      if (portfolio != null) data['portfolio'] = portfolio;
-      if (organization != null) data['organization'] = organization;
-      if (techStack != null) data['tech_stack'] = techStack;
-      if (avatarUrl != null) data['avatar_url'] = avatarUrl;
-
-      final response = await _dio.patch('/users/$id', data: data);
-      return UserModel.fromJson(response.data);
-    } on DioException catch (e) {
-      throw Exception('プロフィールの更新に失敗しました: ${e.message}');
-    }
-  }
+  // TODO: バックエンドに PATCH /users/:id が実装されたら追加
+  // 現在バックエンドにプロフィール更新APIはない
 }
