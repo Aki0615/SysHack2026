@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../domain/auth_notifier.dart';
 
 /// ログイン画面Widget
+/// バックエンドにログインAPIがないため、ユーザーIDで認証する簡易実装
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -13,13 +14,13 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _userIdController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _userIdController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -47,7 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 48),
-                _buildEmailField(),
+                _buildUserIdField(),
                 const SizedBox(height: 16),
                 _buildPasswordField(),
                 const SizedBox(height: 32),
@@ -85,16 +86,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  /// メールアドレス入力フィールド
-  Widget _buildEmailField() {
+  /// ユーザーID入力フィールド
+  Widget _buildUserIdField() {
     return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
+      controller: _userIdController,
       style: const TextStyle(color: Colors.white),
-      decoration: _inputDecoration(label: 'メールアドレス', icon: Icons.mail_outline),
+      decoration: _inputDecoration(label: 'ユーザーID', icon: Icons.person_outline),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'メールアドレスを入力してください';
-        if (!value.contains('@')) return '正しいメールアドレスを入力してください';
+        if (value == null || value.isEmpty) return 'ユーザーIDを入力してください';
         return null;
       },
     );
@@ -184,7 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref
         .read(authNotifierProvider.notifier)
         .login(
-          email: _emailController.text.trim(),
+          userId: _userIdController.text.trim(),
           password: _passwordController.text,
         );
   }
