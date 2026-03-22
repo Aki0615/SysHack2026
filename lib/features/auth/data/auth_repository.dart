@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -31,30 +33,32 @@ class AuthRepository {
     String? techStack,
   }) async {
     try {
-      await _dio.post(
-        '/signup',
-        data: {
-          'id': id,
-          'name': name,
-          'email': email,
-          'password': password,
-          // ignore: use_null_aware_elements
-          if (iconUrl != null) 'icon_url': iconUrl,
-          // ignore: use_null_aware_elements
-          if (oneWord != null) 'one_word': oneWord,
-          // ignore: use_null_aware_elements
-          if (role != null) 'role': role,
-          // ignore: use_null_aware_elements
-          if (techStack != null) 'tech_stack': techStack,
-        },
+      final response = await http.post(
+        Uri.parse('https://streetpass-backend.onrender.com/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "id": id,
+          "name": name,
+          "email": email,
+          "password": password,
+          if (iconUrl != null) "icon_url": iconUrl,
+          if (oneWord != null) "one_word": oneWord,
+          if (role != null) "role": role,
+          if (techStack != null) "tech_stack": techStack,
+        }),
       );
-      // ユーザーIDをローカルに保存（認証状態の判定に使用）
-      await _storage.write(key: 'user_id', value: id);
 
-      // サインアップ成功後、ユーザー情報を取得して返す
-      return await _fetchUser(id);
-    } on DioException catch (e) {
-      throw Exception('サインアップに失敗しました: ${e.message}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // ユーザーIDをローカルに保存（認証状態の判定に使用）
+        await _storage.write(key: 'user_id', value: id);
+
+        // サインアップ成功後、ユーザー情報を取得して返す
+        return await _fetchUser(id);
+      } else {
+        throw Exception('サインアップに失敗しました: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('サインアップ通信エラー: $e');
     }
   }
 

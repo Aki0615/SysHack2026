@@ -12,8 +12,8 @@ final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      // TODO: 実際のRenderデプロイURLに変更すること
-      baseUrl: 'https://api.streetpass.example.com',
+      // 実際のRenderデプロイURLに変更
+      baseUrl: 'https://streetpass-backend.onrender.com',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {'Content-Type': 'application/json'},
