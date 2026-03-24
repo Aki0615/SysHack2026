@@ -29,11 +29,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
-    // ログイン成功時にホーム画面へ遷移する
+    // ログイン成功時・エラー時の処理
     ref.listen(authNotifierProvider, (_, next) {
-      next.whenData((user) {
-        if (user != null) context.go('/home');
-      });
+      next.when(
+        data: (user) {
+          if (user != null) context.go('/home');
+        },
+        error: (error, _) {
+          // エラーが発生した場合はスナックバーで通知する
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        },
+        loading: () {},
+      );
     });
 
     return Scaffold(
