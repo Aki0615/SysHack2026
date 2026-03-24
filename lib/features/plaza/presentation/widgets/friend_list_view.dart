@@ -1,18 +1,16 @@
+// 修正: 不要なコメントを削除し、コードを最小化
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'friend_grid_item.dart';
 
-// ── アイコンの座標を管理するクラス（このファイル内で使う）──
 class _IconPosition {
-  final double x;
-  final double y;
-  const _IconPosition({required this.x, required this.y});
+  final double x, y; // 修正: 変数宣言をまとめて整理
+  const _IconPosition(this.x, this.y); // 修正: シンプルなコンストラクタに変更
 }
 
-// ── ランダム配置で友達アイコンを表示するWidget ──
 class FriendListView extends StatefulWidget {
   final List<Map<String, String>> friends;
-
+  // 修正: constコンストラクタの最適化
   const FriendListView({super.key, required this.friends});
 
   @override
@@ -20,74 +18,77 @@ class FriendListView extends StatefulWidget {
 }
 
 class _FriendListViewState extends State<FriendListView> {
-  // アイコンのサイズ（px）
   static const double _iconSize = 72;
+  static const double _pad = 16.0; // 修正: 定数化
+  static const double _margin = 20.0; // 修正: 定数化
 
-  // 生成した座標リスト（nullの間はまだ未生成）
   List<_IconPosition>? _positions;
 
-  // 重ならないランダム座標を生成するメソッド
-  List<_IconPosition> _generatePositions({
-    required double areaWidth,
-    required double areaHeight,
-  }) {
-    final random = Random();
+  // 修正: メソッド抽出でネストを浅く整理
+  List<_IconPosition> _generatePositions(double width, double height) {
+    final rand = Random();
     final positions = <_IconPosition>[];
-    const padding = 16.0; // 端からの余白
-    const margin = 20.0;   // アイコン間の最低余白
+    final maxX = width - _iconSize - _pad * 2;
+    final maxY = height - _iconSize - _pad * 2;
 
     for (int i = 0; i < widget.friends.length; i++) {
-      int attempts = 0;
-      bool placed = false;
-
-      while (attempts < 100 && !placed) {
-        // ランダムな座標を生成
-        final x = padding +
-            random.nextDouble() * (areaWidth - _iconSize - padding * 2);
-        final y = padding +
-            random.nextDouble() * (areaHeight - _iconSize - padding * 2);
-
-        // 既存アイコンと重なっていないか確認
-        final overlaps = positions.any((pos) {
-          final dx = pos.x - x;
-          final dy = pos.y - y;
-          return sqrt(dx * dx + dy * dy) < _iconSize + margin;
-        });
-
-        if (!overlaps) {
-          positions.add(_IconPosition(x: x, y: y));
-          placed = true;
-        }
-        attempts++;
-      }
+      _tryPlaceIcon(rand, maxX, maxY, positions);
     }
     return positions;
+  }
+
+  // 修正: 位置座標の決定と衝突判定ループを別メソッドに分離
+  void _tryPlaceIcon(
+    Random rand,
+    double maxX,
+    double maxY,
+    List<_IconPosition> positions,
+  ) {
+    for (int attempts = 0; attempts < 100; attempts++) {
+      final x = _pad + rand.nextDouble() * maxX;
+      final y = _pad + rand.nextDouble() * maxY;
+
+      if (!_hasOverlap(x, y, positions)) {
+        positions.add(_IconPosition(x, y));
+        break; // 修正: 配置できたらループを抜ける
+      }
+    }
+  }
+
+  // 修正: 衝突判定ロジックの分離
+  bool _hasOverlap(double x, double y, List<_IconPosition> positions) {
+    return positions.any((p) {
+      final dx = p.x - x;
+      final dy = p.y - y;
+      return sqrt(dx * dx + dy * dy) < _iconSize + _margin;
+    });
+  }
+
+  // 修正: アイテム生成メソッドの抽出
+  Widget _buildFriendItem(int index) {
+    if (index >= _positions!.length) return const SizedBox.shrink();
+
+    final pos = _positions![index];
+    return Positioned(
+      left: pos.x,
+      top: pos.y,
+      child: FriendGridItem(name: widget.friends[index]['name'] ?? ''),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 画面サイズが確定してから座標を1回だけ生成する
+        // 修正: 画面サイズ確定時の座標生成をスッキリ記述
         _positions ??= _generatePositions(
-          areaWidth: constraints.maxWidth,
-          areaHeight: constraints.maxHeight,
+          constraints.maxWidth,
+          constraints.maxHeight,
         );
 
         return Stack(
-          children: List.generate(widget.friends.length, (index) {
-            // 座標が生成できなかった場合はスキップ
-            if (index >= _positions!.length) return const SizedBox.shrink();
-
-            final pos = _positions![index];
-            return Positioned(
-              left: pos.x,
-              top: pos.y,
-              child: FriendGridItem(
-                name: widget.friends[index]['name'] ?? '',
-              ),
-            );
-          }),
+          // 修正: ネストを浅くするためメソッドで要素を展開
+          children: List.generate(widget.friends.length, _buildFriendItem),
         );
       },
     );

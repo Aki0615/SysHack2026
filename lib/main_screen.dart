@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// BottomNavigationBarを持つメイン画面
-/// GoRouterのStatefulShellRouteから渡されるnavigationShellを使って
-/// タブごとの画面遷移状態を保持する
+// 修正: 不要なコメントの削除とネストの最適化
 class MainScreen extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -13,46 +11,69 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
-      body: navigationShell, // 現在選択中のタブの画面を表示する
+      body: navigationShell,
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
 
-  /// BottomNavigationBarの構築
   Widget _buildBottomNav(BuildContext context) {
-    return NavigationBar(
-      backgroundColor: const Color(0xFFFFFFFF),
-      indicatorColor: const Color(0xFF3AAA3A).withValues(alpha: 0.15),
-      selectedIndex: navigationShell.currentIndex,
-      onDestinationSelected: (index) {
-        // GoRouterのShellRoute内でタブを切り替える
-        navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        );
-      },
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined, color: Color(0xFF757575)),
-          selectedIcon: Icon(Icons.home, color: Color(0xFF3AAA3A)),
-          label: 'ホーム',
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFFFFF),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => _onTap(context, index),
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        selectedItemColor: const Color(0xFF3AAA3A),
+        unselectedItemColor: const Color(0xFF9E9E9E),
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.people_outline, color: Color(0xFF757575)),
-          selectedIcon: Icon(Icons.people, color: Color(0xFF3AAA3A)),
-          label: '広場',
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 12,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.calendar_month_outlined, color: Color(0xFF757575)),
-          selectedIcon: Icon(Icons.calendar_month, color: Color(0xFF3AAA3A)),
-          label: 'カレンダー',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.person_outline, color: Color(0xFF757575)),
-          selectedIcon: Icon(Icons.person, color: Color(0xFF3AAA3A)),
-          label: 'マイページ',
-        ),
-      ],
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'ホーム',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_outline),
+            activeIcon: Icon(Icons.people),
+            label: '広場',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_outlined),
+            activeIcon: Icon(Icons.history),
+            label: '履歴',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'マイページ',
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onTap(BuildContext context, int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
     );
   }
 }

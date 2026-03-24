@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// 友達一覧・イベント一覧の切り替えボタンWidget
+// 修正: 不要なコメントの削除とコードの最小化
 class TabSwitchButton extends StatelessWidget {
-  /// 現在選択されているタブ（0: 友達一覧, 1: イベント一覧）
   final int selectedIndex;
-
-  /// タブ切り替え時のコールバック
   final ValueChanged<int> onTabChanged;
 
   const TabSwitchButton({
@@ -22,17 +19,17 @@ class TabSwitchButton extends StatelessWidget {
         children: [
           Expanded(
             child: _buildTabButton(
-              title: '友達一覧',
-              isSelected: selectedIndex == 0,
-              onTap: () => onTabChanged(0),
+              '友達一覧',
+              selectedIndex == 0,
+              () => onTabChanged(0),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: _buildTabButton(
-              title: 'イベント一覧',
-              isSelected: selectedIndex == 1,
-              onTap: () => onTabChanged(1),
+              'イベント一覧',
+              selectedIndex == 1,
+              () => onTabChanged(1),
             ),
           ),
         ],
@@ -40,11 +37,8 @@ class TabSwitchButton extends StatelessWidget {
     );
   }
 
-  Widget _buildTabButton({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
+  // 修正: 引数をシンプルに整理
+  Widget _buildTabButton(String title, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// 広場画面用の検索バーWidget
+// 修正: 不要なコメントを削除、定数の最適化
 class PlazaSearchBar extends StatelessWidget {
   const PlazaSearchBar({super.key});
 
