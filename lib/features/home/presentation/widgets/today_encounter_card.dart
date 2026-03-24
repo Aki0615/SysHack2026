@@ -60,7 +60,7 @@ class TodayEncounterCard extends StatelessWidget {
       textBaseline: TextBaseline.alphabetic,
       children: [
         Text(
-          '\$todayCount',
+          '$todayCount',
           style: const TextStyle(
             color: Color(0xFF3AAA3A),
             fontSize: 32,
@@ -69,7 +69,7 @@ class TodayEncounterCard extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          '/ \$dailyLimit人',
+          '/ $dailyLimit人',
           style: const TextStyle(color: Color(0xFF757575), fontSize: 14),
         ),
       ],

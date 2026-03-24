@@ -66,7 +66,7 @@ class QuestProgressCard extends StatelessWidget {
   }
 
   Widget _buildQuestItem() {
-    final percentText = '\${(progress * 100).toInt()}%';
+    final percentText = '${(progress * 100).toInt()}%';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

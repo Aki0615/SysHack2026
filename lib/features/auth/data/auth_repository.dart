@@ -54,11 +54,19 @@ class AuthRepository {
 
         // サインアップ成功後、ユーザー情報を取得して返す
         return await _fetchUser(id);
+      } else if (response.statusCode == 409) {
+        // 409は競合エラー（既に存在するユーザーID等）
+        throw Exception('このユーザーIDは既に登録されています。ログインするか、別のIDをお試しください。');
       } else {
-        throw Exception('サインアップに失敗しました: ${response.statusCode}');
+        throw Exception('サーバーエラーが発生しました（コード: ${response.statusCode}）');
       }
     } catch (e) {
-      throw Exception('サインアップ通信エラー: $e');
+      // 内部で投げたExceptionはそのまま再スロー
+      if (e is Exception &&
+          !e.toString().startsWith('Exception: サインアップ通信エラー')) {
+        rethrow;
+      }
+      throw Exception('通信エラー: ネットワークをご確認ください。');
     }
   }
 
@@ -75,7 +83,13 @@ class AuthRepository {
       await _storage.write(key: 'user_id', value: userId);
       return user;
     } on DioException catch (e) {
-      throw Exception('ログインに失敗しました: ${e.message}');
+      if (e.response?.statusCode == 404) {
+        // 404はデータが見つからない（未登録）
+        throw Exception('ユーザーが見つかりません。新規登録を行ってください。');
+      }
+      throw Exception('サーバーと通信できませんでした。');
+    } catch (e) {
+      throw Exception('予期せぬエラーが発生しました。');
     }
   }
 
