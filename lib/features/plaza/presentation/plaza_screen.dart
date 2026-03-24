@@ -56,7 +56,10 @@ class PlazaScreen extends ConsumerWidget {
                     // リスト部分（選択中のタブに応じて切り替え）
                     Expanded(
                       child: selectedIndex == 0
-                          ? FriendListView(friends: dummyFriends)
+                          ? SizedBox(
+                              height: 600,
+                              child: FriendListView(friends: dummyFriends),
+                            )
                           : EventListView(events: dummyEvents),
                     ),
                   ],
