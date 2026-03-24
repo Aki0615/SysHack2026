@@ -12,7 +12,13 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   email: json['email'] as String? ?? '',
   iconUrl: json['icon_url'] as String? ?? '',
   oneWord: json['one_word'] as String? ?? '',
-  role: $enumDecodeNullable(_$UserRoleEnumMap, json['role']) ?? UserRole.other,
+  role:
+      $enumDecodeNullable(
+        _$UserRoleEnumMap,
+        json['role'],
+        unknownValue: UserRole.other,
+      ) ??
+      UserRole.other,
   techStack: json['tech_stack'] as String? ?? '',
   twitterUrl: json['twitter_url'] as String? ?? '',
   githubUrl: json['github_url'] as String? ?? '',

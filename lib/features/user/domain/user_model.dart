@@ -20,7 +20,9 @@ abstract class UserModel with _$UserModel {
     @JsonKey(name: 'one_word') @Default('') String oneWord,
 
     /// ロール（frontend / backend / fullstack / other）
-    @Default(UserRole.other) UserRole role,
+    @JsonKey(unknownEnumValue: UserRole.other)
+    @Default(UserRole.other)
+    UserRole role,
 
     /// 技術スタック（バックエンド: tech_stack、単一テキスト）
     @JsonKey(name: 'tech_stack') @Default('') String techStack,
