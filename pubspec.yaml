@@ -43,6 +43,7 @@ dependencies:
   json_annotation: ^4.11.0
   flutter_secure_storage: ^10.0.0
   http: ^1.6.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
