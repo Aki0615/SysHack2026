@@ -18,7 +18,7 @@ mixin _$UserModel {
  String get id; String get name; String get email;/// アバター画像URL（バックエンド: icon_url）
 @JsonKey(name: 'icon_url') String get iconUrl;/// 一言コメント（バックエンド: one_word）
 @JsonKey(name: 'one_word') String get oneWord;/// ロール（frontend / backend / fullstack / other）
- UserRole get role;/// 技術スタック（バックエンド: tech_stack、単一テキスト）
+@JsonKey(unknownEnumValue: UserRole.other) UserRole get role;/// 技術スタック（バックエンド: tech_stack、単一テキスト）
 @JsonKey(name: 'tech_stack') String get techStack;/// Twitter URL（バックエンド: twitter_url）
 @JsonKey(name: 'twitter_url') String get twitterUrl;/// GitHub URL（バックエンド: github_url）
 @JsonKey(name: 'github_url') String get githubUrl;/// ポートフォリオURL（バックエンド: portfolio_url）
@@ -56,7 +56,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String email,@JsonKey(name: 'icon_url') String iconUrl,@JsonKey(name: 'one_word') String oneWord, UserRole role,@JsonKey(name: 'tech_stack') String techStack,@JsonKey(name: 'twitter_url') String twitterUrl,@JsonKey(name: 'github_url') String githubUrl,@JsonKey(name: 'portfolio_url') String portfolioUrl, String affiliation,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+ String id, String name, String email,@JsonKey(name: 'icon_url') String iconUrl,@JsonKey(name: 'one_word') String oneWord,@JsonKey(unknownEnumValue: UserRole.other) UserRole role,@JsonKey(name: 'tech_stack') String techStack,@JsonKey(name: 'twitter_url') String twitterUrl,@JsonKey(name: 'github_url') String githubUrl,@JsonKey(name: 'portfolio_url') String portfolioUrl, String affiliation,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -173,7 +173,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord,  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord, @JsonKey(unknownEnumValue: UserRole.other)  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
 return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_that.role,_that.techStack,_that.twitterUrl,_that.githubUrl,_that.portfolioUrl,_that.affiliation,_that.createdAt,_that.updatedAt);case _:
@@ -194,7 +194,7 @@ return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord,  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord, @JsonKey(unknownEnumValue: UserRole.other)  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
 return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_that.role,_that.techStack,_that.twitterUrl,_that.githubUrl,_that.portfolioUrl,_that.affiliation,_that.createdAt,_that.updatedAt);case _:
@@ -214,7 +214,7 @@ return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord,  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String email, @JsonKey(name: 'icon_url')  String iconUrl, @JsonKey(name: 'one_word')  String oneWord, @JsonKey(unknownEnumValue: UserRole.other)  UserRole role, @JsonKey(name: 'tech_stack')  String techStack, @JsonKey(name: 'twitter_url')  String twitterUrl, @JsonKey(name: 'github_url')  String githubUrl, @JsonKey(name: 'portfolio_url')  String portfolioUrl,  String affiliation, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
 return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_that.role,_that.techStack,_that.twitterUrl,_that.githubUrl,_that.portfolioUrl,_that.affiliation,_that.createdAt,_that.updatedAt);case _:
@@ -229,7 +229,7 @@ return $default(_that.id,_that.name,_that.email,_that.iconUrl,_that.oneWord,_tha
 @JsonSerializable()
 
 class _UserModel implements UserModel {
-  const _UserModel({required this.id, required this.name, this.email = '', @JsonKey(name: 'icon_url') this.iconUrl = '', @JsonKey(name: 'one_word') this.oneWord = '', this.role = UserRole.other, @JsonKey(name: 'tech_stack') this.techStack = '', @JsonKey(name: 'twitter_url') this.twitterUrl = '', @JsonKey(name: 'github_url') this.githubUrl = '', @JsonKey(name: 'portfolio_url') this.portfolioUrl = '', this.affiliation = '', @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _UserModel({required this.id, required this.name, this.email = '', @JsonKey(name: 'icon_url') this.iconUrl = '', @JsonKey(name: 'one_word') this.oneWord = '', @JsonKey(unknownEnumValue: UserRole.other) this.role = UserRole.other, @JsonKey(name: 'tech_stack') this.techStack = '', @JsonKey(name: 'twitter_url') this.twitterUrl = '', @JsonKey(name: 'github_url') this.githubUrl = '', @JsonKey(name: 'portfolio_url') this.portfolioUrl = '', this.affiliation = '', @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override final  String id;
@@ -240,7 +240,7 @@ class _UserModel implements UserModel {
 /// 一言コメント（バックエンド: one_word）
 @override@JsonKey(name: 'one_word') final  String oneWord;
 /// ロール（frontend / backend / fullstack / other）
-@override@JsonKey() final  UserRole role;
+@override@JsonKey(unknownEnumValue: UserRole.other) final  UserRole role;
 /// 技術スタック（バックエンド: tech_stack、単一テキスト）
 @override@JsonKey(name: 'tech_stack') final  String techStack;
 /// Twitter URL（バックエンド: twitter_url）
@@ -287,7 +287,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String email,@JsonKey(name: 'icon_url') String iconUrl,@JsonKey(name: 'one_word') String oneWord, UserRole role,@JsonKey(name: 'tech_stack') String techStack,@JsonKey(name: 'twitter_url') String twitterUrl,@JsonKey(name: 'github_url') String githubUrl,@JsonKey(name: 'portfolio_url') String portfolioUrl, String affiliation,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+ String id, String name, String email,@JsonKey(name: 'icon_url') String iconUrl,@JsonKey(name: 'one_word') String oneWord,@JsonKey(unknownEnumValue: UserRole.other) UserRole role,@JsonKey(name: 'tech_stack') String techStack,@JsonKey(name: 'twitter_url') String twitterUrl,@JsonKey(name: 'github_url') String githubUrl,@JsonKey(name: 'portfolio_url') String portfolioUrl, String affiliation,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
