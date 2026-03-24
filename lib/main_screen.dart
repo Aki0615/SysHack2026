@@ -12,7 +12,7 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: const Color(0xFFFFFFFF),
       body: navigationShell, // 現在選択中のタブの画面を表示する
       bottomNavigationBar: _buildBottomNav(context),
     );
@@ -21,8 +21,8 @@ class MainScreen extends StatelessWidget {
   /// BottomNavigationBarの構築
   Widget _buildBottomNav(BuildContext context) {
     return NavigationBar(
-      backgroundColor: const Color(0xFF1A1A1A),
-      indicatorColor: Colors.blueAccent.withValues(alpha: 0.2),
+      backgroundColor: const Color(0xFFFFFFFF),
+      indicatorColor: const Color(0xFF3AAA3A).withValues(alpha: 0.15),
       selectedIndex: navigationShell.currentIndex,
       onDestinationSelected: (index) {
         // GoRouterのShellRoute内でタブを切り替える
@@ -33,23 +33,23 @@ class MainScreen extends StatelessWidget {
       },
       destinations: const [
         NavigationDestination(
-          icon: Icon(Icons.home_outlined, color: Colors.grey),
-          selectedIcon: Icon(Icons.home, color: Colors.blueAccent),
+          icon: Icon(Icons.home_outlined, color: Color(0xFF757575)),
+          selectedIcon: Icon(Icons.home, color: Color(0xFF3AAA3A)),
           label: 'ホーム',
         ),
         NavigationDestination(
-          icon: Icon(Icons.people_outline, color: Colors.grey),
-          selectedIcon: Icon(Icons.people, color: Colors.blueAccent),
+          icon: Icon(Icons.people_outline, color: Color(0xFF757575)),
+          selectedIcon: Icon(Icons.people, color: Color(0xFF3AAA3A)),
           label: '広場',
         ),
         NavigationDestination(
-          icon: Icon(Icons.calendar_month_outlined, color: Colors.grey),
-          selectedIcon: Icon(Icons.calendar_month, color: Colors.blueAccent),
+          icon: Icon(Icons.calendar_month_outlined, color: Color(0xFF757575)),
+          selectedIcon: Icon(Icons.calendar_month, color: Color(0xFF3AAA3A)),
           label: 'カレンダー',
         ),
         NavigationDestination(
-          icon: Icon(Icons.person_outline, color: Colors.grey),
-          selectedIcon: Icon(Icons.person, color: Colors.blueAccent),
+          icon: Icon(Icons.person_outline, color: Color(0xFF757575)),
+          selectedIcon: Icon(Icons.person, color: Color(0xFF3AAA3A)),
           label: 'マイページ',
         ),
       ],
