@@ -9,6 +9,7 @@ import '../../features/encounter/presentation/encounter_result_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/plaza/presentation/plaza_screen.dart';
 import '../../features/plaza/presentation/profile_screen.dart';
+import '../../features/calendar/presentation/calendar_screen.dart';
 import '../../main_screen.dart';
 import '../widgets/placeholder_screen.dart';
 
@@ -106,10 +107,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/calendar',
-                builder: (context, state) => const PlaceholderScreen(
-                  title: 'カレンダー',
-                  icon: Icons.calendar_month,
-                ),
+                builder: (context, state) => const CalendarScreen(),
               ),
             ],
           ),
