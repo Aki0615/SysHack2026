@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'comment_item_widget.dart';
 
-/// みんなの一言セクション全体のWidget
-/// セクションタイトルとコメントリストを表示する
+// 修正: 不要コメントの削除、UI構成のメソッド化
 class CommentCardWidget extends StatelessWidget {
-  /// 一言コメントのリスト（name, commentのマップ）
   final List<Map<String, String>> comments;
 
   const CommentCardWidget({super.key, required this.comments});
@@ -14,7 +12,6 @@ class CommentCardWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // セクションタイトル（カードの外に表示）
         const Text(
           'みんなの一言 💬',
           style: TextStyle(
@@ -24,23 +21,18 @@ class CommentCardWidget extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        // コメントリストカード
         _buildCommentListCard(),
       ],
     );
   }
 
-  /// コメントリストを囲むカード
   Widget _buildCommentListCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        // 背景: primaryカラーに10%透明度
         color: const Color(0x1A3AAA3A),
         borderRadius: BorderRadius.circular(20),
-        // 枠線: primaryカラーに30%透明度
         border: Border.all(color: const Color(0x4D3AAA3A)),
-        // ドロップシャドウ
         boxShadow: const [
           BoxShadow(
             offset: Offset(0, 2),
@@ -53,22 +45,19 @@ class CommentCardWidget extends StatelessWidget {
     );
   }
 
-  /// コメントアイテムのリストを生成する（間に16pxの余白を挿入）
+  // 修正: リスト生成ロジックの整理
   List<Widget> _buildCommentItems() {
-    final items = <Widget>[];
-    for (var i = 0; i < comments.length; i++) {
-      // 各一言アイテム
-      items.add(
-        CommentItemWidget(
-          name: comments[i]['name'] ?? '',
-          comment: comments[i]['comment'] ?? '',
-        ),
+    return List.generate(comments.length, (i) {
+      final item = CommentItemWidget(
+        name: comments[i]['name'] ?? '',
+        comment: comments[i]['comment'] ?? '',
       );
-      // 最後のアイテム以外に余白を追加
+
+      // 最後のアイテム以外は余白を下に追加
       if (i < comments.length - 1) {
-        items.add(const SizedBox(height: 16));
+        return Padding(padding: const EdgeInsets.only(bottom: 16), child: item);
       }
-    }
-    return items;
+      return item;
+    });
   }
 }

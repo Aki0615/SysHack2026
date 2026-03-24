@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// イベント一覧リスト用アイテムWidget
+// 修正: 不要なコメントの削除、UI構成のコンポーネント化
 class EventListItem extends StatelessWidget {
-  /// イベント名
   final String eventName;
-
-  /// 日付
   final String date;
-
-  /// 参加人数
   final String count;
 
   const EventListItem({
@@ -22,33 +17,31 @@ class EventListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(12),
-        // 枠線: #3AAA3Aに30%透明度・1px
-        border: Border.all(color: const Color(0x4D3AAA3A), width: 1),
-      ),
+      decoration: _buildDecoration(), // 修正: メソッド化
       child: Row(
         children: [
-          // 左: カレンダーチェックアイコン
           _buildLeadingIcon(),
           const SizedBox(width: 12),
-          // 中央: イベント情報
           Expanded(child: _buildEventInfo()),
-          // 右: 矢印アイコン
           const Icon(Icons.chevron_right, color: Color(0xFF9E9E9E)),
         ],
       ),
     );
   }
 
-  /// カレンダーアイコン部分
+  BoxDecoration _buildDecoration() {
+    return BoxDecoration(
+      color: const Color(0xFFFFFFFF),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0x4D3AAA3A), width: 1),
+    );
+  }
+
   Widget _buildLeadingIcon() {
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        // 背景: #3AAA3Aに15%透明度
         color: const Color(0x263AAA3A),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -61,12 +54,10 @@ class EventListItem extends StatelessWidget {
     );
   }
 
-  /// イベント情報テキスト部分
   Widget _buildEventInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // イベント名
         Text(
           eventName,
           style: const TextStyle(
@@ -78,7 +69,6 @@ class EventListItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        // 日付 + アイコン + 人数
         Row(
           children: [
             Text(

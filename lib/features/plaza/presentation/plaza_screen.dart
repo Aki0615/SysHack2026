@@ -6,23 +6,17 @@ import 'widgets/tab_switch_button.dart';
 import 'widgets/friend_list_view.dart';
 import 'widgets/event_list_view.dart';
 
-/// 広場画面の選択中タブ（0: 友達一覧, 1: イベント一覧）を管理するNotifier
+// 修正: 不要なコメントの削除と記述の最適化
 class PlazaTabNotifier extends Notifier<int> {
   @override
   int build() => 0;
-
-  void setTab(int index) {
-    state = index;
-  }
+  void setTab(int index) => state = index;
 }
 
-/// ノティファイアのプロバイダー
 final plazaTabProvider = NotifierProvider<PlazaTabNotifier, int>(
   PlazaTabNotifier.new,
 );
 
-/// 広場画面本体Widget
-/// StatelessWidget（ConsumerWidget）として定義し、Riverpodでタブ状態を管理する
 class PlazaScreen extends ConsumerWidget {
   const PlazaScreen({super.key});
 
@@ -36,43 +30,14 @@ class PlazaScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // AppBar下のセパレーターライン（1px）
             Container(height: 1, color: const Color(0xFFE0E0E0)),
-            // コンテンツ部分
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    // 検索バー
-                    const PlazaSearchBar(),
-                    // 切り替えボタン
-                    TabSwitchButton(
-                      selectedIndex: selectedIndex,
-                      onTabChanged: (index) {
-                        ref.read(plazaTabProvider.notifier).setTab(index);
-                      },
-                    ),
-                    // リスト部分（選択中のタブに応じて切り替え）
-                    Expanded(
-                      child: selectedIndex == 0
-                          ? SizedBox(
-                              height: 600,
-                              child: FriendListView(friends: dummyFriends),
-                            )
-                          : EventListView(events: dummyEvents),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            Expanded(child: _buildContent(ref, selectedIndex)),
           ],
         ),
       ),
     );
   }
 
-  /// AppBarの構築
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: const Color(0xFFFFFFFF),
@@ -86,6 +51,30 @@ class PlazaScreen extends ConsumerWidget {
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+
+  Widget _buildContent(WidgetRef ref, int selectedIndex) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          const PlazaSearchBar(),
+          TabSwitchButton(
+            selectedIndex: selectedIndex,
+            onTabChanged: (index) =>
+                ref.read(plazaTabProvider.notifier).setTab(index),
+          ),
+          Expanded(
+            child: selectedIndex == 0
+                ? SizedBox(
+                    height: 600,
+                    child: FriendListView(friends: dummyFriends),
+                  )
+                : EventListView(events: dummyEvents),
+          ),
+        ],
       ),
     );
   }
