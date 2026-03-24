@@ -10,8 +10,8 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/plaza/presentation/plaza_screen.dart';
 import '../../features/plaza/presentation/profile_screen.dart';
 import '../../features/calendar/presentation/calendar_screen.dart';
+import '../../features/mypage/presentation/mypage_screen.dart';
 import '../../main_screen.dart';
-import '../widgets/placeholder_screen.dart';
 
 /// GoRouterのリフレッシュ用Notifier
 class RouterNotifier extends ChangeNotifier {
@@ -117,8 +117,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/mypage',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: 'マイページ', icon: Icons.person),
+                builder: (context, state) => const MyPageScreen(),
               ),
             ],
           ),
