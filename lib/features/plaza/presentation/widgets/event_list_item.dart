@@ -79,7 +79,7 @@ class EventListItem extends StatelessWidget {
             const Icon(Icons.people, color: Color(0xFF757575), size: 12),
             const SizedBox(width: 4),
             Text(
-              '\$count人',
+              '$count人',
               style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
             ),
           ],
