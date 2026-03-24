@@ -7,19 +7,33 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/encounter/presentation/encounter_result_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/plaza/presentation/plaza_screen.dart';
+import '../../features/plaza/presentation/profile_screen.dart';
 import '../../main_screen.dart';
 import '../widgets/placeholder_screen.dart';
 
+/// GoRouterのリフレッシュ用Notifier
+class RouterNotifier extends ChangeNotifier {
+  final Ref ref;
+  RouterNotifier(this.ref) {
+    ref.listen<AsyncValue<dynamic>>(
+      authNotifierProvider,
+      (_, __) => notifyListeners(),
+    );
+  }
+}
+
 /// GoRouterの設定を管理するプロバイダー
-/// 認証状態の変化に応じてリダイレクトを行う
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
+  final notifier = RouterNotifier(ref);
 
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: notifier,
     debugLogDiagnostics: true, // デバッグ用: ルーティングのログを出力
     // 認証状態に応じたリダイレクト処理
     redirect: (context, state) {
+      final authState = ref.read(authNotifierProvider);
       final user = authState.whenOrNull(data: (user) => user);
       final isLoggedIn = user != null;
       final isOnAuthPage =
@@ -55,6 +69,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SignUpScreen(),
       ),
 
+      // プロフィール画面
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
       // メイン画面（4タブのBottomNavigationBar）
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -76,8 +96,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/plaza',
-                builder: (context, state) =>
-                    const PlaceholderScreen(title: '広場', icon: Icons.people),
+                builder: (context, state) => const PlazaScreen(),
               ),
             ],
           ),
