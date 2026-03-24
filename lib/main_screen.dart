@@ -56,9 +56,9 @@ class MainScreen extends StatelessWidget {
             label: '広場',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.history_outlined),
-            activeIcon: Icon(Icons.history),
-            label: '履歴',
+            icon: Icon(Icons.calendar_today_outlined),
+            activeIcon: Icon(Icons.calendar_month),
+            label: 'カレンダー',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
