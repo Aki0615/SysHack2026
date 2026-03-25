@@ -23,19 +23,19 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     if (userId == null) return null;
 
     try {
-      return await repo.login(userId: userId, password: '');
+      return await repo.restoreSession(userId);
     } catch (_) {
       // ユーザー情報取得に失敗した場合は未ログインとする
       return null;
     }
   }
 
-  /// ログイン処理（ユーザーIDで認証）
-  Future<void> login({required String userId, required String password}) async {
+  /// ログイン処理（メールアドレスで認証）
+  Future<void> login({required String email, required String password}) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final repo = ref.read(authRepositoryProvider);
-      return await repo.login(userId: userId, password: password);
+      return await repo.login(email: email, password: password);
     });
   }
 
@@ -50,13 +50,18 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final repo = ref.read(authRepositoryProvider);
-      return await repo.signUp(
+      await repo.signUp(
         id: id,
         name: name,
         email: email,
         password: password,
-        role: role,
+        iconUrl: "", // 仕様書で必須のため空文字を送信
+        oneWord: "",
+        role: role ?? "other",
+        techStack: "",
       );
+      // signUpのレスポンスがないため、直後に自動ログイン処理を呼び出してセッションを確立します
+      return await repo.login(email: email, password: password);
     });
   }
 

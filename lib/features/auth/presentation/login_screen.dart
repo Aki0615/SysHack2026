@@ -14,13 +14,13 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _userIdController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
   @override
   void dispose() {
-    _userIdController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -60,7 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 48),
-                _buildUserIdField(),
+                _buildEmailField(),
                 const SizedBox(height: 16),
                 _buildPasswordField(),
                 const SizedBox(height: 32),
@@ -98,14 +98,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  /// ユーザーID入力フィールド
-  Widget _buildUserIdField() {
+  /// メールアドレス入力フィールド
+  Widget _buildEmailField() {
     return TextFormField(
-      controller: _userIdController,
+      controller: _emailController,
       style: const TextStyle(color: Colors.white),
-      decoration: _inputDecoration(label: 'ユーザーID', icon: Icons.person_outline),
+      keyboardType: TextInputType.emailAddress,
+      decoration: _inputDecoration(
+        label: 'メールアドレス',
+        icon: Icons.email_outlined,
+      ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'ユーザーIDを入力してください';
+        if (value == null || value.isEmpty) return 'メールアドレスを入力してください';
+        if (!value.contains('@')) return '正しいメールアドレスを入力してください';
         return null;
       },
     );
@@ -195,7 +200,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref
         .read(authNotifierProvider.notifier)
         .login(
-          userId: _userIdController.text.trim(),
+          email: _emailController.text.trim(),
           password: _passwordController.text,
         );
   }
