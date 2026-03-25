@@ -36,11 +36,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _navigateAfterDelay();
   }
 
-  /// 2秒待機後、認証状態をチェックして適切な画面へ遷移する
+  /// 2秒待機後、初回の認証状態チェックを開始する
   Future<void> _navigateAfterDelay() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
+    _checkAuthState();
+  }
 
+  /// 認証状態をポーリングでチェックし、ログインまたは結果待ちへと遷移する
+  void _checkAuthState() {
     final authState = ref.read(authNotifierProvider);
     authState.when(
       data: (user) {
@@ -53,8 +57,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         }
       },
       loading: () {
-        // まだ認証チェック中なら少し待ってリトライ
-        Future.delayed(const Duration(milliseconds: 500), _navigateAfterDelay);
+        // まだ認証チェック中なら待って再帰（ここで2秒待機をスタックさせない）
+        Future.delayed(const Duration(milliseconds: 500), _checkAuthState);
       },
       error: (_, _) {
         // エラー時はログイン画面へ
@@ -63,8 +67,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 
-  /// 未確認のすれ違いデータをチェックし、あれば結果画面へ遷移
-  Future<void> _checkPendingEncounters() async {
+  /// 未確認のすれ違いデータをチェックし、結果画面またはホームへ遷移する
+  void _checkPendingEncounters() {
     final encounterState = ref.read(encounterNotifierProvider);
     encounterState.when(
       data: (encounters) {
@@ -77,7 +81,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         }
       },
       loading: () {
-        // ロード中なら少し待ってリトライ
+        // ロード中なら待って再帰
         Future.delayed(
           const Duration(milliseconds: 500),
           _checkPendingEncounters,
