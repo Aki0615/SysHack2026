@@ -77,13 +77,21 @@ class AuthRepository {
 
   /// 保存済みユーザーIDの有無を確認する
   Future<bool> hasSession() async {
-    final userId = await _storage.read(key: 'user_id');
-    return userId != null;
+    try {
+      final userId = await _storage.read(key: 'user_id');
+      return userId != null;
+    } catch (_) {
+      return false; // ネイティブエラー時（Mac環境のKeychain等）は未ログイン扱いにする
+    }
   }
 
   /// 保存されたユーザーIDを取得する
   Future<String?> getSavedUserId() async {
-    return await _storage.read(key: 'user_id');
+    try {
+      return await _storage.read(key: 'user_id');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// ログアウト（ユーザーIDを削除）
