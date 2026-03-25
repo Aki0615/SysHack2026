@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/domain/auth_notifier.dart';
+import '../../home/data/home_repository.dart';
 import '../data/encounter_repository.dart';
 import '../data/pending_encounter_repository.dart';
 import '../domain/encounter_model.dart';
@@ -30,11 +31,14 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
     if (userId == null) return [];
 
     try {
-      final repo = ref.read(encounterRepositoryProvider);
-      final pendingData = await repo.getPendingEncounters(userId);
+      // 未確認データはホーム取得APIから引っ張ってくる（仕様変更への追従）
+      final homeRepo = ref.read(homeRepositoryProvider);
+      final homeData = await homeRepo.fetchHomeData(userId);
+      final unconfirmedList = homeData['unconfirmed'] as List<dynamic>? ?? [];
 
       // Map → EncounterModel に変換
-      final encounters = pendingData.map((data) {
+      final encounters = unconfirmedList.map((item) {
+        final data = item as Map<String, dynamic>;
         return EncounterModel(
           id: data['id']?.toString() ?? '',
           encounteredUser: EncounteredUserInfo(
@@ -44,8 +48,9 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
             oneWord: data['one_word']?.toString() ?? '',
           ),
           encounteredAt:
-              DateTime.tryParse(data['created_at'] ?? '') ?? DateTime.now(),
-          isConfirmed: data['is_confirmed'] ?? false,
+              DateTime.tryParse(data['created_at']?.toString() ?? '') ??
+              DateTime.now(),
+          isConfirmed: false,
         );
       }).toList();
 
@@ -79,11 +84,8 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
 
     try {
       final repo = ref.read(encounterRepositoryProvider);
-      await repo.postEncounter(
-        myId: myId,
-        targetId: targetUserId,
-        eventId: eventId,
-      );
+      // API仕様書通り my_id, target_id のみを送信する (eventIdは送らない)
+      await repo.recordEncounter(myId: myId, targetId: targetUserId);
       await limitService.increment();
       state = AsyncValue.data(await _fetchPendingEncounters());
     } catch (e) {
@@ -97,9 +99,8 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
     if (currentList.isEmpty) return;
 
     try {
-      final repo = ref.read(encounterRepositoryProvider);
-      final ids = currentList.map((e) => e.id).toList();
-      await repo.confirmEncounters(ids);
+      // 仕様書に confirm 系API は存在しないため、Flutterクライアント上のローカル処理のみに留める
+      // （※API連携仕様書の絶対的遵守事項「仕様書にない機能は実装しない」に基づく）
 
       final localRepo = ref.read(pendingEncounterRepositoryProvider);
       await localRepo.clearAll();
