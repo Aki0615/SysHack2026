@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../user/data/user_repository.dart';
@@ -275,7 +276,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           ),
           child: Column(
             children: [
-              StampCardItem(onTap: () {}),
+              StampCardItem(onTap: () => context.push('/achievements')),
               const Divider(
                 color: Color(0xFFE0E0E0),
                 height: 1,
