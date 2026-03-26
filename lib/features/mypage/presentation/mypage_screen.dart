@@ -5,11 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../user/data/user_repository.dart';
 import 'widgets/profile_icon_widget.dart';
-import 'widgets/name_edit_widget.dart';
-import 'widgets/comment_edit_widget.dart';
 import 'widgets/stamp_card_item.dart';
 
-/// マイページ本体。ログイン中のユーザー情報を表示し、編集・保存機能を提供
+/// マイページ本体
+/// 閲覧モードと編集モードを切り替え、編集モードでは全項目を一括で編集・保存する
 class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
 
@@ -18,19 +17,46 @@ class MyPageScreen extends ConsumerStatefulWidget {
 }
 
 class _MyPageScreenState extends ConsumerState<MyPageScreen> {
+  // --- 表示用（現在の確定値）---
   String? _imagePath;
   String _name = '';
   String _comment = '';
   String _techStack = '';
   String _twitter = '';
   String _github = '';
+
+  // --- 編集用（一時バッファ）---
+  late TextEditingController _nameCtrl;
+  late TextEditingController _commentCtrl;
+  late TextEditingController _techStackCtrl;
+  late TextEditingController _twitterCtrl;
+  late TextEditingController _githubCtrl;
+
+  // --- 状態フラグ ---
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isEditing = false; // true: 編集モード, false: 閲覧モード
 
   @override
   void initState() {
     super.initState();
+    // テキストコントローラーの初期化
+    _nameCtrl = TextEditingController();
+    _commentCtrl = TextEditingController();
+    _techStackCtrl = TextEditingController();
+    _twitterCtrl = TextEditingController();
+    _githubCtrl = TextEditingController();
     _loadUserData();
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _commentCtrl.dispose();
+    _techStackCtrl.dispose();
+    _twitterCtrl.dispose();
+    _githubCtrl.dispose();
+    super.dispose();
   }
 
   /// ログイン中のユーザー情報を読み込む
@@ -51,19 +77,54 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     }
   }
 
-  /// サーバーにプロフィール情報を保存
-  Future<void> _saveToServer(String field, String value) async {
+  /// 編集モードに切り替える（コントローラーに現在の値をセット）
+  void _enterEditMode() {
+    setState(() {
+      _isEditing = true;
+      _nameCtrl.text = _name;
+      _commentCtrl.text = _comment;
+      _techStackCtrl.text = _techStack;
+      _twitterCtrl.text = _twitter;
+      _githubCtrl.text = _github;
+    });
+  }
+
+  /// 編集をキャンセルして閲覧モードに戻る
+  void _cancelEdit() {
+    setState(() => _isEditing = false);
+  }
+
+  /// 全項目を一括でサーバーに保存する
+  Future<void> _saveAll() async {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) return;
 
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(userRepositoryProvider);
-      await repo.updateUser(user.id, {field: value});
+      // 全フィールドをまとめて1回のPATCHで送信
+      await repo.updateUser(user.id, {
+        'name': _nameCtrl.text,
+        'one_word': _commentCtrl.text,
+        'tech_stack': _techStackCtrl.text,
+        'twitter_url': _twitterCtrl.text,
+        'github_url': _githubCtrl.text,
+      });
+
+      // 保存成功 → ローカルの表示用変数を更新して閲覧モードへ
+      setState(() {
+        _name = _nameCtrl.text;
+        _comment = _commentCtrl.text;
+        _techStack = _techStackCtrl.text;
+        _twitter = _twitterCtrl.text;
+        _github = _githubCtrl.text;
+        _isEditing = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('保存しました'),
+            content: Text('プロフィールを保存しました'),
             duration: Duration(seconds: 1),
           ),
         );
@@ -79,16 +140,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     }
   }
 
-  /// URLを開く
+  /// URLを外部ブラウザで開く
   Future<void> _launchUrl(String url) async {
     if (url.isEmpty) return;
-
-    // URLにプロトコルがなければhttps://を追加
     String fullUrl = url;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       fullUrl = 'https://$url';
     }
-
     final uri = Uri.parse(fullUrl);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -101,52 +159,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     }
   }
 
-  // 汎用テキスト編集ダイアログ
-  void _showEditDialog(
-    String title,
-    String initialValue,
-    String serverField,
-    ValueChanged<String> onSaved,
-  ) {
-    final controller = TextEditingController(text: initialValue);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: '入力してください'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'キャンセル',
-                style: TextStyle(color: Color(0xFF757575)),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                onSaved(controller.text);
-                Navigator.pop(context);
-                _saveToServer(serverField, controller.text);
-              },
-              child: const Text(
-                '保存',
-                style: TextStyle(
-                  color: Color(0xFF3AAA3A),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // 確認用ダイアログ
+  /// 確認用ダイアログ（ログアウト・削除用）
   void _showConfirmDialog(
     String title,
     String confirmLabel,
@@ -185,6 +198,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════════
+  //  ビルド
+  // ═══════════════════════════════════════════════════════
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -204,7 +221,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               child: Column(
                 children: [
                   _buildProfileHeader(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+                  _buildEditButton(),
+                  const SizedBox(height: 24),
                   _buildInformationSection(),
                   const SizedBox(height: 32),
                   _buildSettingsSection(),
@@ -212,6 +231,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 ],
               ),
             ),
+            // 保存中のオーバーレイ
             if (_isSaving)
               Container(
                 color: Colors.black26,
@@ -223,35 +243,207 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     );
   }
 
+  // ─────────────────────────────────────────────────────
+  //  プロフィールヘッダー（アイコン・名前・一言）
+  // ─────────────────────────────────────────────────────
+
   Widget _buildProfileHeader() {
     return Column(
       children: [
+        // アイコン（編集モードでもタップ可能）
         ProfileIconWidget(
           imagePath: _imagePath,
           onImageSelected: (path) {
             setState(() => _imagePath = path);
-            // アイコンURLの保存はファイルアップロード機能が必要なため、ローカルのみ
           },
         ),
         const SizedBox(height: 16),
-        NameEditWidget(
-          name: _name,
-          onSaved: (val) {
-            setState(() => _name = val);
-            _saveToServer('name', val);
-          },
-        ),
-        const SizedBox(height: 16),
-        CommentEditWidget(
-          comment: _comment,
-          onSaved: (val) {
-            setState(() => _comment = val);
-            _saveToServer('one_word', val);
-          },
-        ),
+        // 名前
+        _isEditing ? _buildNameField() : _buildNameLabel(),
+        const SizedBox(height: 12),
+        // 一言コメント
+        _isEditing ? _buildCommentField() : _buildCommentLabel(),
       ],
     );
   }
+
+  /// 閲覧モード: 名前テキスト
+  Widget _buildNameLabel() {
+    return Text(
+      _name.isEmpty ? '名前を入力' : _name,
+      style: TextStyle(
+        color: _name.isEmpty
+            ? const Color(0xFF9E9E9E)
+            : const Color(0xFF1A1A1A),
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  /// 編集モード: 名前入力フィールド
+  Widget _buildNameField() {
+    return TextField(
+      controller: _nameCtrl,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        color: Color(0xFF1A1A1A),
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+      decoration: InputDecoration(
+        hintText: '名前を入力',
+        hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        filled: true,
+        fillColor: const Color(0xFFF5F5F5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A), width: 2),
+        ),
+      ),
+    );
+  }
+
+  /// 閲覧モード: 一言テキスト（カプセル型背景）
+  Widget _buildCommentLabel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Text(
+        _comment.isEmpty ? '一言を入力' : _comment,
+        style: TextStyle(
+          color: _comment.isEmpty
+              ? const Color(0xFF9E9E9E)
+              : const Color(0xFF1A1A1A),
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  /// 編集モード: 一言入力フィールド
+  Widget _buildCommentField() {
+    return TextField(
+      controller: _commentCtrl,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+      decoration: InputDecoration(
+        hintText: '一言を入力',
+        hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF5F5F5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A), width: 2),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  編集する / すべて保存 / キャンセル ボタン
+  // ─────────────────────────────────────────────────────
+
+  Widget _buildEditButton() {
+    if (_isEditing) {
+      // 編集モード: 「すべて保存」と「キャンセル」ボタン
+      return Row(
+        children: [
+          // キャンセルボタン
+          Expanded(
+            child: OutlinedButton(
+              onPressed: _cancelEdit,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: Color(0xFF757575)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'キャンセル',
+                style: TextStyle(
+                  color: Color(0xFF757575),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // すべて保存ボタン
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _saveAll,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3AAA3A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'すべて保存',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 閲覧モード: 「編集する」ボタン
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _enterEditMode,
+        icon: const Icon(Icons.edit, size: 18),
+        label: const Text(
+          '編集する',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF3AAA3A),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          side: const BorderSide(color: Color(0xFF3AAA3A)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  MY INFORMATION セクション
+  // ─────────────────────────────────────────────────────
 
   Widget _buildInformationSection() {
     return Column(
@@ -273,60 +465,67 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           ),
           child: Column(
             children: [
+              // スタンプカード（モードに関係なく常に表示）
               StampCardItem(onTap: () => context.push('/stamp-card')),
               const Divider(
                 color: Color(0xFFE0E0E0),
                 height: 1,
                 thickness: 0.5,
               ),
-              _buildInfoEditItem(
-                icon: Icons.code,
-                iconBackgroundColor: const Color(0xFF1565C0),
-                label: '技術スタック',
-                value: _techStack,
-                onEdit: () => _showEditDialog(
-                  '技術スタックを編集',
-                  _techStack,
-                  'tech_stack',
-                  (val) => setState(() => _techStack = val),
-                ),
-              ),
+              // 技術スタック
+              _isEditing
+                  ? _buildEditField(
+                      icon: Icons.code,
+                      iconColor: const Color(0xFF1565C0),
+                      label: '技術スタック',
+                      controller: _techStackCtrl,
+                    )
+                  : _buildViewItem(
+                      icon: Icons.code,
+                      iconColor: const Color(0xFF1565C0),
+                      label: '技術スタック',
+                      value: _techStack,
+                    ),
               const Divider(
                 color: Color(0xFFE0E0E0),
                 height: 1,
                 thickness: 0.5,
               ),
-              _buildLinkEditItem(
-                icon: Icons.alternate_email,
-                iconBackgroundColor: const Color(0xFF1DA1F2),
-                label: 'Twitter',
-                value: _twitter,
-                onEdit: () => _showEditDialog(
-                  'Twitterを編集',
-                  _twitter,
-                  'twitter_url',
-                  (val) => setState(() => _twitter = val),
-                ),
-                onLaunch: () => _launchUrl(_twitter),
-              ),
+              // Twitter
+              _isEditing
+                  ? _buildEditField(
+                      icon: Icons.alternate_email,
+                      iconColor: const Color(0xFF1DA1F2),
+                      label: 'Twitter',
+                      controller: _twitterCtrl,
+                    )
+                  : _buildLinkItem(
+                      icon: Icons.alternate_email,
+                      iconColor: const Color(0xFF1DA1F2),
+                      label: 'Twitter',
+                      value: _twitter,
+                      onLaunch: () => _launchUrl(_twitter),
+                    ),
               const Divider(
                 color: Color(0xFFE0E0E0),
                 height: 1,
                 thickness: 0.5,
               ),
-              _buildLinkEditItem(
-                icon: Icons.link,
-                iconBackgroundColor: const Color(0xFF333333),
-                label: 'GitHub',
-                value: _github,
-                onEdit: () => _showEditDialog(
-                  'GitHubを編集',
-                  _github,
-                  'github_url',
-                  (val) => setState(() => _github = val),
-                ),
-                onLaunch: () => _launchUrl(_github),
-              ),
+              // GitHub
+              _isEditing
+                  ? _buildEditField(
+                      icon: Icons.link,
+                      iconColor: const Color(0xFF333333),
+                      label: 'GitHub',
+                      controller: _githubCtrl,
+                    )
+                  : _buildLinkItem(
+                      icon: Icons.link,
+                      iconColor: const Color(0xFF333333),
+                      label: 'GitHub',
+                      value: _github,
+                      onLaunch: () => _launchUrl(_github),
+                    ),
             ],
           ),
         ),
@@ -334,84 +533,62 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     );
   }
 
-  /// 通常の編集アイテム
-  Widget _buildInfoEditItem({
+  /// 閲覧モード: 通常の表示アイテム
+  Widget _buildViewItem({
     required IconData icon,
-    required Color iconBackgroundColor,
+    required Color iconColor,
     required String label,
     required String value,
-    required VoidCallback onEdit,
   }) {
-    return InkWell(
-      onTap: onEdit,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: iconBackgroundColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Color(0xFF757575),
-                      fontSize: 12,
-                    ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          _buildIconCircle(icon, iconColor),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF757575),
+                    fontSize: 12,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value.isEmpty ? '未設定' : value,
-                    style: TextStyle(
-                      color: value.isEmpty
-                          ? const Color(0xFF9E9E9E)
-                          : const Color(0xFF1A1A1A),
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value.isEmpty ? '未設定' : value,
+                  style: TextStyle(
+                    color: value.isEmpty
+                        ? const Color(0xFF9E9E9E)
+                        : const Color(0xFF1A1A1A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Icon(Icons.edit, color: Color(0xFF757575), size: 20),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  /// リンク付き編集アイテム（Twitter/GitHub用）
-  Widget _buildLinkEditItem({
+  /// 閲覧モード: リンク付きアイテム（Twitter/GitHub）
+  Widget _buildLinkItem({
     required IconData icon,
-    required Color iconBackgroundColor,
+    required Color iconColor,
     required String label,
     required String value,
-    required VoidCallback onEdit,
     required VoidCallback onLaunch,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: iconBackgroundColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.white, size: 18),
-          ),
+          _buildIconCircle(icon, iconColor),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -444,7 +621,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ],
             ),
           ),
-          // リンクボタン
           if (value.isNotEmpty)
             IconButton(
               onPressed: onLaunch,
@@ -455,16 +631,77 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ),
               tooltip: '開く',
             ),
-          // 編集ボタン
-          IconButton(
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit, color: Color(0xFF757575), size: 20),
-            tooltip: '編集',
+        ],
+      ),
+    );
+  }
+
+  /// 編集モード: テキスト入力フィールド付きアイテム
+  Widget _buildEditField({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _buildIconCircle(icon, iconColor),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              style: const TextStyle(
+                color: Color(0xFF1A1A1A),
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              decoration: InputDecoration(
+                labelText: label,
+                labelStyle: const TextStyle(
+                  color: Color(0xFF757575),
+                  fontSize: 12,
+                ),
+                hintText: '$labelを入力',
+                hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF3AAA3A),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+
+  /// 共通のアイコン丸（左側のカラーアイコン）
+  Widget _buildIconCircle(IconData icon, Color color) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: Icon(icon, color: Colors.white, size: 18),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  //  SETTINGS セクション（変更なし）
+  // ─────────────────────────────────────────────────────
 
   Widget _buildSettingsSection() {
     return Column(
