@@ -20,13 +20,13 @@ class MonthSelector extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // 左: ＜ 前月
+          // 左: ＜ 先月
           GestureDetector(
             onTap: onPreviousMonth,
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: Text(
-                '＜ 前月',
+                '＜ 先月',
                 style: TextStyle(color: Color(0xFF757575), fontSize: 14),
               ),
             ),
