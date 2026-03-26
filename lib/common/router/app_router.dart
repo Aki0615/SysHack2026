@@ -11,6 +11,7 @@ import '../../features/plaza/presentation/plaza_screen.dart';
 import '../../features/plaza/presentation/profile_screen.dart';
 import '../../features/calendar/presentation/calendar_screen.dart';
 import '../../features/mypage/presentation/mypage_screen.dart';
+import '../../features/mypage/presentation/stamp_card_screen.dart';
 import '../../main_screen.dart';
 
 /// GoRouterのリフレッシュ用Notifier
@@ -74,6 +75,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+
+      // スタンプカード（実績確認）画面
+      GoRoute(
+        path: '/stamp-card',
+        builder: (context, state) => const StampCardScreen(),
       ),
 
       // メイン画面（4タブのBottomNavigationBar）
