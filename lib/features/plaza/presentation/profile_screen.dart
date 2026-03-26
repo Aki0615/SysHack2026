@@ -38,7 +38,7 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildHeader(Map<String, String> profile) {
     return Column(
       children: [
-        _buildProfileImage(),
+        _buildProfileImage(profile),
         const SizedBox(height: 16),
         Text(
           profile['name'] ?? '',
@@ -54,7 +54,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileImage() {
+  Widget _buildProfileImage(Map<String, String> profile) {
     return Container(
       width: 96,
       height: 96,
@@ -64,8 +64,29 @@ class ProfileScreen extends StatelessWidget {
         border: Border.all(color: const Color(0xFF3AAA3A), width: 3),
       ),
       alignment: Alignment.center,
-      child: const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48),
+      clipBehavior: Clip.antiAlias,
+      child: _buildProfileImageContent(profile),
     );
+  }
+
+  Widget _buildProfileImageContent(Map<String, String> profile) {
+    final iconUrl = profile['icon_url'] ?? '';
+
+    // Firebase URL から画像を表示
+    if (iconUrl.isNotEmpty) {
+      return Image.network(
+        iconUrl,
+        width: 96,
+        height: 96,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
+        },
+      );
+    }
+
+    // デフォルトアイコン
+    return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
   }
 
   Widget _buildCommentBadge(String comment) {
