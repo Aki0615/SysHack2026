@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../user/data/user_repository.dart';
@@ -70,10 +71,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('保存に失敗しました: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('保存に失敗しました: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -96,9 +94,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('URLを開けませんでした')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('URLを開けませんでした')));
       }
     }
   }
@@ -275,7 +273,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           ),
           child: Column(
             children: [
-              StampCardItem(onTap: () {}),
+              StampCardItem(onTap: () => context.push('/stamp-card')),
               const Divider(
                 color: Color(0xFFE0E0E0),
                 height: 1,
