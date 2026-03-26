@@ -37,34 +37,45 @@ class PlazaCountCard extends StatelessWidget {
   }
 
   Widget _buildLabel() {
-    return const Row(
+    return Row(
       children: [
-        Icon(Icons.people, color: Color(0xFF3AAA3A), size: 16),
-        SizedBox(width: 4),
-        Text('広場の人数', style: TextStyle(color: Color(0xFF757575), fontSize: 12)),
+        const Icon(Icons.people, color: Color(0xFF3AAA3A), size: 16),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            '広場の人数',
+            style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildCount() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          '$count',
-          style: const TextStyle(
-            color: Color(0xFF1A1A1A),
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            '$count',
+            style: const TextStyle(
+              color: Color(0xFF1A1A1A),
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(width: 4),
-        const Text(
-          '人',
-          style: TextStyle(color: Color(0xFF757575), fontSize: 14),
-        ),
-      ],
+          const SizedBox(width: 4),
+          const Text(
+            '人',
+            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+          ),
+        ],
+      ),
     );
   }
 }
