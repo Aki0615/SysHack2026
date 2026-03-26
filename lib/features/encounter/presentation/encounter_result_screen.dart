@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../domain/encounter_model.dart';
 import '../domain/encounter_notifier.dart';
 
-/// Mii広場風のすれ違い結果画面
-/// 未確認のすれ違いユーザーをアニメーション付きで順番に紹介する
+/// 今回のすれ違い画面
+/// ループ型スクロールでアイコンを表示し、タップで一言を表示する
 class EncounterResultScreen extends ConsumerStatefulWidget {
   const EncounterResultScreen({super.key});
 
@@ -16,42 +16,35 @@ class EncounterResultScreen extends ConsumerStatefulWidget {
 
 class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
     with TickerProviderStateMixin {
-  int _currentIndex = 0;
-  late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
+  int? _selectedIndex;
+  late PageController _pageController;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+
+  // ループのための大きな初期値
+  static const int _initialPage = 10000;
 
   @override
   void initState() {
     super.initState();
-    // スライドインアニメーション（右から入ってくる）
-    _slideController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
+    _pageController = PageController(
+      viewportFraction: 0.3,
+      initialPage: _initialPage,
     );
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-        );
 
-    // フェードインアニメーション
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
-      curve: Curves.easeIn,
+      curve: Curves.easeInOut,
     );
-
-    _slideController.forward();
-    _fadeController.forward();
   }
 
   @override
   void dispose() {
-    _slideController.dispose();
+    _pageController.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -74,7 +67,6 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
     );
   }
 
-  /// メインコンテンツの構築
   Widget _buildContent(List<EncounterModel> encounters) {
     if (encounters.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -83,227 +75,331 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
       return const SizedBox.shrink();
     }
 
-    final isLastUser = _currentIndex >= encounters.length - 1;
-    final currentEncounter = encounters[_currentIndex];
-
     return Column(
       children: [
+        const SizedBox(height: 48),
+        // ヘッダー: タイトルと人数
+        _buildHeader(encounters.length),
+        const SizedBox(height: 48),
+        // ループ型アイコンスクロール
+        SizedBox(
+          height: 160,
+          child: _buildLoopingAvatarScroll(encounters),
+        ),
         const SizedBox(height: 32),
-        _EncounterHeader(
-          currentIndex: _currentIndex,
-          totalCount: encounters.length,
-        ),
+        // 選択されたユーザーの一言表示エリア
+        _buildOneWordDisplay(encounters),
         const Spacer(),
-        SlideTransition(
-          position: _slideAnimation,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: _EncounterUserCard(encounter: currentEncounter),
-          ),
-        ),
-        const Spacer(),
-        _EncounterActionButton(
-          isLastUser: isLastUser,
-          onNextUser: () => _showNextUser(encounters.length),
-          onConfirmAll: () => _handleConfirmAll(),
-        ),
+        // 確認ボタン
+        _buildConfirmButton(),
         const SizedBox(height: 48),
       ],
     );
   }
 
-  /// 次のユーザーを表示する
-  void _showNextUser(int totalCount) {
-    if (_currentIndex >= totalCount - 1) return;
-    _slideController.reset();
-    _fadeController.reset();
-    setState(() => _currentIndex++);
-    _slideController.forward();
-    _fadeController.forward();
-  }
-
-  /// 全て確認済みにする処理
-  Future<void> _handleConfirmAll() async {
-    await ref.read(encounterNotifierProvider.notifier).confirmAll();
-    if (mounted) context.go('/home');
-  }
-}
-
-// ─────────────────────────────────────────────────
-// 以下、子Widget群（ネスト防止のため分割）
-// ─────────────────────────────────────────────────
-
-/// ヘッダー部分（進捗表示）
-class _EncounterHeader extends StatelessWidget {
-  final int currentIndex;
-  final int totalCount;
-
-  const _EncounterHeader({
-    required this.currentIndex,
-    required this.totalCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeader(int count) {
     return Column(
       children: [
         const Text(
-          '🎉 すれ違いました！',
+          '今回のすれ違い',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          '${currentIndex + 1} / $totalCount 人',
-          style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
-        ),
         const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 48),
-          child: LinearProgressIndicator(
-            value: (currentIndex + 1) / totalCount,
-            backgroundColor: Colors.grey.shade800,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-            borderRadius: BorderRadius.circular(4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.blueAccent.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.people, color: Colors.blueAccent, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                '$count 人とすれ違いました',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
-}
 
-/// すれ違ったユーザーの情報カード
-class _EncounterUserCard extends StatelessWidget {
-  final EncounterModel encounter;
+  Widget _buildLoopingAvatarScroll(List<EncounterModel> encounters) {
+    final itemCount = encounters.length;
 
-  const _EncounterUserCard({required this.encounter});
+    return PageView.builder(
+      controller: _pageController,
+      onPageChanged: (index) {
+        // ループ用のインデックスを実際のインデックスに変換
+        final realIndex = index % itemCount;
+        setState(() {
+          _selectedIndex = realIndex;
+        });
+        _fadeController.forward(from: 0.0);
+      },
+      itemBuilder: (context, index) {
+        final realIndex = index % itemCount;
+        final encounter = encounters[realIndex];
+        final isSelected = _selectedIndex == realIndex;
 
-  @override
-  Widget build(BuildContext context) {
+        return _PageAnimatedBuilder(
+          animation: _pageController,
+          builder: (context, child) {
+            double scale = 1.0;
+            double opacity = 0.6;
+
+            if (_pageController.position.haveDimensions) {
+              final page = _pageController.page ?? _initialPage.toDouble();
+              final diff = (index - page).abs();
+              scale = (1 - (diff * 0.2)).clamp(0.7, 1.0);
+              opacity = (1 - (diff * 0.3)).clamp(0.4, 1.0);
+            }
+
+            return Transform.scale(
+              scale: scale,
+              child: Opacity(
+                opacity: opacity,
+                child: _AvatarItem(
+                  encounter: encounter,
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = realIndex;
+                    });
+                    _fadeController.forward(from: 0.0);
+                    // タップしたアイテムを中央に移動
+                    final targetPage = _pageController.page!.round() -
+                        (_pageController.page!.round() % itemCount) +
+                        realIndex;
+                    _pageController.animateToPage(
+                      targetPage,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildOneWordDisplay(List<EncounterModel> encounters) {
+    if (_selectedIndex == null) {
+      return Container(
+        height: 120,
+        margin: const EdgeInsets.symmetric(horizontal: 32),
+        child: Center(
+          child: Text(
+            'アイコンをタップして\n一言を見る',
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    final encounter = encounters[_selectedIndex!];
     final user = encounter.encounteredUser;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueAccent.withValues(alpha: 0.1),
-            blurRadius: 20,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // アバター（アイコンURLがある場合は画像、なければデフォルトアイコン）
-          _buildAvatar(user.iconUrl),
-          const SizedBox(height: 16),
-          // 名前
-          Text(
-            user.name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 32),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blueAccent.withValues(alpha: 0.1),
+              blurRadius: 15,
+              spreadRadius: 1,
             ),
-          ),
-          const SizedBox(height: 8),
-          // 一言コメント
-          if (user.oneWord.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade800.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '「${user.oneWord}」',
-                style: TextStyle(color: Colors.grey.shade300, fontSize: 14),
-                textAlign: TextAlign.center,
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              user.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          const SizedBox(height: 16),
-          // すれ違い時刻
-          Text(
-            _formatTime(encounter.encounteredAt),
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// アバターを構築する
-  Widget _buildAvatar(String iconUrl) {
-    if (iconUrl.isNotEmpty) {
-      return CircleAvatar(radius: 40, backgroundImage: NetworkImage(iconUrl));
-    }
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Colors.blueAccent, Colors.blue.shade800],
+            const SizedBox(height: 12),
+            if (user.oneWord.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade800.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '「${user.oneWord}」',
+                  style: TextStyle(
+                    color: Colors.grey.shade300,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              Text(
+                '一言が設定されていません',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 14,
+                ),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              _formatTime(encounter.encounteredAt),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+            ),
+          ],
         ),
       ),
-      child: const Icon(Icons.person, size: 40, color: Colors.white),
     );
   }
 
-  /// 時刻をフォーマットする
-  String _formatTime(DateTime dt) {
-    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} にすれ違い';
-  }
-}
-
-/// 「次の人を見る」/「確認した！」ボタン
-class _EncounterActionButton extends StatelessWidget {
-  final bool isLastUser;
-  final VoidCallback onNextUser;
-  final VoidCallback onConfirmAll;
-
-  const _EncounterActionButton({
-    required this.isLastUser,
-    required this.onNextUser,
-    required this.onConfirmAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildConfirmButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 48),
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: isLastUser ? onConfirmAll : onNextUser,
+          onPressed: _handleConfirmAll,
           style: ElevatedButton.styleFrom(
-            backgroundColor: isLastUser
-                ? Colors.greenAccent.shade700
-                : Colors.blueAccent,
+            backgroundColor: Colors.greenAccent.shade700,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          child: Text(
-            isLastUser ? '✅ 確認した！' : '次の人を見る →',
-            style: const TextStyle(
-              fontSize: 16,
+          child: const Text(
+            '確認してホームへ',
+            style: TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> _handleConfirmAll() async {
+    await ref.read(encounterNotifierProvider.notifier).confirmAll();
+    if (mounted) context.go('/home');
+  }
+
+  String _formatTime(DateTime dt) {
+    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} にすれ違い';
+  }
+}
+
+/// アバターアイテムウィジェット
+class _AvatarItem extends StatelessWidget {
+  final EncounterModel encounter;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _AvatarItem({
+    required this.encounter,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final user = encounter.encounteredUser;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected ? Colors.blueAccent : Colors.transparent,
+            width: 3,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.blueAccent.withValues(alpha: 0.4),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : null,
+        ),
+        child: _buildAvatar(user.iconUrl),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String iconUrl) {
+    if (iconUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 50,
+        backgroundImage: NetworkImage(iconUrl),
+      );
+    }
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.blueAccent, Colors.blue.shade800],
+        ),
+      ),
+      child: const Icon(Icons.person, size: 50, color: Colors.white),
+    );
+  }
+}
+
+/// PageController用のアニメーションビルダー
+class _PageAnimatedBuilder extends StatelessWidget {
+  final PageController animation;
+  final Widget Function(BuildContext context, Widget? child) builder;
+
+  const _PageAnimatedBuilder({
+    required this.animation,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: builder,
     );
   }
 }
