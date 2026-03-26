@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../domain/auth_notifier.dart';
 
 /// アカウント作成画面Widget
-/// バックエンドの POST /signup に合わせた2ステップフォーム
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
@@ -48,7 +47,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           if (user != null) context.go('/home');
         },
         error: (error, _) {
-          // エラーが発生した場合はスナックバーで通知する
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(error.toString().replaceAll('Exception: ', '')),
@@ -61,11 +59,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: const Color(0xFFFFFFFF),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFFFFFFFF),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () {
             if (_currentStep > 0) {
               setState(() => _currentStep--);
@@ -76,7 +76,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
         title: Text(
           _currentStep == 0 ? '新規登録' : 'ロール選択',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: SafeArea(
@@ -133,37 +136,45 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             TextFormField(
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Color(0xFF1A1A1A)),
               decoration: InputDecoration(
                 labelText: 'パスワード',
-                labelStyle: TextStyle(color: Colors.grey.shade500),
-                prefixIcon: Icon(
+                labelStyle: const TextStyle(color: Color(0xFF757575)),
+                prefixIcon: const Icon(
                   Icons.lock_outline,
-                  color: Colors.grey.shade500,
+                  color: Color(0xFF757575),
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _isPasswordVisible
                         ? Icons.visibility
                         : Icons.visibility_off,
-                    color: Colors.grey,
+                    color: const Color(0xFF757575),
                   ),
                   onPressed: () =>
                       setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),
                 filled: true,
-                fillColor: const Color(0xFF1E1E1E),
+                fillColor: const Color(0xFFF5F5F5),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade800),
+                  borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.blueAccent),
+                  borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.redAccent),
                 ),
               ),
               validator: (v) {
@@ -180,7 +191,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: const Color(0xFF3AAA3A),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -210,9 +221,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
+          const Text(
             'あなたの専門分野を選んでください',
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
           ),
           const SizedBox(height: 24),
           ...List.generate(_roles.length, (index) {
@@ -229,7 +240,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ElevatedButton(
             onPressed: authState.isLoading ? null : _handleSignUp,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.greenAccent.shade700,
+              backgroundColor: const Color(0xFF3AAA3A),
+              disabledBackgroundColor:
+                  const Color(0xFF3AAA3A).withValues(alpha: 0.5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -282,25 +295,33 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF1A1A1A)),
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.grey.shade500),
-        prefixIcon: Icon(icon, color: Colors.grey.shade500),
+        labelStyle: const TextStyle(color: Color(0xFF757575)),
+        prefixIcon: Icon(icon, color: const Color(0xFF757575)),
         filled: true,
-        fillColor: const Color(0xFF1E1E1E),
+        fillColor: const Color(0xFFF5F5F5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade800),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blueAccent),
+          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.redAccent),
         ),
       ),
       validator: validator,
@@ -333,11 +354,13 @@ class _RoleOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? Colors.blueAccent.withValues(alpha: 0.15)
-                : const Color(0xFF1E1E1E),
+                ? const Color(0xFF3AAA3A).withValues(alpha: 0.1)
+                : const Color(0xFFF5F5F5),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? Colors.blueAccent : Colors.grey.shade800,
+              color: isSelected
+                  ? const Color(0xFF3AAA3A)
+                  : const Color(0xFFE0E0E0),
             ),
           ),
           child: Row(
@@ -347,14 +370,16 @@ class _RoleOption extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.blueAccent : Colors.white,
+                  color: isSelected
+                      ? const Color(0xFF3AAA3A)
+                      : const Color(0xFF1A1A1A),
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               const Spacer(),
               if (isSelected)
-                const Icon(Icons.check_circle, color: Colors.blueAccent),
+                const Icon(Icons.check_circle, color: Color(0xFF3AAA3A)),
             ],
           ),
         ),

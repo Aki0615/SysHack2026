@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../domain/auth_notifier.dart';
 
 /// ログイン画面Widget
-/// バックエンドにログインAPIがないため、ユーザーIDで認証する簡易実装
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -36,7 +35,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (user != null) context.go('/home');
         },
         error: (error, _) {
-          // エラーが発生した場合はスナックバーで通知する
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(error.toString().replaceAll('Exception: ', '')),
@@ -49,7 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
@@ -79,20 +77,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        const Icon(Icons.bluetooth, size: 56, color: Colors.blueAccent),
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: const Color(0x1A3AAA3A),
+            shape: BoxShape.circle,
+            border: Border.all(color: const Color(0x4D3AAA3A)),
+          ),
+          child: const Icon(
+            Icons.bluetooth,
+            size: 40,
+            color: Color(0xFF3AAA3A),
+          ),
+        ),
         const SizedBox(height: 16),
         const Text(
           'StreetPass',
           style: TextStyle(
-            color: Colors.white,
+            color: Color(0xFF1A1A1A),
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        const Text(
           'ログインしてすれ違いを始めよう',
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+          style: TextStyle(color: Color(0xFF757575), fontSize: 14),
         ),
       ],
     );
@@ -102,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF1A1A1A)),
       keyboardType: TextInputType.emailAddress,
       decoration: _inputDecoration(
         label: 'メールアドレス',
@@ -121,14 +132,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Color(0xFF1A1A1A)),
       decoration: _inputDecoration(
         label: 'パスワード',
         icon: Icons.lock_outline,
         suffixIcon: IconButton(
           icon: Icon(
             _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey,
+            color: const Color(0xFF757575),
           ),
           onPressed: () =>
               setState(() => _isPasswordVisible = !_isPasswordVisible),
@@ -148,7 +159,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return ElevatedButton(
       onPressed: isLoading ? null : _handleLogin,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: const Color(0xFF3AAA3A),
+        disabledBackgroundColor: const Color(0xFF3AAA3A).withValues(alpha: 0.5),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -177,14 +189,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return TextButton(
       onPressed: () => context.push('/signup'),
       child: RichText(
-        text: TextSpan(
+        text: const TextSpan(
           text: 'アカウントをお持ちでない方は',
-          style: TextStyle(color: Colors.grey.shade500),
-          children: const [
+          style: TextStyle(color: Color(0xFF757575)),
+          children: [
             TextSpan(
               text: '新規登録',
               style: TextStyle(
-                color: Colors.blueAccent,
+                color: Color(0xFF3AAA3A),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -213,22 +225,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: Colors.grey.shade500),
-      prefixIcon: Icon(icon, color: Colors.grey.shade500),
+      labelStyle: const TextStyle(color: Color(0xFF757575)),
+      prefixIcon: Icon(icon, color: const Color(0xFF757575)),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: const Color(0xFF1E1E1E),
+      fillColor: const Color(0xFFF5F5F5),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade800),
+        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.blueAccent),
+        borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent),
       ),
     );
   }
