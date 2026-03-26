@@ -65,8 +65,13 @@ class CommentEditWidget extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                comment,
-                style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+                comment.isEmpty ? '一言を入力' : comment,
+                style: TextStyle(
+                  color: comment.isEmpty
+                      ? const Color(0xFF9E9E9E)
+                      : const Color(0xFF1A1A1A),
+                  fontSize: 14,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

@@ -54,9 +54,11 @@ class NameEditWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            name,
-            style: const TextStyle(
-              color: Color(0xFF1A1A1A),
+            name.isEmpty ? '名前を入力' : name,
+            style: TextStyle(
+              color: name.isEmpty
+                  ? const Color(0xFF9E9E9E)
+                  : const Color(0xFF1A1A1A),
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
