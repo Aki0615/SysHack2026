@@ -11,6 +11,7 @@ import '../../features/plaza/presentation/plaza_screen.dart';
 import '../../features/plaza/presentation/profile_screen.dart';
 import '../../features/calendar/presentation/calendar_screen.dart';
 import '../../features/mypage/presentation/mypage_screen.dart';
+import '../../features/mypage/presentation/achievements_screen.dart';
 import '../../main_screen.dart';
 
 /// GoRouterのリフレッシュ用Notifier
@@ -74,6 +75,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+
+      // 実績一覧画面
+      GoRoute(
+        path: '/achievements',
+        builder: (context, state) => const AchievementsScreen(),
       ),
 
       // メイン画面（4タブのBottomNavigationBar）
