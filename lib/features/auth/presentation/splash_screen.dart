@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/network/dio_client.dart';
 import '../domain/auth_notifier.dart';
 import '../../encounter/domain/encounter_notifier.dart';
 
@@ -32,8 +33,28 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
     _fadeController.forward();
 
+    // Renderの無料枠はスリープするため、起動時にウェイクアップリクエストを送る
+    _wakeUpServer();
+
     // 2秒後に遷移先を判定する
     _navigateAfterDelay();
+  }
+
+  /// サーバーにウェイクアップリクエストを送信（Renderスリープ対策）
+  Future<void> _wakeUpServer() async {
+    try {
+      final dio = ref.read(dioProvider);
+      // ヘルスチェックエンドポイントまたはルートにリクエストを送る
+      // エラーは無視（サーバーが起きればOK）
+      await dio.get('/').timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw Exception('timeout'),
+      );
+      debugPrint('Server wake-up request sent');
+    } catch (e) {
+      // エラーは無視（ウェイクアップが目的なので）
+      debugPrint('Server wake-up: $e (ignored)');
+    }
   }
 
   /// 2秒待機後、初回の認証状態チェックを開始する
