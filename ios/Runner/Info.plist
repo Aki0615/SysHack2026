@@ -66,5 +66,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>プロフィール画像の選択に使用します。</string>
+	<key>NSCameraUsageDescription</key>
+	<string>プロフィール画像の撮影に使用します。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>動画撮影時にマイクを使用します。</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>バックグラウンドでのすれ違い通信にBluetoothを利用します。</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>すれ違い通信にBluetoothを利用します。</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+	</array>
 </dict>
 </plist>
