@@ -18,7 +18,8 @@ class MyPageScreen extends ConsumerStatefulWidget {
 
 class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   // --- 表示用（現在の確定値）---
-  String? _imagePath;
+  String? _imagePath; // ローカルファイルパス（表示用）
+  String? _imageUrl; // Firebase URL
   String _name = '';
   String _comment = '';
   String _techStack = '';
@@ -35,6 +36,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   // --- 状態フラグ ---
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isUploading = false;
   bool _isEditing = false; // true: 編集モード, false: 閲覧モード
 
   @override
@@ -64,16 +66,69 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     final user = ref.read(authNotifierProvider).value;
     if (user != null) {
       setState(() {
-        _name = user.name;
-        _comment = user.oneWord;
-        _techStack = user.techStack;
-        _twitter = user.twitterUrl;
-        _github = user.githubUrl;
-        _imagePath = user.iconUrl.isNotEmpty ? user.iconUrl : null;
+        // データがない場合はデフォルト値を設定（?? '' でフォールバック）
+        _name = (user.name ?? '').isNotEmpty ? user.name : '';
+        _comment = (user.oneWord ?? '').isNotEmpty ? user.oneWord : '';
+        _techStack = (user.techStack ?? '').isNotEmpty ? user.techStack : '';
+        _twitter = (user.twitterUrl ?? '').isNotEmpty ? user.twitterUrl : '';
+        _github = (user.githubUrl ?? '').isNotEmpty ? user.githubUrl : '';
+        _imageUrl = (user.iconUrl ?? '').isNotEmpty ? user.iconUrl : null;
+        _imagePath = null;
         _isLoading = false;
       });
     } else {
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// 画像が選択されたときの処理（アップロード実行）
+  Future<void> _handleImageSelected(String localPath) async {
+    final user = ref.read(authNotifierProvider).value;
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ユーザー情報が見つかりません')),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _imagePath = localPath; // 一時的にローカルパスを表示用に設定
+      _isUploading = true;
+    });
+
+    try {
+      final repo = ref.read(userRepositoryProvider);
+      final uploadedUrl = await repo.uploadAvatar(user.id, localPath);
+
+      setState(() {
+        _imageUrl = uploadedUrl;
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('画像をアップロードしました'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _imagePath = null;
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('画像のアップロードに失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -102,18 +157,23 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(userRepositoryProvider);
-      // 全フィールドをまとめて1回のPATCHで送信
-      await repo.updateUser(user.id, {
-        'name': _nameCtrl.text,
-        'one_word': _commentCtrl.text,
-        'tech_stack': _techStackCtrl.text,
-        'twitter_url': _twitterCtrl.text,
-        'github_url': _githubCtrl.text,
-      });
+      
+      // すべてのフィールドを送信（空のフィールドも含む）
+      // これにより「削除」の意思が正しく伝わる
+      final updateData = <String, dynamic>{
+        'name': _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text,
+        'one_word': _commentCtrl.text,      // 空でも送信（削除の意思を表現）
+        'tech_stack': _techStackCtrl.text,  // 空でも送信
+        'twitter_url': _twitterCtrl.text,   // 空でも送信
+        'github_url': _githubCtrl.text,     // 空でも送信
+      };
+      
+      // フィールドを送信
+      await repo.updateUser(user.id, updateData);
 
-      // 保存成功 → ローカルの表示用変数を更新して閲覧モードへ
+      // 保存成功後、表示を更新して閲覧モードへ
       setState(() {
-        _name = _nameCtrl.text;
+        _name = _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text;
         _comment = _commentCtrl.text;
         _techStack = _techStackCtrl.text;
         _twitter = _twitterCtrl.text;
@@ -131,8 +191,14 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // エラー詳細を表示
+        print('Save error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存に失敗しました: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('保存に失敗しました: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     } finally {
@@ -251,11 +317,36 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     return Column(
       children: [
         // アイコン（編集モードでもタップ可能）
-        ProfileIconWidget(
-          imagePath: _imagePath,
-          onImageSelected: (path) {
-            setState(() => _imagePath = path);
-          },
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            ProfileIconWidget(
+              imagePath: _imagePath,
+              imageUrl: _imageUrl,
+              onImageSelected: _handleImageSelected,
+            ),
+            // アップロード中のオーバーレイ
+            if (_isUploading)
+              Container(
+                width: 96,
+                height: 96,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black26,
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         // 名前

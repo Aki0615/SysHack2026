@@ -4,12 +4,14 @@ import 'package:image_picker/image_picker.dart';
 
 /// 円形のプロフィール写真と、画像アップロード用のカメラボタンを含むWidget
 class ProfileIconWidget extends StatelessWidget {
-  final String? imagePath;
+  final String? imagePath; // ローカルファイルパス
+  final String? imageUrl; // Firebase URL
   final ValueChanged<String> onImageSelected;
 
   const ProfileIconWidget({
     super.key,
     this.imagePath,
+    this.imageUrl,
     required this.onImageSelected,
   });
 
@@ -36,14 +38,7 @@ class ProfileIconWidget extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             clipBehavior: Clip.antiAlias,
-            child: imagePath != null
-                ? Image.file(
-                    File(imagePath!),
-                    width: 96,
-                    height: 96,
-                    fit: BoxFit.cover,
-                  )
-                : const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48),
+            child: _buildImageWidget(),
           ),
           // 編集ボタン（右下）
           Positioned(
@@ -69,5 +64,39 @@ class ProfileIconWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Firebase URLが優先、次にローカルパス、両方がない場合はデフォルトアイコン
+  Widget _buildImageWidget() {
+    // Firebase URL が存在する場合（NULL や空文字をチェック）
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Image.network(
+        imageUrl!,
+        width: 96,
+        height: 96,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Image load error: $error');
+          return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
+        },
+      );
+    }
+
+    // ローカルパスが存在する場合（NULL や空文字をチェック）
+    if (imagePath != null && imagePath!.isNotEmpty) {
+      return Image.file(
+        File(imagePath!),
+        width: 96,
+        height: 96,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Local file error: $error');
+          return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
+        },
+      );
+    }
+
+    // どちらもない場合
+    return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
   }
 }

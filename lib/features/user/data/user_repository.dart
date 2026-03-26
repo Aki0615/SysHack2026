@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/dio_client.dart';
@@ -19,9 +20,14 @@ class UserRepository {
   Future<UserModel> getUser(String id) async {
     try {
       final response = await _dio.get('/users/$id');
-      return UserModel.fromJson(response.data);
+      print('User response data: ${response.data}');
+      return UserModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
+      print('DioException: ${e.message}, ${e.response?.data}');
       throw Exception('ユーザー情報の取得に失敗しました: ${e.message}');
+    } catch (e) {
+      print('Error parsing user data: $e');
+      throw Exception('ユーザー情報の解析に失敗しました: $e');
     }
   }
 
@@ -29,9 +35,51 @@ class UserRepository {
   Future<UserModel> updateUser(String id, Map<String, dynamic> data) async {
     try {
       final response = await _dio.patch('/users/$id', data: data);
-      return UserModel.fromJson(response.data);
+      print('Update response data: ${response.data}');
+      // レスポンスがmessageのみの場合は、更新前のデータで返す
+      if (response.data is Map && response.data.containsKey('message')) {
+        // 更新成功但しユーザーデータが返ってこない場合は、送信したデータをそのまま返す
+        throw Exception('サーバーからユーザーデータが返ってきません');
+      }
+      return UserModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
+      print('DioException: ${e.message}, ${e.response?.data}');
       throw Exception('ユーザー情報の更新に失敗しました: ${e.message}');
+    } catch (e) {
+      print('Error updating user: $e');
+      throw Exception('ユーザー情報の更新に失敗しました: $e');
+    }
+  }
+
+  /// アバター画像をアップロード（POST /users/:id/avatar）
+  /// Firebase Storageへアップロードされ、icon_urlが返される
+  Future<String> uploadAvatar(String id, String imagePath) async {
+    try {
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        throw Exception('ファイルが見つかりません: $imagePath');
+      }
+
+      // マルチパートフォームデータを作成
+      final formData = FormData.fromMap({
+        'avatar': await MultipartFile.fromFile(
+          imagePath,
+          filename: imagePath.split('/').last,
+        ),
+      });
+
+      final response = await _dio.post(
+        '/users/$id/avatar',
+        data: formData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['icon_url'] as String;
+      } else {
+        throw Exception('アップロードに失敗しました');
+      }
+    } on DioException catch (e) {
+      throw Exception('アバター画像のアップロードに失敗しました: ${e.message}');
     }
   }
 }
