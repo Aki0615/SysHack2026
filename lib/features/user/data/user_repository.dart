@@ -25,6 +25,13 @@ class UserRepository {
     }
   }
 
-  // TODO: バックエンドに PATCH /users/:id が実装されたら追加
-  // 現在バックエンドにプロフィール更新APIはない
+  /// ユーザー情報を更新する（PATCH /users/:id）
+  Future<UserModel> updateUser(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/users/$id', data: data);
+      return UserModel.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('ユーザー情報の更新に失敗しました: ${e.message}');
+    }
+  }
 }
