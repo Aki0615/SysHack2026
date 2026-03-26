@@ -92,16 +92,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      actions: const [
-        Padding(
-          padding: EdgeInsets.only(right: 16),
-          child: Icon(
-            Icons.notifications_none,
-            color: Color(0xFF1A1A1A),
-            size: 28,
-          ),
-        ),
-      ],
     );
   }
 
