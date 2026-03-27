@@ -4,13 +4,14 @@ import 'package:go_router/go_router.dart';
 // 修正: 不要なコメントの削除、コードのネスト解消
 class FriendGridItem extends StatelessWidget {
   final String name;
+  final String userId;
 
-  const FriendGridItem({super.key, required this.name});
+  const FriendGridItem({super.key, required this.name, required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/profile'), // 修正: 処理をインライン化
+      onTap: () => context.push('/profile/$userId'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
