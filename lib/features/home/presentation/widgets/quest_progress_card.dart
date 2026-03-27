@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
-// 修正: 不要なコメントを削除、定数とレイアウトを整理
 class QuestProgressCard extends StatelessWidget {
   final String questName;
   final double progress;
+  final VoidCallback? onViewAllTap;
 
   const QuestProgressCard({
     super.key,
     required this.questName,
     required this.progress,
+    this.onViewAllTap,
   });
 
   @override
@@ -55,7 +56,7 @@ class QuestProgressCard extends StatelessWidget {
           ),
         ),
         GestureDetector(
-          onTap: () {}, // 修正: TODOコメント削除
+          onTap: onViewAllTap,
           child: const Text(
             'すべて見る',
             style: TextStyle(color: Color(0xFF3AAA3A), fontSize: 12),

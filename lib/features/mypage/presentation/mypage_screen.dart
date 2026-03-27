@@ -854,6 +854,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 const Color(0xFF757575),
                 const Color(0xFF1A1A1A),
                 trailing: Icons.chevron_right,
+                onTap: () => _launchUrl('https://example.com/terms'),
               ),
               const Divider(
                 color: Color(0xFFE0E0E0),
@@ -866,6 +867,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 const Color(0xFF757575),
                 const Color(0xFF1A1A1A),
                 trailing: Icons.chevron_right,
+                onTap: () => _launchUrl('https://example.com/privacy'),
               ),
               const Divider(
                 color: Color(0xFFE0E0E0),
