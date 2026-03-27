@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/plaza_dummy_data.dart';
+import '../domain/plaza_notifier.dart';
+import '../../user/domain/user_model.dart';
 import 'widgets/friend_list_view.dart';
 import 'widgets/event_list_view.dart';
 
@@ -275,18 +277,37 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
 
   /// フィルタリングされた友達リスト
   Widget _buildFilteredFriendList(String query) {
-    final filteredFriends = query.isEmpty
-        ? dummyFriends
-        : dummyFriends.where((friend) {
-            final name = friend['name']?.toString().toLowerCase() ?? '';
-            return name.contains(query.toLowerCase());
-          }).toList();
+    final plazaState = ref.watch(plazaNotifierProvider);
 
-    if (filteredFriends.isEmpty) {
-      return _buildEmptyState('該当する友達が見つかりません');
-    }
+    return plazaState.when(
+      data: (users) {
+        final filteredFriends = query.isEmpty
+            ? users
+            : users.where((user) {
+                return user.name.toLowerCase().contains(query.toLowerCase());
+              }).toList();
 
-    return FriendListView(friends: filteredFriends);
+        if (filteredFriends.isEmpty) {
+          return _buildEmptyState('該当する友達が見つかりません');
+        }
+
+        // UserModelをMap形式に変換してFriendListViewに渡す
+        final friendMaps = filteredFriends
+            .map((user) => {
+                  'id': user.id,
+                  'name': user.name,
+                  'comment': user.oneWord,
+                  'iconUrl': user.iconUrl,
+                })
+            .toList();
+
+        return FriendListView(friends: friendMaps);
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+      ),
+      error: (_, __) => _buildEmptyState('データの取得に失敗しました'),
+    );
   }
 
   /// フィルタリングされたイベントリスト
@@ -326,7 +347,24 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
 
   /// ランダム表示（友達をランダムに5人表示）
   Widget _buildRandomFriendList() {
-    final randomFriends = getRandomFriends();
+    final plazaState = ref.watch(plazaNotifierProvider);
+
+    return plazaState.when(
+      data: (users) => _buildRandomFriendContent(users),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+      ),
+      error: (_, __) => _buildEmptyState('データの取得に失敗しました'),
+    );
+  }
+
+  Widget _buildRandomFriendContent(List<UserModel> users) {
+    if (users.isEmpty) {
+      return _buildEmptyState('すれ違った人がいません');
+    }
+
+    final shuffled = List<UserModel>.from(users)..shuffle();
+    final randomFriends = shuffled.take(5).toList();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -363,8 +401,8 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
               itemCount: randomFriends.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                final friend = randomFriends[index];
-                return _buildFriendCard(friend);
+                final user = randomFriends[index];
+                return _buildUserCard(user);
               },
             ),
           ),
@@ -396,7 +434,8 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     );
   }
 
-  Widget _buildFriendCard(Map<String, dynamic> friend) {
+  /// UserModel用のカード（ランダム表示用）
+  Widget _buildUserCard(UserModel user) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -413,7 +452,16 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
               color: Color(0xFFE0E0E0),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person, color: Color(0xFF757575)),
+            child: user.iconUrl.isNotEmpty
+                ? ClipOval(
+                    child: Image.network(
+                      user.iconUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.person, color: Color(0xFF757575)),
+                    ),
+                  )
+                : const Icon(Icons.person, color: Color(0xFF757575)),
           ),
           const SizedBox(width: 16),
           // 名前とコメント
@@ -422,7 +470,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  friend['name'] ?? '',
+                  user.name,
                   style: const TextStyle(
                     color: Color(0xFF1A1A1A),
                     fontSize: 16,
@@ -431,7 +479,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  friend['comment'] ?? '',
+                  user.oneWord,
                   style: const TextStyle(
                     color: Color(0xFF757575),
                     fontSize: 12,

@@ -1,41 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/home_dummy_data.dart';
+import '../domain/home_notifier.dart';
 import 'widgets/stats_row_widget.dart';
 import 'widgets/quest_progress_card.dart';
 import 'widgets/comment_card_widget.dart';
 
-// 修正: サブウィジェットの切り出し、不要なコメント削除
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final homeState = ref.watch(homeNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: _buildAppBar(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StatsRowWidget(
-                plazaCount: dummyPlazaCount,
-                todayCount: dummyTodayCount,
-                dailyLimit: dummyDailyLimit,
-              ),
-              const SizedBox(height: 24),
-              QuestProgressCard(
-                questName: '人とすれ違う',
-                progress: dummyQuestProgress,
-                onViewAllTap: () => context.push('/stamp-card'),
-              ),
-              const SizedBox(height: 24),
-              CommentCardWidget(comments: dummyComments),
-            ],
+        child: homeState.when(
+          data: (data) => _buildContent(context, ref, data),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
           ),
+          error: (error, _) => _buildErrorState(ref),
         ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, WidgetRef ref, HomeState data) {
+    // randomThreeからコメントリストを生成
+    final comments = data.randomThree
+        .map((user) => {
+              'name': user['name']?.toString() ?? '',
+              'comment': user['one_word']?.toString() ?? '',
+            })
+        .toList();
+
+    // クエスト進捗（5回すれ違いをクエストとする場合）
+    const dailyLimit = 5;
+    final progress = (data.todayEncounters / dailyLimit).clamp(0.0, 1.0);
+
+    return RefreshIndicator(
+      color: const Color(0xFF3AAA3A),
+      onRefresh: () => ref.read(homeNotifierProvider.notifier).refresh(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            StatsRowWidget(
+              plazaCount: data.totalEncounters,
+              todayCount: data.todayEncounters,
+              dailyLimit: dailyLimit,
+            ),
+            const SizedBox(height: 24),
+            QuestProgressCard(
+              questName: '人とすれ違う',
+              progress: progress,
+              onViewAllTap: () => context.push('/stamp-card'),
+            ),
+            const SizedBox(height: 24),
+            CommentCardWidget(comments: comments),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(WidgetRef ref) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Color(0xFF757575)),
+          const SizedBox(height: 16),
+          const Text(
+            'データの取得に失敗しました',
+            style: TextStyle(color: Color(0xFF757575), fontSize: 16),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => ref.read(homeNotifierProvider.notifier).refresh(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3AAA3A),
+            ),
+            child: const Text(
+              '再試行',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }

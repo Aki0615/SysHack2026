@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import '../data/calendar_dummy_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../domain/calendar_notifier.dart';
 import 'widgets/encounter_bubble.dart';
 import 'widgets/month_selector.dart';
 import 'widgets/calendar_grid.dart';
 
 /// カレンダー画面本体Widget
-class CalendarScreen extends StatefulWidget {
+class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _currentMonth;
   DateTime? _selectedDay;
 
@@ -21,6 +22,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.initState();
     final now = DateTime.now();
     _currentMonth = DateTime(now.year, now.month);
+
+    // 初回データ取得
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(calendarNotifierProvider.notifier).fetchMonthData(_currentMonth);
+    });
   }
 
   void _onPreviousMonth() {
@@ -28,6 +34,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
       _selectedDay = null; // 月を変えたら選択解除
     });
+    ref.read(calendarNotifierProvider.notifier).fetchMonthData(_currentMonth);
   }
 
   void _onNextMonth() {
@@ -35,21 +42,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
       _selectedDay = null;
     });
+    ref.read(calendarNotifierProvider.notifier).fetchMonthData(_currentMonth);
   }
 
   void _onDaySelected(DateTime date) {
-    // 選択した日付がダミーデータ内に存在するかチェック
-    final encounterEntry = dummyEncounterDays.entries.cast<MapEntry<DateTime, Map<String, dynamic>>?>().firstWhere(
-      (e) =>
-          e != null &&
-          e.key.year == date.year &&
-          e.key.month == date.month &&
-          e.key.day == date.day,
-      orElse: () => null,
-    );
+    final calendarState = ref.read(calendarNotifierProvider);
+    final dayData = calendarState.encounterDays.entries
+        .cast<MapEntry<DateTime, Map<String, dynamic>>?>()
+        .firstWhere(
+          (e) =>
+              e != null &&
+              e.key.year == date.year &&
+              e.key.month == date.month &&
+              e.key.day == date.day,
+          orElse: () => null,
+        );
 
     setState(() {
-      if (encounterEntry != null) {
+      if (dayData != null) {
         _selectedDay = date;
       } else {
         _selectedDay = null;
@@ -57,8 +67,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
 
     // すれ違いデータがある場合は詳細ボトムシートを表示
-    if (encounterEntry != null) {
-      _showEventDetailBottomSheet(date, encounterEntry.value);
+    if (dayData != null) {
+      _showEventDetailBottomSheet(date, dayData.value);
     }
   }
 
@@ -273,10 +283,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildContent() {
+    final calendarState = ref.watch(calendarNotifierProvider);
+
     return Column(
       children: [
         // 吹き出しエリア
-        _buildBubbleSection(),
+        _buildBubbleSection(calendarState),
         const SizedBox(height: 24),
         // 月切り替えとカレンダーグリッド
         MonthSelector(
@@ -285,34 +297,46 @@ class _CalendarScreenState extends State<CalendarScreen> {
           onNextMonth: _onNextMonth,
         ),
         const SizedBox(height: 8),
-        CalendarGrid(
-          currentMonth: _currentMonth,
-          selectedDay: _selectedDay,
-          encounterDays: dummyEncounterDays,
-          onDaySelected: _onDaySelected,
-        ),
+        if (calendarState.isLoading)
+          const Padding(
+            padding: EdgeInsets.all(40),
+            child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+          )
+        else
+          CalendarGrid(
+            currentMonth: _currentMonth,
+            selectedDay: _selectedDay,
+            encounterDays: calendarState.encounterDays,
+            onDaySelected: _onDaySelected,
+          ),
       ],
     );
   }
 
-  Widget _buildBubbleSection() {
+  Widget _buildBubbleSection(CalendarState calendarState) {
     // 選択された日付がある場合
     if (_selectedDay != null) {
-      final entry = dummyEncounterDays.entries.firstWhere(
-        (e) =>
-            e.key.year == _selectedDay!.year &&
-            e.key.month == _selectedDay!.month &&
-            e.key.day == _selectedDay!.day,
-      );
+      final entry = calendarState.encounterDays.entries
+          .cast<MapEntry<DateTime, Map<String, dynamic>>?>()
+          .firstWhere(
+            (e) =>
+                e != null &&
+                e.key.year == _selectedDay!.year &&
+                e.key.month == _selectedDay!.month &&
+                e.key.day == _selectedDay!.day,
+            orElse: () => null,
+          );
 
-      final data = entry.value;
-      return EncounterBubble(
-        count: data['count'] as int,
-        eventName: data['event'] as String?,
-      );
+      if (entry != null) {
+        final data = entry.value;
+        return EncounterBubble(
+          count: data['count'] as int,
+          eventName: data['event'] as String?,
+        );
+      }
     }
 
     // 選択されていない場合は月の合計を表示
-    return EncounterBubble(count: dummyMonthTotal);
+    return EncounterBubble(count: calendarState.monthTotal);
   }
 }
