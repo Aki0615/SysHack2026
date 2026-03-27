@@ -12,8 +12,32 @@ class EncounterRepository {
 
   EncounterRepository(this._dio);
 
+  /// エフェメラルID（短期トークン）を取得する（GET /users/:id/ephemeral-token）
+  /// プライバシー保護のため、一定時間ごとに新しいトークンを取得してアドバタイズに使用
+  Future<EphemeralToken> getEphemeralToken(String userId) async {
+    try {
+      final response = await _dio.get('/users/$userId/ephemeral-token');
+      return EphemeralToken.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception('エフェメラルトークンの取得に失敗: ${e.message}');
+    }
+  }
+
+  /// エフェメラルIDから実際のユーザーIDを解決する（POST /encounters/resolve）
+  /// すれ違い確定時に相手のエフェメラルIDから実ユーザーIDを取得
+  Future<String> resolveEphemeralId(String ephemeralId) async {
+    try {
+      final response = await _dio.post(
+        '/encounters/resolve',
+        data: {"ephemeral_id": ephemeralId},
+      );
+      return response.data['user_id'] as String;
+    } on DioException catch (e) {
+      throw Exception('ユーザーIDの解決に失敗: ${e.message}');
+    }
+  }
+
   /// バックグラウンドですれ違った相手のIDを送信する（POST /encounters）
-  /// ※レスポンス仕様がないため、通信を行うのみでレスポンスボディのパースは行わない
   Future<void> recordEncounter({
     required String myId,
     required String targetId,
@@ -24,4 +48,21 @@ class EncounterRepository {
       options: Options(contentType: 'application/json'),
     );
   }
+}
+
+/// エフェメラルトークン（短期間有効なBLEアドバタイズ用トークン）
+class EphemeralToken {
+  final String token;
+  final DateTime expiresAt;
+
+  EphemeralToken({required this.token, required this.expiresAt});
+
+  factory EphemeralToken.fromJson(Map<String, dynamic> json) {
+    return EphemeralToken(
+      token: json['token'] as String,
+      expiresAt: DateTime.parse(json['expires_at'] as String),
+    );
+  }
+
+  bool get isExpired => DateTime.now().isAfter(expiresAt);
 }
