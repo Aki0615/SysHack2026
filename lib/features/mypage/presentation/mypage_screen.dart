@@ -76,7 +76,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         _techStack = user.techStack.isNotEmpty ? user.techStack : '';
         _twitter = user.twitterUrl.isNotEmpty ? user.twitterUrl : '';
         _github = user.githubUrl.isNotEmpty ? user.githubUrl : '';
-        _connpass = user.connpassUsername.isNotEmpty ? user.connpassUsername : '';
+        _connpass = user.connpassUrl.isNotEmpty ? user.connpassUrl : '';
         _imageUrl = user.iconUrl.isNotEmpty ? user.iconUrl : null;
         _imagePath = null;
         _isLoading = false;
@@ -171,10 +171,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         'one_word': _commentCtrl.text,      // 空でも送信（削除の意思を表現）
         'tech_stack': _techStackCtrl.text,  // 空でも送信
         'twitter_url': _twitterCtrl.text,   // 空でも送信
-        'github_url': _githubCtrl.text,        // 空でも送信
-        'connpass_username': _connpassCtrl.text, // 空でも送信
+        'github_url': _githubCtrl.text,     // 空でも送信
+        'connpass_url': _connpassCtrl.text, // 空でも送信
       };
-      
+
+      // デバッグ: 送信データを表示
+      print('Sending update data: $updateData');
+
       // フィールドを送信
       await repo.updateUser(user.id, updateData);
 

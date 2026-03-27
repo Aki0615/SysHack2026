@@ -34,7 +34,9 @@ class UserRepository {
   /// ユーザー情報を更新する（PATCH /users/:id）
   Future<UserModel> updateUser(String id, Map<String, dynamic> data) async {
     try {
+      print('PATCH /users/$id with data: $data');
       final response = await _dio.patch('/users/$id', data: data);
+      print('Update response status: ${response.statusCode}');
       print('Update response data: ${response.data}');
 
       // レスポンスがユーザーデータを含む場合はそのまま返す

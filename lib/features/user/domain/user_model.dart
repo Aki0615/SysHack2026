@@ -41,8 +41,8 @@ abstract class UserModel with _$UserModel {
     /// ポートフォリオURL（バックエンド: portfolio_url）
     @Default('') String portfolioUrl,
 
-    /// Connpassユーザー名（バックエンド: connpass_username）
-    @Default('') String connpassUsername,
+    /// ConnpassユーザーURL（バックエンド: connpass_url）
+    @Default('') String connpassUrl,
 
     /// 所属（バックエンド: affiliation）
     @Default('') String affiliation,
@@ -93,7 +93,7 @@ abstract class UserModel with _$UserModel {
       twitterUrl: _readString(json, 'twitter_url'),
       githubUrl: _readString(json, 'github_url'),
       portfolioUrl: _readString(json, 'portfolio_url'),
-      connpassUsername: _readString(json, 'connpass_username'),
+      connpassUrl: _readString(json, 'connpass_url'),
       affiliation: _readString(json, 'affiliation'),
       createdAt: parseDateTime(json['created_at']),
       updatedAt: parseDateTime(json['updated_at']),
