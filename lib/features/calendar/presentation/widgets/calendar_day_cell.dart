@@ -5,6 +5,7 @@ class CalendarDayCell extends StatelessWidget {
   final DateTime date;
   final bool isToday;
   final bool hasEncounter;
+  final String? eventName;
   final VoidCallback onTap;
 
   const CalendarDayCell({
@@ -12,6 +13,7 @@ class CalendarDayCell extends StatelessWidget {
     required this.date,
     required this.isToday,
     required this.hasEncounter,
+    this.eventName,
     required this.onTap,
   });
 
@@ -20,37 +22,60 @@ class CalendarDayCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(alignment: Alignment.center, child: _buildCellContent()),
+      child: Container(
+        alignment: Alignment.center,
+        child: _buildCellContent(),
+      ),
     );
   }
 
   Widget _buildCellContent() {
-    // すれ違いがある場合: 緑の丸背景 + 白文字
+    // すれ違いがある場合: 緑の丸背景 + 白文字 + イベント名
     if (hasEncounter) {
-      return Container(
-        width: 36,
-        height: 36,
-        decoration: const BoxDecoration(
-          color: Color(0xFF3AAA3A),
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          '${date.day}',
-          style: const TextStyle(
-            color: Color(0xFFFFFFFF),
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: const BoxDecoration(
+              color: Color(0xFF3AAA3A),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${date.day}',
+              style: const TextStyle(
+                color: Color(0xFFFFFFFF),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-        ),
+          if (eventName != null && eventName!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              _truncateEventName(eventName!),
+              style: const TextStyle(
+                color: Color(0xFF3AAA3A),
+                fontSize: 8,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
       );
     }
 
     // 今日の場合: 緑の枠線 + 緑文字（太字）
     if (isToday) {
       return Container(
-        width: 36,
-        height: 36,
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: const Color(0xFF3AAA3A), width: 1.5),
@@ -60,7 +85,7 @@ class CalendarDayCell extends StatelessWidget {
           '${date.day}',
           style: const TextStyle(
             color: Color(0xFF3AAA3A),
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -70,7 +95,13 @@ class CalendarDayCell extends StatelessWidget {
     // 通常の日付: 黒文字
     return Text(
       '${date.day}',
-      style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+      style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 12),
     );
+  }
+
+  /// イベント名を短縮表示（最大6文字）
+  String _truncateEventName(String name) {
+    if (name.length <= 6) return name;
+    return '${name.substring(0, 5)}…';
   }
 }

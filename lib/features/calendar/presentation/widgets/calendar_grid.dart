@@ -84,6 +84,7 @@ class CalendarGrid extends StatelessWidget {
         crossAxisCount: 7,
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
+        childAspectRatio: 0.8, // 縦長にしてイベント名表示用のスペースを確保
       ),
       itemCount: totalCells,
       itemBuilder: (context, index) {
@@ -101,15 +102,22 @@ class CalendarGrid extends StatelessWidget {
             date.day == now.day;
 
         // すれ違いデータの確認。時刻部分を無視して年月日で一致判定
-        final hasEncounter = encounterDays.keys.any(
-          (d) =>
-              d.year == date.year && d.month == date.month && d.day == date.day,
+        final encounterEntry = encounterDays.entries.cast<MapEntry<DateTime, Map<String, dynamic>>?>().firstWhere(
+          (e) =>
+              e != null &&
+              e.key.year == date.year &&
+              e.key.month == date.month &&
+              e.key.day == date.day,
+          orElse: () => null,
         );
+        final hasEncounter = encounterEntry != null;
+        final eventName = encounterEntry?.value['event'] as String?;
 
         return CalendarDayCell(
           date: date,
           isToday: isToday,
           hasEncounter: hasEncounter,
+          eventName: eventName,
           onTap: () => onDaySelected(date),
         );
       },
