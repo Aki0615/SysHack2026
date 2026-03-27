@@ -10,7 +10,7 @@ import 'widgets/event_list_view.dart';
 /// 広場のタブ状態管理
 class PlazaTabNotifier extends Notifier<int> {
   @override
-  int build() => 0;
+  int build() => 2; // デフォルトはランダム表示
   void setTab(int index) => state = index;
 }
 
