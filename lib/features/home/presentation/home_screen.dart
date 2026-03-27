@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/home_dummy_data.dart';
 import 'widgets/stats_row_widget.dart';
 import 'widgets/quest_progress_card.dart';
@@ -25,9 +26,10 @@ class HomeScreen extends StatelessWidget {
                 dailyLimit: dummyDailyLimit,
               ),
               const SizedBox(height: 24),
-              const QuestProgressCard(
+              QuestProgressCard(
                 questName: '人とすれ違う',
                 progress: dummyQuestProgress,
+                onViewAllTap: () => context.push('/stamp-card'),
               ),
               const SizedBox(height: 24),
               CommentCardWidget(comments: dummyComments),
