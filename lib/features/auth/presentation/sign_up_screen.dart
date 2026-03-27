@@ -17,6 +17,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _connpassController = TextEditingController();
   bool _isPasswordVisible = false;
   int _currentStep = 0; // 0: 基本情報, 1: ロール選択
   String _selectedRole = 'other';
@@ -35,6 +36,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _connpassController.dispose();
     super.dispose();
   }
 
@@ -183,6 +185,18 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _connpassController,
+              label: 'ConnpassユーザーID（任意）',
+              icon: Icons.link,
+              validator: null, // 任意なのでバリデーションなし
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '※ Connpassアカウントを連携すると、イベント情報を取得できます',
+              style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+            ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
@@ -282,6 +296,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text,
           role: _selectedRole,
+          connpassUrl: _connpassController.text.trim(),
         );
   }
 
