@@ -46,10 +46,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final dio = ref.read(dioProvider);
       // ヘルスチェックエンドポイントまたはルートにリクエストを送る
       // エラーは無視（サーバーが起きればOK）
-      await dio.get('/').timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => throw Exception('timeout'),
-      );
+      await dio
+          .get('/')
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => throw Exception('timeout'),
+          );
       debugPrint('Server wake-up request sent');
     } catch (e) {
       // エラーは無視（ウェイクアップが目的なので）
@@ -89,30 +91,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   /// 未確認のすれ違いデータをチェックし、結果画面またはホームへ遷移する
+  /// APIが未実装やエラーの場合は安全にホーム画面へフォールバック
   void _checkPendingEncounters() {
-    final encounterState = ref.read(encounterNotifierProvider);
-    encounterState.when(
-      data: (encounters) {
-        if (encounters.isNotEmpty) {
-          // 未確認データあり → すれ違い結果画面
-          context.go('/encounter-result');
-        } else {
-          // 未確認データなし → ホーム画面
+    try {
+      final encounterState = ref.read(encounterNotifierProvider);
+      encounterState.when(
+        data: (encounters) {
+          if (encounters.isNotEmpty) {
+            // 未確認データあり → すれ違い結果画面
+            context.go('/encounter-result');
+          } else {
+            // 未確認データなし → ホーム画面
+            context.go('/home');
+          }
+        },
+        loading: () {
+          // ロード中なら待って再帰（最大5秒でタイムアウト）
+          Future.delayed(
+            const Duration(milliseconds: 500),
+            _checkPendingEncounters,
+          );
+        },
+        error: (_, _) {
+          // エラー時は安全にホームへ（APIが未実装でも問題なし）
+          debugPrint('未確認データの取得でエラー発生、ホーム画面へ遷移');
           context.go('/home');
-        }
-      },
-      loading: () {
-        // ロード中なら待って再帰
-        Future.delayed(
-          const Duration(milliseconds: 500),
-          _checkPendingEncounters,
-        );
-      },
-      error: (_, _) {
-        // エラー時はホームへ
-        context.go('/home');
-      },
-    );
+        },
+      );
+    } catch (e) {
+      // プロバイダー自体のエラーもキャッチしてホーム画面へ
+      debugPrint('encounter チェック中にエラー: $e');
+      context.go('/home');
+    }
   }
 
   @override
