@@ -46,6 +46,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     required String email,
     required String password,
     String? role,
+    String? connpassUrl,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -59,6 +60,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
         oneWord: "",
         role: role ?? "other",
         techStack: "",
+        connpassUrl: connpassUrl ?? "",
       );
       // signUpのレスポンスがないため、直後に自動ログイン処理を呼び出してセッションを確立します
       return await repo.login(email: email, password: password);

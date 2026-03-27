@@ -27,6 +27,7 @@ class AuthRepository {
     required String oneWord,
     required String role,
     required String techStack,
+    String connpassUrl = '',
   }) async {
     await _dio.post(
       '/signup',
@@ -39,6 +40,7 @@ class AuthRepository {
         "one_word": oneWord,
         "role": role,
         "tech_stack": techStack,
+        "connpass_url": connpassUrl,
       },
       options: Options(contentType: 'application/json'),
     );
