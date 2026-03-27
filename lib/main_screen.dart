@@ -1,17 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'features/ble/ble_notifier.dart';
+import 'features/auth/domain/auth_notifier.dart';
 
-// 修正: 不要なコメントの削除とネストの最適化
-class MainScreen extends StatelessWidget {
+/// メイン画面（4タブのBottomNavigationBar）
+/// ログイン後に表示される画面で、BLEすれ違い機能のライフサイクルを管理する
+class MainScreen extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainScreen({super.key, required this.navigationShell});
 
   @override
+  ConsumerState<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends ConsumerState<MainScreen>
+    with WidgetsBindingObserver {
+  bool _bleStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // アプリのライフサイクルイベントを監視
+    WidgetsBinding.instance.addObserver(this);
+    // ログイン済みならBLEを自動開始
+    _startBleIfLoggedIn();
+  }
+
+  @override
+  void dispose() {
+    // アプリ完全終了時にBLEを停止
+    WidgetsBinding.instance.removeObserver(this);
+    _stopBle();
+    super.dispose();
+  }
+
+  /// アプリのライフサイクル変化を検知
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // フォアグラウンドに復帰 → BLEが停止していたら再開
+        debugPrint('アプリがフォアグラウンドに復帰しました');
+        _startBleIfLoggedIn();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        // バックグラウンドに移行 → BLEは停止しない（継続）
+        debugPrint('アプリがバックグラウンドに移行しました（BLE継続中）');
+        break;
+      case AppLifecycleState.detached:
+        // アプリが完全に終了 → BLEを停止
+        debugPrint('アプリが終了します（BLE停止）');
+        _stopBle();
+        break;
+    }
+  }
+
+  /// ログイン済みの場合にBLEすれ違い機能を開始する
+  Future<void> _startBleIfLoggedIn() async {
+    if (_bleStarted) return;
+
+    final user = ref.read(authNotifierProvider).value;
+    if (user == null) return;
+
+    try {
+      await ref.read(bleNotifierProvider.notifier).start();
+      _bleStarted = true;
+      debugPrint('BLEすれ違い機能を自動開始しました（ユーザー: ${user.id}）');
+    } catch (e) {
+      debugPrint('BLE自動開始エラー: $e');
+    }
+  }
+
+  /// BLEすれ違い機能を停止する
+  Future<void> _stopBle() async {
+    if (!_bleStarted) return;
+    try {
+      await ref.read(bleNotifierProvider.notifier).stop();
+      _bleStarted = false;
+      debugPrint('BLEすれ違い機能を停止しました');
+    } catch (e) {
+      debugPrint('BLE停止エラー: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
-      body: navigationShell,
+      body: widget.navigationShell,
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
@@ -29,7 +109,7 @@ class MainScreen extends StatelessWidget {
         ],
       ),
       child: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onTap: (index) => _onTap(context, index),
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.transparent,
@@ -71,9 +151,9 @@ class MainScreen extends StatelessWidget {
   }
 
   void _onTap(BuildContext context, int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 }
