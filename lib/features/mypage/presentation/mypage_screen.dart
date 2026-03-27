@@ -25,6 +25,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   String _techStack = '';
   String _twitter = '';
   String _github = '';
+  String _connpass = '';
 
   // --- 編集用（一時バッファ）---
   late TextEditingController _nameCtrl;
@@ -32,6 +33,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   late TextEditingController _techStackCtrl;
   late TextEditingController _twitterCtrl;
   late TextEditingController _githubCtrl;
+  late TextEditingController _connpassCtrl;
 
   // --- 状態フラグ ---
   bool _isLoading = true;
@@ -48,6 +50,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     _techStackCtrl = TextEditingController();
     _twitterCtrl = TextEditingController();
     _githubCtrl = TextEditingController();
+    _connpassCtrl = TextEditingController();
     _loadUserData();
   }
 
@@ -58,6 +61,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     _techStackCtrl.dispose();
     _twitterCtrl.dispose();
     _githubCtrl.dispose();
+    _connpassCtrl.dispose();
     super.dispose();
   }
 
@@ -67,12 +71,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     if (user != null) {
       setState(() {
         // データがない場合はデフォルト値を設定（?? '' でフォールバック）
-        _name = (user.name ?? '').isNotEmpty ? user.name : '';
-        _comment = (user.oneWord ?? '').isNotEmpty ? user.oneWord : '';
-        _techStack = (user.techStack ?? '').isNotEmpty ? user.techStack : '';
-        _twitter = (user.twitterUrl ?? '').isNotEmpty ? user.twitterUrl : '';
-        _github = (user.githubUrl ?? '').isNotEmpty ? user.githubUrl : '';
-        _imageUrl = (user.iconUrl ?? '').isNotEmpty ? user.iconUrl : null;
+        _name = user.name.isNotEmpty ? user.name : '';
+        _comment = user.oneWord.isNotEmpty ? user.oneWord : '';
+        _techStack = user.techStack.isNotEmpty ? user.techStack : '';
+        _twitter = user.twitterUrl.isNotEmpty ? user.twitterUrl : '';
+        _github = user.githubUrl.isNotEmpty ? user.githubUrl : '';
+        _connpass = user.connpassUrl.isNotEmpty ? user.connpassUrl : '';
+        _imageUrl = user.iconUrl.isNotEmpty ? user.iconUrl : null;
         _imagePath = null;
         _isLoading = false;
       });
@@ -141,6 +146,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       _techStackCtrl.text = _techStack;
       _twitterCtrl.text = _twitter;
       _githubCtrl.text = _github;
+      _connpassCtrl.text = _connpass;
     });
   }
 
@@ -166,6 +172,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         'tech_stack': _techStackCtrl.text,  // 空でも送信
         'twitter_url': _twitterCtrl.text,   // 空でも送信
         'github_url': _githubCtrl.text,     // 空でも送信
+        'connpass_url': _connpassCtrl.text, // 空でも送信
       };
       
       // フィールドを送信
@@ -178,6 +185,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         _techStack = _techStackCtrl.text;
         _twitter = _twitterCtrl.text;
         _github = _githubCtrl.text;
+        _connpass = _connpassCtrl.text;
         _isEditing = false;
       });
 
@@ -650,6 +658,28 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       label: 'GitHub',
                       value: _github,
                       onLaunch: () => _launchUrl(_github),
+                    ),
+              const Divider(
+                color: Color(0xFFE0E0E0),
+                height: 1,
+                thickness: 0.5,
+              ),
+              // Connpass
+              _isEditing
+                  ? _buildEditField(
+                      icon: Icons.event,
+                      iconColor: const Color(0xFFE53935),
+                      label: 'Connpass',
+                      controller: _connpassCtrl,
+                    )
+                  : _buildLinkItem(
+                      icon: Icons.event,
+                      iconColor: const Color(0xFFE53935),
+                      label: 'Connpass',
+                      value: _connpass,
+                      onLaunch: () => _launchUrl(_connpass.isNotEmpty
+                          ? 'https://connpass.com/user/$_connpass/'
+                          : ''),
                     ),
             ],
           ),
