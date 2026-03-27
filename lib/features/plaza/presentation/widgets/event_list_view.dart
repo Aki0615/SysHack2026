@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
 import 'event_list_item.dart';
 
-// 修正: 不要なコメントの削除とコードの最小化
 class EventListView extends StatelessWidget {
-  final List<Map<String, String>> events;
+  final List<Map<String, dynamic>> events;
+  final void Function(Map<String, dynamic> event)? onEventTap;
 
-  const EventListView({super.key, required this.events});
+  const EventListView({
+    super.key,
+    required this.events,
+    this.onEventTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
       itemCount: events.length,
-      separatorBuilder: (context, index) =>
-          const SizedBox(height: 8), // 修正: 引数名を省略しない
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final event = events[index];
         return EventListItem(
-          eventName: event['name'] ?? '',
-          date: event['date'] ?? '',
-          count: event['count'] ?? '',
+          eventName: event['name']?.toString() ?? '',
+          date: event['date']?.toString() ?? '',
+          count: event['count']?.toString() ?? '',
+          onTap: onEventTap != null ? () => onEventTap!(event) : null,
         );
       },
     );
