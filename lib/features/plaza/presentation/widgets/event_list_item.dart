@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
 
-// 修正: 不要なコメントの削除、UI構成のコンポーネント化
 class EventListItem extends StatelessWidget {
   final String eventName;
   final String date;
   final String count;
+  final VoidCallback? onTap;
 
   const EventListItem({
     super.key,
     required this.eventName,
     required this.date,
     required this.count,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: _buildDecoration(), // 修正: メソッド化
-      child: Row(
-        children: [
-          _buildLeadingIcon(),
-          const SizedBox(width: 12),
-          Expanded(child: _buildEventInfo()),
-          const Icon(Icons.chevron_right, color: Color(0xFF9E9E9E)),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: _buildDecoration(),
+        child: Row(
+          children: [
+            _buildLeadingIcon(),
+            const SizedBox(width: 12),
+            Expanded(child: _buildEventInfo()),
+            const Icon(Icons.chevron_right, color: Color(0xFF9E9E9E)),
+          ],
+        ),
       ),
     );
   }

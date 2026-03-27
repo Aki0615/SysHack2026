@@ -9,8 +9,7 @@ class _IconPosition {
 }
 
 class FriendListView extends StatefulWidget {
-  final List<Map<String, String>> friends;
-  // 修正: constコンストラクタの最適化
+  final List<Map<String, dynamic>> friends;
   const FriendListView({super.key, required this.friends});
 
   @override
@@ -64,7 +63,6 @@ class _FriendListViewState extends State<FriendListView> {
     });
   }
 
-  // 修正: アイテム生成メソッドの抽出
   Widget _buildFriendItem(int index) {
     if (index >= _positions!.length) return const SizedBox.shrink();
 
@@ -72,7 +70,7 @@ class _FriendListViewState extends State<FriendListView> {
     return Positioned(
       left: pos.x,
       top: pos.y,
-      child: FriendGridItem(name: widget.friends[index]['name'] ?? ''),
+      child: FriendGridItem(name: widget.friends[index]['name']?.toString() ?? ''),
     );
   }
 

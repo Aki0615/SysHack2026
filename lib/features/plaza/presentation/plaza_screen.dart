@@ -64,13 +64,14 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context, int selectedIndex) {
+    final titles = ['友達一覧', 'イベント一覧', 'ランダム表示'];
     return AppBar(
       backgroundColor: const Color(0xFFFFFFFF),
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
       title: Text(
-        selectedIndex == 0 ? '友達一覧' : 'イベント一覧',
+        titles[selectedIndex],
         style: const TextStyle(
           color: Color(0xFF1A1A1A),
           fontSize: 22,
@@ -148,6 +149,17 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     Navigator.pop(context);
                   },
                 ),
+                const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                // ランダム表示
+                _buildMenuItem(
+                  icon: Icons.shuffle,
+                  title: 'ランダム表示',
+                  isSelected: currentIndex == 2,
+                  onTap: () {
+                    ref.read(plazaTabProvider.notifier).setTab(2);
+                    Navigator.pop(context);
+                  },
+                ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -199,6 +211,11 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
   }
 
   Widget _buildContent(int selectedIndex, String searchQuery) {
+    // ランダム表示の場合は検索バーなし
+    if (selectedIndex == 2) {
+      return _buildRandomFriendList();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -261,7 +278,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     final filteredFriends = query.isEmpty
         ? dummyFriends
         : dummyFriends.where((friend) {
-            final name = friend['name']?.toLowerCase() ?? '';
+            final name = friend['name']?.toString().toLowerCase() ?? '';
             return name.contains(query.toLowerCase());
           }).toList();
 
@@ -277,7 +294,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     final filteredEvents = query.isEmpty
         ? dummyEvents
         : dummyEvents.where((event) {
-            final name = event['name']?.toLowerCase() ?? '';
+            final name = event['name']?.toString().toLowerCase() ?? '';
             return name.contains(query.toLowerCase());
           }).toList();
 
@@ -285,7 +302,10 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       return _buildEmptyState('該当するイベントが見つかりません');
     }
 
-    return EventListView(events: filteredEvents);
+    return EventListView(
+      events: filteredEvents,
+      onEventTap: _showEventDetailBottomSheet,
+    );
   }
 
   Widget _buildEmptyState(String message) {
@@ -301,6 +321,329 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// ランダム表示（友達をランダムに5人表示）
+  Widget _buildRandomFriendList() {
+    final randomFriends = getRandomFriends();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        children: [
+          // 説明テキスト
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.shuffle, color: Color(0xFF3AAA3A)),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'ランダムに選ばれた友達です',
+                    style: TextStyle(
+                      color: Color(0xFF3AAA3A),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // リスト
+          Expanded(
+            child: ListView.separated(
+              itemCount: randomFriends.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final friend = randomFriends[index];
+                return _buildFriendCard(friend);
+              },
+            ),
+          ),
+          // シャッフルボタン
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => setState(() {}), // リビルドでシャッフル
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              label: const Text(
+                'シャッフル',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3AAA3A),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFriendCard(Map<String, dynamic> friend) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          // アイコン
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE0E0E0),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person, color: Color(0xFF757575)),
+          ),
+          const SizedBox(width: 16),
+          // 名前とコメント
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  friend['name'] ?? '',
+                  style: const TextStyle(
+                    color: Color(0xFF1A1A1A),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  friend['comment'] ?? '',
+                  style: const TextStyle(
+                    color: Color(0xFF757575),
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+        ],
+      ),
+    );
+  }
+
+  /// イベント詳細ボトムシートを表示
+  void _showEventDetailBottomSheet(Map<String, dynamic> event) {
+    final participants = (event['participants'] as List<dynamic>?) ?? [];
+    final participantUsers = dummyFriends
+        .where((f) => participants.contains(f['id']))
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ハンドル
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // ヘッダー
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 日付
+                      Text(
+                        event['date'] ?? '',
+                        style: const TextStyle(
+                          color: Color(0xFF757575),
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // イベント名
+                      Text(
+                        event['name'] ?? '',
+                        style: const TextStyle(
+                          color: Color(0xFF1A1A1A),
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // 場所
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            color: Color(0xFF757575),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              event['location'] ?? '',
+                              style: const TextStyle(
+                                color: Color(0xFF757575),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // すれ違い人数
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.people,
+                              color: Color(0xFF3AAA3A),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'すれ違った人数',
+                              style: TextStyle(
+                                color: Color(0xFF757575),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${event['count']}人',
+                              style: const TextStyle(
+                                color: Color(0xFF3AAA3A),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                // すれ違った人一覧
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'すれ違った人',
+                        style: TextStyle(
+                          color: Color(0xFF1A1A1A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${participantUsers.length}人',
+                        style: const TextStyle(
+                          color: Color(0xFF757575),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // 参加者リスト
+                Flexible(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    shrinkWrap: true,
+                    itemCount: participantUsers.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final user = participantUsers[index];
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE0E0E0),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                color: Color(0xFF757575),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              user['name'] ?? '',
+                              style: const TextStyle(
+                                color: Color(0xFF1A1A1A),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
