@@ -38,20 +38,197 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _onDaySelected(DateTime date) {
-    setState(() {
-      // 選択した日付がダミーデータ内に存在するかチェック
-      final hasEncounter = dummyEncounterDays.keys.any(
-        (d) =>
-            d.year == date.year && d.month == date.month && d.day == date.day,
-      );
+    // 選択した日付がダミーデータ内に存在するかチェック
+    final encounterEntry = dummyEncounterDays.entries.cast<MapEntry<DateTime, Map<String, dynamic>>?>().firstWhere(
+      (e) =>
+          e != null &&
+          e.key.year == date.year &&
+          e.key.month == date.month &&
+          e.key.day == date.day,
+      orElse: () => null,
+    );
 
-      // 存在する場合は吹き出しに表示し、存在しない場合は選択解除（月の合計表示）
-      if (hasEncounter) {
+    setState(() {
+      if (encounterEntry != null) {
         _selectedDay = date;
       } else {
         _selectedDay = null;
       }
     });
+
+    // すれ違いデータがある場合は詳細ボトムシートを表示
+    if (encounterEntry != null) {
+      _showEventDetailBottomSheet(date, encounterEntry.value);
+    }
+  }
+
+  /// イベント詳細ボトムシートを表示
+  void _showEventDetailBottomSheet(DateTime date, Map<String, dynamic> data) {
+    final count = data['count'] as int;
+    final eventName = data['event'] as String?;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ハンドル
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // 日付
+                  Text(
+                    '${date.year}年${date.month}月${date.day}日',
+                    style: const TextStyle(
+                      color: Color(0xFF757575),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // イベント名またはタイトル
+                  Text(
+                    eventName ?? 'すれ違い記録',
+                    style: const TextStyle(
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // すれ違い人数
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.people,
+                          color: Color(0xFF3AAA3A),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'すれ違った人数',
+                          style: const TextStyle(
+                            color: Color(0xFF757575),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '$count人',
+                          style: const TextStyle(
+                            color: Color(0xFF3AAA3A),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (eventName != null) ...[
+                    const SizedBox(height: 16),
+                    // イベント情報
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.event,
+                            color: Color(0xFF757575),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'イベント',
+                                  style: TextStyle(
+                                    color: Color(0xFF757575),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  eventName,
+                                  style: const TextStyle(
+                                    color: Color(0xFF1A1A1A),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  // 閉じるボタン
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3AAA3A),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        '閉じる',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
