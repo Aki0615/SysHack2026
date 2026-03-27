@@ -2,30 +2,13 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'user_role.dart';
 
 part 'user_model.freezed.dart';
-part 'user_model.g.dart';
 
-/// DateTimeコンバーター：NULLを許容
-class _DateTimeConverter implements JsonConverter<DateTime?, dynamic> {
-  const _DateTimeConverter();
-
-  @override
-  DateTime? fromJson(dynamic json) {
-    if (json == null) return null;
-    if (json is String) {
-      try {
-        return DateTime.parse(json);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  @override
-  dynamic toJson(DateTime? value) => value?.toIso8601String();
+/// 文字列コンバーター：NULLを空文字にフォールバック
+String _readString(Map<dynamic, dynamic> json, String key) {
+  final value = json[key];
+  if (value is String) return value;
+  return value?.toString() ?? '';
 }
-
-const _dateTimeConverter = _DateTimeConverter();
 
 /// ユーザー情報を表現するドメインモデル（freezedで不変データクラスを生成）
 /// バックエンドのGoの構造体に合わせたJSONフィールド名を使用
@@ -37,59 +20,83 @@ abstract class UserModel with _$UserModel {
     @Default('') String email,
 
     /// アバター画像URL（バックエンド: icon_url）
-    /// NULLの場合は空文字にフォールバック
-    @JsonKey(name: 'icon_url') @Default('') String iconUrl,
+    @Default('') String iconUrl,
 
     /// 一言コメント（バックエンド: one_word）
-    /// NULLの場合は空文字にフォールバック
-    @JsonKey(name: 'one_word') @Default('') String oneWord,
+    @Default('') String oneWord,
 
     /// ロール（frontend / backend / fullstack / other）
-    @JsonKey(unknownEnumValue: UserRole.other)
     @Default(UserRole.other)
     UserRole role,
 
-    /// 技術スタック（バックエンド: tech_stack、単一テキスト）
-    /// NULLの場合は空文字にフォールバック
-    @JsonKey(name: 'tech_stack') @Default('') String techStack,
+    /// 技術スタック（バックエンド: tech_stack）
+    @Default('') String techStack,
 
     /// Twitter URL（バックエンド: twitter_url）
-    /// NULLの場合は空文字にフォールバック
-    @JsonKey(name: 'twitter_url') @Default('') String twitterUrl,
+    @Default('') String twitterUrl,
 
     /// GitHub URL（バックエンド: github_url）
-    /// NULLの場合は空文字にフォールバック
-    @JsonKey(name: 'github_url') @Default('') String githubUrl,
+    @Default('') String githubUrl,
 
     /// ポートフォリオURL（バックエンド: portfolio_url）
-    /// NULLの場合は空文字にフォールバック
-    @JsonKey(name: 'portfolio_url') @Default('') String portfolioUrl,
+    @Default('') String portfolioUrl,
+
+    /// ConnpassユーザーURL（バックエンド: connpass_url）
+    @Default('') String connpassUrl,
 
     /// 所属（バックエンド: affiliation）
-    /// NULLの場合は空文字にフォールバック
     @Default('') String affiliation,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) = _UserModel;
 
+  /// カスタムfromJson: NULL値を空文字にフォールバックしてからパース
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    // NULL値を安全に空文字列にフォールバック（すべてのフィールド）
-    final data = Map<String, dynamic>.from(json);
-    
-    // 文字列フィールドの安全なコンバージョン
-    String _toStr(dynamic value) => (value is String) ? value : (value?.toString() ?? '');
-    
-    data['id'] = _toStr(data['id']);
-    data['name'] = _toStr(data['name']);
-    data['email'] = _toStr(data['email']);
-    data['icon_url'] = _toStr(data['icon_url']);
-    data['one_word'] = _toStr(data['one_word']);
-    data['tech_stack'] = _toStr(data['tech_stack']);
-    data['twitter_url'] = _toStr(data['twitter_url']);
-    data['github_url'] = _toStr(data['github_url']);
-    data['portfolio_url'] = _toStr(data['portfolio_url']);
-    data['affiliation'] = _toStr(data['affiliation']);
+    // ロールのパース
+    UserRole parseRole(dynamic value) {
+      if (value == null) return UserRole.other;
+      final str = value.toString().toLowerCase();
+      switch (str) {
+        case 'frontend':
+          return UserRole.frontend;
+        case 'backend':
+          return UserRole.backend;
+        case 'fullstack':
+          return UserRole.fullstack;
+        default:
+          return UserRole.other;
+      }
+    }
 
-    return _$UserModelFromJson(data);
+    // DateTimeのパース
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (_) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    return UserModel(
+      id: _readString(json, 'id'),
+      name: _readString(json, 'name'),
+      email: _readString(json, 'email'),
+      iconUrl: _readString(json, 'icon_url'),
+      oneWord: _readString(json, 'one_word'),
+      role: parseRole(json['role']),
+      techStack: _readString(json, 'tech_stack'),
+      twitterUrl: _readString(json, 'twitter_url'),
+      githubUrl: _readString(json, 'github_url'),
+      portfolioUrl: _readString(json, 'portfolio_url'),
+      connpassUrl: _readString(json, 'connpass_url'),
+      affiliation: _readString(json, 'affiliation'),
+      createdAt: parseDateTime(json['created_at']),
+      updatedAt: parseDateTime(json['updated_at']),
+    );
   }
 }
