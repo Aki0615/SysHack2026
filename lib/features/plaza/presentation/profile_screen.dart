@@ -1,26 +1,54 @@
 import 'package:flutter/material.dart';
-import '../../plaza/data/plaza_dummy_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../user/data/user_repository.dart';
+import '../../user/domain/user_model.dart';
 import 'widgets/info_list_item.dart';
 
-// 修正: 不要なコメント削減、階層の整理
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+final profileProvider = FutureProvider.family<UserModel, String>((ref, userId) {
+  return ref.read(userRepositoryProvider).getUser(userId);
+});
+
+class ProfileScreen extends ConsumerWidget {
+  final String userId;
+
+  const ProfileScreen({super.key, required this.userId});
 
   @override
-  Widget build(BuildContext context) {
-    final profile = dummyProfile;
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (userId.isEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFFFFFFF),
+        appBar: _buildAppBar(),
+        body: const Center(
+          child: Text('プロフィールIDが不正です'),
+        ),
+      );
+    }
+
+    final profileAsync = ref.watch(profileProvider(userId));
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
-      appBar: _buildAppBar(), // 修正: メソッド化
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          children: [
-            _buildHeader(profile),
-            const SizedBox(height: 32),
-            _buildInfoList(profile),
-          ],
+      appBar: _buildAppBar(),
+      body: profileAsync.when(
+        data: (profile) => SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            children: [
+              _buildHeader(profile),
+              const SizedBox(height: 32),
+              _buildInfoList(profile),
+            ],
+          ),
+        ),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+        ),
+        error: (error, _) => Center(
+          child: Text(
+            'プロフィールの取得に失敗しました\n$error',
+            textAlign: TextAlign.center,
+          ),
         ),
       ),
     );
@@ -35,13 +63,13 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(Map<String, String> profile) {
+  Widget _buildHeader(UserModel profile) {
     return Column(
       children: [
         _buildProfileImage(profile),
         const SizedBox(height: 16),
         Text(
-          profile['name'] ?? '',
+          profile.name,
           style: const TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 22,
@@ -49,12 +77,12 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _buildCommentBadge(profile['comment'] ?? ''),
+        _buildCommentBadge(profile.oneWord),
       ],
     );
   }
 
-  Widget _buildProfileImage(Map<String, String> profile) {
+  Widget _buildProfileImage(UserModel profile) {
     return Container(
       width: 96,
       height: 96,
@@ -69,8 +97,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileImageContent(Map<String, String> profile) {
-    final iconUrl = profile['icon_url'] ?? '';
+  Widget _buildProfileImageContent(UserModel profile) {
+    final iconUrl = profile.iconUrl;
 
     // Firebase URL から画像を表示
     if (iconUrl.isNotEmpty) {
@@ -104,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoList(Map<String, String> profile) {
+  Widget _buildInfoList(UserModel profile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -128,34 +156,34 @@ class ProfileScreen extends StatelessWidget {
                 icon: Icons.code,
                 iconBackgroundColor: const Color(0xFF1565C0),
                 title: '技術スタック',
-                value: profile['techStack'] ?? '',
+                value: profile.techStack,
               ),
               InfoListItem(
                 icon: Icons.alternate_email,
                 iconBackgroundColor: const Color(0xFF1DA1F2),
                 title: 'Twitter',
-                value: profile['twitter'] ?? '',
+                value: profile.twitterUrl,
                 isUrl: true,
               ),
               InfoListItem(
                 icon: Icons.link,
                 iconBackgroundColor: const Color(0xFF333333),
                 title: 'GitHub',
-                value: profile['github'] ?? '',
+                value: profile.githubUrl,
                 isUrl: true,
               ),
               InfoListItem(
                 icon: Icons.language,
                 iconBackgroundColor: const Color(0xFF3AAA3A),
                 title: 'ポートフォリオ',
-                value: profile['portfolio'] ?? '',
+                value: profile.portfolioUrl,
                 isUrl: true,
               ),
               InfoListItem(
                 icon: Icons.business,
                 iconBackgroundColor: const Color(0xFFFF6F00),
                 title: '所属団体',
-                value: profile['organization'] ?? '',
+                value: profile.affiliation,
                 showDivider: false,
               ),
             ],

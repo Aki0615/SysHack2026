@@ -73,8 +73,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // プロフィール画面
       GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        path: '/profile/:id',
+        builder: (context, state) {
+          final userId = state.pathParameters['id'] ?? '';
+          return ProfileScreen(userId: userId);
+        },
       ),
 
       // スタンプカード（実績確認）画面

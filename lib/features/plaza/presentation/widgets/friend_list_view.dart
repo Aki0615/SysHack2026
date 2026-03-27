@@ -70,7 +70,10 @@ class _FriendListViewState extends State<FriendListView> {
     return Positioned(
       left: pos.x,
       top: pos.y,
-      child: FriendGridItem(name: widget.friends[index]['name']?.toString() ?? ''),
+      child: FriendGridItem(
+        name: widget.friends[index]['name']?.toString() ?? '',
+        userId: widget.friends[index]['id']?.toString() ?? '',
+      ),
     );
   }
 
