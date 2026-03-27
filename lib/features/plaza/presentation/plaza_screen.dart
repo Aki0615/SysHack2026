@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../data/plaza_dummy_data.dart';
 import '../domain/plaza_notifier.dart';
 import '../../user/domain/user_model.dart';
@@ -436,62 +437,69 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
 
   /// UserModel用のカード（ランダム表示用）
   Widget _buildUserCard(UserModel user) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          // アイコン
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE0E0E0),
-              shape: BoxShape.circle,
-            ),
-            child: user.iconUrl.isNotEmpty
-                ? ClipOval(
-                    child: Image.network(
-                      user.iconUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.person, color: Color(0xFF757575)),
+        onTap: () => context.push('/profile/${user.id}'),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              // アイコン
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE0E0E0),
+                  shape: BoxShape.circle,
+                ),
+                child: user.iconUrl.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          user.iconUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.person, color: Color(0xFF757575)),
+                        ),
+                      )
+                    : const Icon(Icons.person, color: Color(0xFF757575)),
+              ),
+              const SizedBox(width: 16),
+              // 名前とコメント
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.name,
+                      style: const TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  )
-                : const Icon(Icons.person, color: Color(0xFF757575)),
-          ),
-          const SizedBox(width: 16),
-          // 名前とコメント
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.name,
-                  style: const TextStyle(
-                    color: Color(0xFF1A1A1A),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.oneWord,
+                      style: const TextStyle(
+                        color: Color(0xFF757575),
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  user.oneWord,
-                  style: const TextStyle(
-                    color: Color(0xFF757575),
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            ],
           ),
-          const Icon(Icons.chevron_right, color: Color(0xFF757575)),
-        ],
+        ),
       ),
     );
   }
