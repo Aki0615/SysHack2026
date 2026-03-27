@@ -264,6 +264,40 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     );
   }
 
+  /// アカウント削除処理
+  Future<void> _handleDeleteAccount() async {
+    final user = ref.read(authNotifierProvider).value;
+    if (user == null) return;
+
+    setState(() => _isSaving = true);
+    try {
+      final repo = ref.read(userRepositoryProvider);
+      await repo.deleteUser(user.id);
+
+      // 削除成功後、ログアウトしてログイン画面へ
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('アカウントを削除しました'),
+            backgroundColor: Color(0xFF3AAA3A),
+          ),
+        );
+      }
+      ref.read(authNotifierProvider.notifier).logout();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('削除に失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   // ═══════════════════════════════════════════════════════
   //  ビルド
   // ═══════════════════════════════════════════════════════
@@ -869,7 +903,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                     '本当に削除しますか？\n（この操作は取り消せません）',
                     '削除する',
                     const Color(0xFFE53935),
-                    () {},
+                    _handleDeleteAccount,
                   );
                 },
               ),
