@@ -41,7 +41,14 @@ class CommentCardWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(children: _buildCommentItems()),
+      child: comments.isEmpty
+          ? const Center(
+              child: Text(
+                'まだコメントがありません',
+                style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+              ),
+            )
+          : Column(children: _buildCommentItems()),
     );
   }
 
@@ -51,6 +58,7 @@ class CommentCardWidget extends StatelessWidget {
       final item = CommentItemWidget(
         name: comments[i]['name'] ?? '',
         comment: comments[i]['comment'] ?? '',
+        iconUrl: comments[i]['iconUrl'] ?? '',
       );
 
       // 最後のアイテム以外は余白を下に追加

@@ -29,11 +29,15 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, HomeState data) {
-    // randomThreeからコメントリストを生成
-    final comments = data.randomThree
+    // randomThreeが空ならunconfirmedをフォールバックとして使用
+    final commentSource =
+        data.randomThree.isNotEmpty ? data.randomThree : data.unconfirmed;
+
+    final comments = commentSource
         .map((user) => {
               'name': user['name']?.toString() ?? '',
               'comment': user['one_word']?.toString() ?? '',
+              'iconUrl': user['icon_url']?.toString() ?? '',
             })
         .toList();
 
@@ -53,7 +57,6 @@ class HomeScreen extends ConsumerWidget {
             StatsRowWidget(
               plazaCount: data.totalEncounters,
               todayCount: data.todayEncounters,
-              dailyLimit: dailyLimit,
             ),
             const SizedBox(height: 24),
             QuestProgressCard(
