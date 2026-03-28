@@ -292,17 +292,14 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           return _buildEmptyState('該当する友達が見つかりません');
         }
 
-        // UserModelをMap形式に変換してFriendListViewに渡す
-        final friendMaps = filteredFriends
-            .map((user) => {
-                  'id': user.id,
-                  'name': user.name,
-                  'comment': user.oneWord,
-                  'iconUrl': user.iconUrl,
-                })
-            .toList();
-
-        return FriendListView(friends: friendMaps);
+        return ListView.separated(
+          itemCount: filteredFriends.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final user = filteredFriends[index];
+            return _buildUserCard(user);
+          },
+        );
       },
       loading: () => const Center(
         child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
@@ -367,6 +364,15 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     final shuffled = List<UserModel>.from(users)..shuffle();
     final randomFriends = shuffled.take(5).toList();
 
+    final randomFriendMaps = randomFriends
+        .map((user) => {
+              'id': user.id,
+              'name': user.name,
+              'comment': user.oneWord,
+              'iconUrl': user.iconUrl,
+            })
+        .toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
@@ -396,17 +402,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          // リスト
-          Expanded(
-            child: ListView.separated(
-              itemCount: randomFriends.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final user = randomFriends[index];
-                return _buildUserCard(user);
-              },
-            ),
-          ),
+          Expanded(child: FriendListView(friends: randomFriendMaps)),
           // シャッフルボタン
           const SizedBox(height: 16),
           SizedBox(
