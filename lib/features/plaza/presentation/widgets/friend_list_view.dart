@@ -17,50 +17,62 @@ class FriendListView extends StatefulWidget {
 }
 
 class _FriendListViewState extends State<FriendListView> {
-  static const double _iconSize = 72;
-  static const double _pad = 16.0; // 修正: 定数化
-  static const double _margin = 20.0; // 修正: 定数化
+  static const double _pad = 16.0;
+  static const double _itemWidth = 96.0;
+  static const double _itemHeight = 104.0;
+  static const double _itemGap = 8.0;
 
   List<_IconPosition>? _positions;
+  double? _lastWidth;
+  double? _lastHeight;
+  String _lastLayoutKey = '';
 
   // 修正: メソッド抽出でネストを浅く整理
   List<_IconPosition> _generatePositions(double width, double height) {
     final rand = Random();
     final positions = <_IconPosition>[];
-    final maxX = width - _iconSize - _pad * 2;
-    final maxY = height - _iconSize - _pad * 2;
+    final maxX = width - _itemWidth - _pad * 2;
+    final maxY = height - _itemHeight - _pad * 2;
 
     for (int i = 0; i < widget.friends.length; i++) {
-      _tryPlaceIcon(rand, maxX, maxY, positions);
+      _tryPlaceItem(rand, maxX, maxY, positions);
     }
     return positions;
   }
 
-  // 修正: 位置座標の決定と衝突判定ループを別メソッドに分離
-  void _tryPlaceIcon(
+  void _tryPlaceItem(
     Random rand,
     double maxX,
     double maxY,
     List<_IconPosition> positions,
   ) {
-    for (int attempts = 0; attempts < 100; attempts++) {
+    for (int attempts = 0; attempts < 300; attempts++) {
       final x = _pad + rand.nextDouble() * maxX;
       final y = _pad + rand.nextDouble() * maxY;
 
       if (!_hasOverlap(x, y, positions)) {
         positions.add(_IconPosition(x, y));
-        break; // 修正: 配置できたらループを抜ける
+        break;
       }
     }
   }
 
-  // 修正: 衝突判定ロジックの分離
   bool _hasOverlap(double x, double y, List<_IconPosition> positions) {
     return positions.any((p) {
-      final dx = p.x - x;
-      final dy = p.y - y;
-      return sqrt(dx * dx + dy * dy) < _iconSize + _margin;
+      final horizontalOverlap =
+          (x < p.x + _itemWidth + _itemGap) &&
+          (x + _itemWidth + _itemGap > p.x);
+      final verticalOverlap =
+          (y < p.y + _itemHeight + _itemGap) &&
+          (y + _itemHeight + _itemGap > p.y);
+      return horizontalOverlap && verticalOverlap;
     });
+  }
+
+  String _buildLayoutKey() {
+    return widget.friends
+        .map((f) => '${f['id'] ?? ''}:${f['name'] ?? ''}')
+        .join('|');
   }
 
   Widget _buildFriendItem(int index) {
@@ -81,14 +93,24 @@ class _FriendListViewState extends State<FriendListView> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 修正: 画面サイズ確定時の座標生成をスッキリ記述
-        _positions ??= _generatePositions(
-          constraints.maxWidth,
-          constraints.maxHeight,
-        );
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final layoutKey = _buildLayoutKey();
+
+        final needsRebuild =
+            _positions == null ||
+            _lastWidth != width ||
+            _lastHeight != height ||
+            _lastLayoutKey != layoutKey;
+
+        if (needsRebuild) {
+          _positions = _generatePositions(width, height);
+          _lastWidth = width;
+          _lastHeight = height;
+          _lastLayoutKey = layoutKey;
+        }
 
         return Stack(
-          // 修正: ネストを浅くするためメソッドで要素を展開
           children: List.generate(widget.friends.length, _buildFriendItem),
         );
       },
