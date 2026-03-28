@@ -20,7 +20,7 @@ class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this.ref) {
     ref.listen<AsyncValue<dynamic>>(
       authNotifierProvider,
-      (_, __) => notifyListeners(),
+	  (previous, next) => notifyListeners(),
     );
   }
 }
@@ -41,8 +41,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnAuthPage =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
-          state.matchedLocation == '/' ||
-          state.matchedLocation == '/encounter-result';
+	      state.matchedLocation == '/';
 
       // ログイン済みで認証ページにいる場合 → ホームへ
       if (isLoggedIn && isOnAuthPage) return '/home';

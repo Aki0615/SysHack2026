@@ -73,4 +73,20 @@ class HomeNotifier extends AsyncNotifier<HomeState> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(_fetchHomeData);
   }
+
+  /// すれ違い保存成功時に、表示カウントを即時に+1する
+  /// サーバー再同期前でもUI上で増加が見えるようにする
+  void incrementEncounterCountOptimistically() {
+    if (!state.hasValue) return;
+    final current = state.value!;
+
+    state = AsyncValue.data(
+      HomeState(
+        totalEncounters: current.totalEncounters + 1,
+        todayEncounters: current.todayEncounters + 1,
+        unconfirmed: current.unconfirmed,
+        randomThree: current.randomThree,
+      ),
+    );
+  }
 }

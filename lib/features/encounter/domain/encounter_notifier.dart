@@ -85,12 +85,22 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
     try {
       final repo = ref.read(encounterRepositoryProvider);
       // API仕様書通り my_id, target_id のみを送信する (eventIdは送らない)
-      await repo.recordEncounter(myId: myId, targetId: targetUserId);
-      await limitService.increment();
+      final result = await repo.recordEncounter(myId: myId, targetId: targetUserId);
+      if (result.created) {
+        await limitService.increment();
+      } else {
+        debugPrint('すれ違いは新規保存されませんでした: ${result.message ?? 'no message'}');
+      }
       state = AsyncValue.data(await _fetchPendingEncounters());
     } catch (e) {
       debugPrint('すれ違い記録の保存に失敗: $e');
     }
+  }
+
+  /// サーバーから未確認すれ違いデータを再取得する
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(_fetchPendingEncounters);
   }
 
   /// 「確認した！」ボタンが押された時の処理
