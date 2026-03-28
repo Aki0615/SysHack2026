@@ -25,9 +25,17 @@ class PlazaRepository {
 
     if (data is List) {
       return data
-          .map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } else if (data is Map<String, dynamic>) {
+      if (data['encounters'] is List) {
+        final encounters = data['encounters'] as List;
+        return encounters
+            .whereType<Map>()
+            .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
       return [UserModel.fromJson(data)];
     }
     return [];
