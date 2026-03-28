@@ -29,7 +29,10 @@ class EncounterRepository {
     try {
       final response = await _dio.post(
         '/encounters/resolve',
-        data: {"ephemeral_id": ephemeralId},
+        data: {
+          "token": ephemeralId,
+          "ephemeral_id": ephemeralId,
+        },
       );
       return response.data['user_id'] as String;
     } on DioException catch (e) {
@@ -58,9 +61,24 @@ class EphemeralToken {
   EphemeralToken({required this.token, required this.expiresAt});
 
   factory EphemeralToken.fromJson(Map<String, dynamic> json) {
+    DateTime parseExpiresAt() {
+      final expiresAtRaw = json['expires_at'];
+      if (expiresAtRaw is String && expiresAtRaw.isNotEmpty) {
+        return DateTime.parse(expiresAtRaw);
+      }
+
+      final expiresInRaw = json['expires_in'];
+      final expiresInSec = int.tryParse(expiresInRaw?.toString() ?? '');
+      if (expiresInSec != null) {
+        return DateTime.now().add(Duration(seconds: expiresInSec));
+      }
+
+      return DateTime.now().add(const Duration(hours: 1));
+    }
+
     return EphemeralToken(
       token: json['token'] as String,
-      expiresAt: DateTime.parse(json['expires_at'] as String),
+      expiresAt: parseExpiresAt(),
     );
   }
 
