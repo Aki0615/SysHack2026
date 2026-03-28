@@ -107,11 +107,19 @@ class CalendarNotifier extends Notifier<CalendarState> {
         dateString: dateString,
       );
 
-      final count = data['count'] as int? ?? 0;
+      final count =
+          (data['encounter_count'] as int?) ?? (data['count'] as int?) ?? 0;
+      final event =
+          data['event'] as String? ??
+          ((data['event_names'] as List?)?.cast<String?>().firstWhere(
+            (name) => name != null && name.isNotEmpty,
+            orElse: () => null,
+          ));
+
       if (count > 0) {
         return MapEntry(date, {
           'count': count,
-          'event': data['event'],
+          'event': event,
         });
       }
     } catch (_) {
