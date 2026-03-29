@@ -5,7 +5,7 @@ import '../../auth/domain/auth_notifier.dart';
 
 /// カレンダー画面のデータ状態
 class CalendarState {
-  /// 日付ごとのすれ違いデータ（キー: DateTime、値: {count, event}）
+  /// 日付ごとのすれ違いデータ（キー: DateTime、値: {count, event, users}）
   final Map<DateTime, Map<String, dynamic>> encounterDays;
 
   /// 月の合計すれ違い数
@@ -115,17 +115,47 @@ class CalendarNotifier extends Notifier<CalendarState> {
             (name) => name != null && name.isNotEmpty,
             orElse: () => null,
           ));
+      final users = _parseEncounterUsers(data);
 
       if (count > 0) {
         return MapEntry(date, {
           'count': count,
           'event': event,
+          'users': users,
         });
       }
     } catch (_) {
       // エラーは無視
     }
     return null;
+  }
+
+  List<Map<String, dynamic>> _parseEncounterUsers(Map<String, dynamic> data) {
+    final candidates = [
+      data['users'],
+      data['encounter_users'],
+      data['encounters'],
+    ];
+
+    for (final candidate in candidates) {
+      if (candidate is List) {
+        return candidate
+            .whereType<Map>()
+            .map(
+              (raw) => {
+                'id': raw['id']?.toString() ?? '',
+                'name': raw['name']?.toString() ?? '',
+                'iconUrl':
+                    (raw['icon_url'] ?? raw['iconUrl'])?.toString() ?? '',
+                'comment': (raw['one_word'] ?? raw['comment'])?.toString() ?? '',
+              },
+            )
+            .where((user) => user['id']!.isNotEmpty)
+            .toList();
+      }
+    }
+
+    return const [];
   }
 
   /// 特定日のデータを取得

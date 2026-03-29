@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../ble/ble_notifier.dart';
 import '../domain/encounter_model.dart';
 import '../domain/encounter_notifier.dart';
 
@@ -312,6 +313,7 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
 
   Future<void> _handleConfirmAll() async {
     await ref.read(encounterNotifierProvider.notifier).confirmAll();
+    ref.read(bleNotifierProvider.notifier).resetEncounterCount();
     if (mounted) context.go('/home');
   }
 

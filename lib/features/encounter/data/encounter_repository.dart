@@ -77,6 +77,34 @@ class EncounterRepository {
       message: message,
     );
   }
+
+  /// すれ違い結果を確認済みにする（PUT /users/:id/encounters/confirm）
+  Future<void> confirmAllEncounters(String userId) async {
+    await _dio.put('/users/$userId/encounters/confirm');
+  }
+
+  /// 解除済み実績一覧を取得する（GET /users/:id/achievements）
+  Future<List<UnlockedAchievement>> fetchUnlockedAchievements(String userId) async {
+    final response = await _dio.get('/users/$userId/achievements');
+    final body = response.data;
+    if (body is! Map<String, dynamic>) {
+      return const [];
+    }
+
+    final achievements = (body['achievements'] as List?) ?? const [];
+    return achievements
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .where((e) => e['is_unlocked'] == true)
+        .map(
+          (e) => UnlockedAchievement(
+            id: e['id']?.toString() ?? '',
+            title: e['title']?.toString() ?? '',
+          ),
+        )
+        .where((a) => a.id.isNotEmpty)
+        .toList();
+  }
 }
 
 class EncounterRecordResult {
@@ -87,6 +115,13 @@ class EncounterRecordResult {
     required this.created,
     this.message,
   });
+}
+
+class UnlockedAchievement {
+  final String id;
+  final String title;
+
+  const UnlockedAchievement({required this.id, required this.title});
 }
 
 /// エフェメラルトークン（短期間有効なBLEアドバタイズ用トークン）
