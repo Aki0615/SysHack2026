@@ -89,6 +89,17 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<BleState>(bleNotifierProvider, (previous, next) {
+      final prevCount = previous?.confirmedEncounterCount ?? 0;
+      final hasNewEncounter = next.confirmedEncounterCount > prevCount;
+      if (!hasNewEncounter) return;
+
+      final location = GoRouterState.of(context).matchedLocation;
+      if (location != '/encounter-result') {
+        context.go('/encounter-result');
+      }
+    });
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       body: widget.navigationShell,

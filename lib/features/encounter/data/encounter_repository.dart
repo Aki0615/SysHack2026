@@ -29,7 +29,10 @@ class EncounterRepository {
     try {
       final response = await _dio.post(
         '/encounters/resolve',
-        data: {"ephemeral_id": ephemeralId},
+        data: {
+          "token": ephemeralId,
+          "ephemeral_id": ephemeralId,
+        },
       );
       return response.data['user_id'] as String;
     } on DioException catch (e) {
@@ -38,16 +41,52 @@ class EncounterRepository {
   }
 
   /// バックグラウンドですれ違った相手のIDを送信する（POST /encounters）
-  Future<void> recordEncounter({
+  Future<EncounterRecordResult> recordEncounter({
     required String myId,
-    required String targetId,
+    String? targetId,
+    String? targetToken,
   }) async {
-    await _dio.post(
+    if ((targetId == null || targetId.isEmpty) &&
+        (targetToken == null || targetToken.isEmpty)) {
+      throw Exception('targetId か targetToken のどちらかが必要です');
+    }
+
+    final data = <String, dynamic>{
+      'my_id': myId,
+      if (targetId != null && targetId.isNotEmpty) 'target_id': targetId,
+      if (targetToken != null && targetToken.isNotEmpty) ...{
+        'target_token': targetToken,
+        // 後方互換のため従来キーも併送
+        'ephemeral_id': targetToken,
+        'token': targetToken,
+      },
+    };
+
+    final response = await _dio.post(
       '/encounters',
-      data: {"my_id": myId, "target_id": targetId},
+      data: data,
       options: Options(contentType: 'application/json'),
     );
+
+    final status = response.statusCode ?? 0;
+    final body = response.data;
+    final message = body is Map<String, dynamic> ? body['message']?.toString() : null;
+
+    return EncounterRecordResult(
+      created: status == 201,
+      message: message,
+    );
   }
+}
+
+class EncounterRecordResult {
+  final bool created;
+  final String? message;
+
+  const EncounterRecordResult({
+    required this.created,
+    this.message,
+  });
 }
 
 /// エフェメラルトークン（短期間有効なBLEアドバタイズ用トークン）
@@ -58,9 +97,24 @@ class EphemeralToken {
   EphemeralToken({required this.token, required this.expiresAt});
 
   factory EphemeralToken.fromJson(Map<String, dynamic> json) {
+    DateTime parseExpiresAt() {
+      final expiresAtRaw = json['expires_at'];
+      if (expiresAtRaw is String && expiresAtRaw.isNotEmpty) {
+        return DateTime.parse(expiresAtRaw);
+      }
+
+      final expiresInRaw = json['expires_in'];
+      final expiresInSec = int.tryParse(expiresInRaw?.toString() ?? '');
+      if (expiresInSec != null) {
+        return DateTime.now().add(Duration(seconds: expiresInSec));
+      }
+
+      return DateTime.now().add(const Duration(hours: 1));
+    }
+
     return EphemeralToken(
       token: json['token'] as String,
-      expiresAt: DateTime.parse(json['expires_at'] as String),
+      expiresAt: parseExpiresAt(),
     );
   }
 

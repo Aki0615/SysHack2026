@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 // 修正: 不要なコメントを削除、定数とレイアウトを整理
 class TodayEncounterCard extends StatelessWidget {
   final int todayCount;
-  final int dailyLimit;
 
   const TodayEncounterCard({
     super.key,
     required this.todayCount,
-    required this.dailyLimit,
   });
 
   @override
@@ -69,15 +67,15 @@ class TodayEncounterCard extends StatelessWidget {
           Text(
             '$todayCount',
             style: const TextStyle(
-              color: Color(0xFF3AAA3A),
+              color: Color(0xFF1A1A1A),
               fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(width: 4),
-          Text(
-            '/ $dailyLimit人',
-            style: const TextStyle(color: Color(0xFF757575), fontSize: 14),
+          const Text(
+            '人',
+            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
           ),
         ],
       ),

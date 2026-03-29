@@ -6,13 +6,11 @@ import 'today_encounter_card.dart';
 class StatsRowWidget extends StatelessWidget {
   final int plazaCount;
   final int todayCount;
-  final int dailyLimit;
 
   const StatsRowWidget({
     super.key,
     required this.plazaCount,
     required this.todayCount,
-    required this.dailyLimit,
   });
 
   @override
@@ -21,7 +19,7 @@ class StatsRowWidget extends StatelessWidget {
       children: [
         PlazaCountCard(count: plazaCount),
         const SizedBox(width: 8),
-        TodayEncounterCard(todayCount: todayCount, dailyLimit: dailyLimit),
+        TodayEncounterCard(todayCount: todayCount),
       ],
     );
   }
