@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'common/widgets/animated_bottom_nav_bar.dart';
 import 'core/network/dio_client.dart';
 import 'features/ble/ble_notifier.dart';
 import 'features/auth/domain/auth_notifier.dart';
@@ -258,56 +259,31 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFFFFF),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: widget.navigationShell.currentIndex,
-        onTap: (index) => _onTap(context, index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: const Color(0xFF3AAA3A),
-        unselectedItemColor: const Color(0xFF9E9E9E),
-        selectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
+    return AnimatedBottomNavBar(
+      currentIndex: widget.navigationShell.currentIndex,
+      onTap: (index) => _onTap(context, index),
+      items: const [
+        BottomNavItem(
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home,
+          label: 'ホーム',
         ),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 12,
+        BottomNavItem(
+          icon: Icons.people_outline,
+          activeIcon: Icons.people,
+          label: '広場',
         ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'ホーム',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: '広場',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_month),
-            label: 'カレンダー',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'マイページ',
-          ),
-        ],
-      ),
+        BottomNavItem(
+          icon: Icons.calendar_today_outlined,
+          activeIcon: Icons.calendar_month,
+          label: 'カレンダー',
+        ),
+        BottomNavItem(
+          icon: Icons.person_outline,
+          activeIcon: Icons.person,
+          label: 'マイページ',
+        ),
+      ],
     );
   }
 
