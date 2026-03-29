@@ -5,8 +5,14 @@ import 'package:go_router/go_router.dart';
 class FriendGridItem extends StatelessWidget {
   final String name;
   final String userId;
+  final String iconUrl;
 
-  const FriendGridItem({super.key, required this.name, required this.userId});
+  const FriendGridItem({
+    super.key,
+    required this.name,
+    required this.userId,
+    required this.iconUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +31,28 @@ class FriendGridItem extends StatelessWidget {
   }
 
   Widget _buildIcon() {
+    if (iconUrl.isNotEmpty) {
+      return Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF3AAA3A), width: 2),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            iconUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildFallbackIcon(),
+          ),
+        ),
+      );
+    }
+
+    return _buildFallbackIcon();
+  }
+
+  Widget _buildFallbackIcon() {
     return Container(
       width: 64,
       height: 64,

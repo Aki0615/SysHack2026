@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'features/ble/ble_notifier.dart';
 import 'features/auth/domain/auth_notifier.dart';
+import 'features/encounter/domain/encounter_notifier.dart';
 
 /// メイン画面（4タブのBottomNavigationBar）
 /// ログイン後に表示される画面で、BLEすれ違い機能のライフサイクルを管理する
@@ -48,11 +49,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
+        // バックグラウンド移行時点の未確認データを保存して次回起動比較に使う
+        ref.read(encounterNotifierProvider.notifier).saveShutdownSnapshot();
         // バックグラウンドに移行 → BLEは停止しない（継続）
         debugPrint('アプリがバックグラウンドに移行しました（BLE継続中）');
         break;
       case AppLifecycleState.detached:
         // アプリが完全に終了 → BLEを停止
+        ref.read(encounterNotifierProvider.notifier).saveShutdownSnapshot();
         debugPrint('アプリが終了します（BLE停止）');
         _stopBle();
         break;
