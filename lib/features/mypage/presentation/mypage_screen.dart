@@ -23,6 +23,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   String _name = '';
   String _comment = '';
   String _techStack = '';
+  String _affiliation = '';
   String _twitter = '';
   String _github = '';
   String _connpass = '';
@@ -31,6 +32,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   late TextEditingController _nameCtrl;
   late TextEditingController _commentCtrl;
   late TextEditingController _techStackCtrl;
+  late TextEditingController _affiliationCtrl;
   late TextEditingController _twitterCtrl;
   late TextEditingController _githubCtrl;
   late TextEditingController _connpassCtrl;
@@ -48,6 +50,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     _nameCtrl = TextEditingController();
     _commentCtrl = TextEditingController();
     _techStackCtrl = TextEditingController();
+    _affiliationCtrl = TextEditingController();
     _twitterCtrl = TextEditingController();
     _githubCtrl = TextEditingController();
     _connpassCtrl = TextEditingController();
@@ -59,6 +62,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     _nameCtrl.dispose();
     _commentCtrl.dispose();
     _techStackCtrl.dispose();
+    _affiliationCtrl.dispose();
     _twitterCtrl.dispose();
     _githubCtrl.dispose();
     _connpassCtrl.dispose();
@@ -74,6 +78,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         _name = user.name.isNotEmpty ? user.name : '';
         _comment = user.oneWord.isNotEmpty ? user.oneWord : '';
         _techStack = user.techStack.isNotEmpty ? user.techStack : '';
+        _affiliation = user.affiliation.isNotEmpty ? user.affiliation : '';
         _twitter = user.twitterUrl.isNotEmpty ? user.twitterUrl : '';
         _github = user.githubUrl.isNotEmpty ? user.githubUrl : '';
         _connpass = user.connpassUrl.isNotEmpty ? user.connpassUrl : '';
@@ -144,6 +149,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       _nameCtrl.text = _name;
       _commentCtrl.text = _comment;
       _techStackCtrl.text = _techStack;
+      _affiliationCtrl.text = _affiliation;
       _twitterCtrl.text = _twitter;
       _githubCtrl.text = _github;
       _connpassCtrl.text = _connpass;
@@ -170,6 +176,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         'name': _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text,
         'one_word': _commentCtrl.text,      // 空でも送信（削除の意思を表現）
         'tech_stack': _techStackCtrl.text,  // 空でも送信
+        'affiliation': _affiliationCtrl.text,
         'twitter_url': _twitterCtrl.text,   // 空でも送信
         'github_url': _githubCtrl.text,     // 空でも送信
         'connpass_url': _connpassCtrl.text, // 空でも送信
@@ -186,6 +193,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         _name = _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text;
         _comment = _commentCtrl.text;
         _techStack = _techStackCtrl.text;
+        _affiliation = _affiliationCtrl.text;
         _twitter = _twitterCtrl.text;
         _github = _githubCtrl.text;
         _connpass = _connpassCtrl.text;
@@ -621,6 +629,25 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       iconColor: const Color(0xFF1565C0),
                       label: '技術スタック',
                       value: _techStack,
+                    ),
+              const Divider(
+                color: Color(0xFFE0E0E0),
+                height: 1,
+                thickness: 0.5,
+              ),
+              // 所属団体
+              _isEditing
+                  ? _buildEditField(
+                      icon: Icons.business,
+                      iconColor: const Color(0xFFFF6F00),
+                      label: '所属団体',
+                      controller: _affiliationCtrl,
+                    )
+                  : _buildViewItem(
+                      icon: Icons.business,
+                      iconColor: const Color(0xFFFF6F00),
+                      label: '所属団体',
+                      value: _affiliation,
                     ),
               const Divider(
                 color: Color(0xFFE0E0E0),
