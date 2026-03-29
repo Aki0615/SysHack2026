@@ -221,7 +221,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               style: const TextStyle(color: Color(0xFF1A1A1A)),
               onChanged: (_) => _clearErrorIfNeeded(),
               decoration: InputDecoration(
-                labelText: 'パスワード',
+                labelText: 'パスワード（6文字以上）',
                 labelStyle: const TextStyle(color: Color(0xFF757575)),
                 prefixIcon: const Icon(
                   Icons.lock_outline,
