@@ -19,9 +19,7 @@ class ProfileScreen extends ConsumerWidget {
       return Scaffold(
         backgroundColor: const Color(0xFFFFFFFF),
         appBar: _buildAppBar(),
-        body: const Center(
-          child: Text('プロフィールIDが不正です'),
-        ),
+        body: const Center(child: Text('プロフィールIDが不正です')),
       );
     }
 
@@ -45,10 +43,7 @@ class ProfileScreen extends ConsumerWidget {
           child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
         ),
         error: (error, _) => Center(
-          child: Text(
-            'プロフィールの取得に失敗しました\n$error',
-            textAlign: TextAlign.center,
-          ),
+          child: Text('プロフィールの取得に失敗しました\n$error', textAlign: TextAlign.center),
         ),
       ),
     );

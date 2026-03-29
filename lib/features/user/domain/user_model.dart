@@ -26,8 +26,7 @@ abstract class UserModel with _$UserModel {
     @Default('') String oneWord,
 
     /// ロール（frontend / backend / fullstack / other）
-    @Default(UserRole.other)
-    UserRole role,
+    @Default(UserRole.other) UserRole role,
 
     /// 技術スタック（バックエンド: tech_stack）
     @Default('') String techStack,

@@ -96,9 +96,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ユーザー情報が見つかりません')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('ユーザー情報が見つかりません')));
       }
       return;
     }
@@ -169,17 +169,17 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(userRepositoryProvider);
-      
+
       // すべてのフィールドを送信（空のフィールドも含む）
       // これにより「削除」の意思が正しく伝わる
       final updateData = <String, dynamic>{
         'name': _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text,
-        'one_word': _commentCtrl.text,      // 空でも送信（削除の意思を表現）
-        'tech_stack': _techStackCtrl.text,  // 空でも送信
+        'one_word': _commentCtrl.text, // 空でも送信（削除の意思を表現）
+        'tech_stack': _techStackCtrl.text, // 空でも送信
         'affiliation': _affiliationCtrl.text,
-        'twitter_url': _twitterCtrl.text,   // 空でも送信
-        'github_url': _githubCtrl.text,     // 空でも送信
-        'connpass_username': _connpassCtrl.text, // 空でも送信
+        'twitter_url': _twitterCtrl.text, // 空でも送信
+        'github_url': _githubCtrl.text, // 空でも送信
+        'connpass_url': _connpassCtrl.text, // 空でも送信
       };
 
       // デバッグ: 送信データを表示
@@ -239,7 +239,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     }
 
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && mounted) {
         ScaffoldMessenger.of(
           context,
@@ -348,10 +351,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('削除に失敗しました: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('削除に失敗しました: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -435,8 +435,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                     height: 40,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
                 ),
@@ -709,7 +708,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       iconColor: const Color(0xFF1DA1F2),
                       label: 'Twitter',
                       value: _twitter,
-                      onLaunch: () => _launchUrl(_normalizeTwitterUrl(_twitter)),
+                      onLaunch: () =>
+                          _launchUrl(_normalizeTwitterUrl(_twitter)),
                     ),
               const Divider(
                 color: Color(0xFFE0E0E0),
@@ -749,8 +749,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       iconColor: const Color(0xFFE53935),
                       label: 'Connpass',
                       value: _connpass,
-                    onLaunch: () =>
-                      _launchUrl(_normalizeConnpassUrl(_connpass)),
+                      onLaunch: () =>
+                          _launchUrl(_normalizeConnpassUrl(_connpass)),
                     ),
             ],
           ),

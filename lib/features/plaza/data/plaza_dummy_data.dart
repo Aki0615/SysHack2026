@@ -27,7 +27,14 @@ final List<Map<String, dynamic>> dummyEvents = [
     'date': '2026/03/08',
     'location': '大阪府大阪市 グランフロント大阪',
     'count': 28,
-    'participants': ['user_2', 'user_4', 'user_6', 'user_7', 'user_9', 'user_10'],
+    'participants': [
+      'user_2',
+      'user_4',
+      'user_6',
+      'user_7',
+      'user_9',
+      'user_10',
+    ],
   },
   {
     'id': 'event_3',
@@ -59,7 +66,15 @@ final List<Map<String, dynamic>> dummyEvents = [
     'date': '2026/04/01',
     'location': '神奈川県横浜市 パシフィコ横浜',
     'count': 45,
-    'participants': ['user_1', 'user_2', 'user_3', 'user_4', 'user_5', 'user_6', 'user_7'],
+    'participants': [
+      'user_1',
+      'user_2',
+      'user_3',
+      'user_4',
+      'user_5',
+      'user_6',
+      'user_7',
+    ],
   },
   {
     'id': 'event_7',
