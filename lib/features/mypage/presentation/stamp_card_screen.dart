@@ -1,32 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../domain/achievement_model.dart';
+import '../domain/achievement_notifier.dart';
 
 /// スタンプカード（実績確認）画面
-/// マイページの「スタンプカード > 実績の確認」から遷移して表示される
-class StampCardScreen extends StatelessWidget {
+class StampCardScreen extends ConsumerWidget {
   const StampCardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final achievementState = ref.watch(achievementNotifierProvider);
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: _buildAppBar(context),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          children: [
-            _ProgressCard(
-              unlockedCount: _achievements.where((a) => a.isUnlocked).length,
-              totalCount: _achievements.length,
+      body: achievementState.when(
+        data: (data) => RefreshIndicator(
+          color: const Color(0xFF3AAA3A),
+          onRefresh: () => ref.read(achievementNotifierProvider.notifier).refresh(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              children: [
+                _ProgressCard(
+                  unlockedCount: data.unlockedCount,
+                  totalCount: data.totalCount,
+                ),
+                const SizedBox(height: 20),
+                _AchievementGrid(achievements: data.achievements),
+              ],
             ),
-            const SizedBox(height: 20),
-            _AchievementGrid(achievements: _achievements),
-          ],
+          ),
         ),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+        ),
+        error: (_, _) => _buildErrorState(context, ref),
       ),
     );
   }
 
-  /// AppBar: 戻るボタンと「スタンプカード」タイトル
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: const Color(0xFFFFFFFF),
@@ -47,90 +62,43 @@ class StampCardScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildErrorState(BuildContext context, WidgetRef ref) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 56, color: Color(0xFF9E9E9E)),
+            const SizedBox(height: 12),
+            const Text(
+              '実績の取得に失敗しました',
+              style: TextStyle(
+                color: Color(0xFF757575),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.read(achievementNotifierProvider.notifier).refresh(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3AAA3A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                '再試行',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
-
-// ─────────────────────────────────────────────────────────
-//  ダミーデータ（実績一覧）
-// ─────────────────────────────────────────────────────────
-
-/// 実績データモデル
-class _AchievementData {
-  final String emoji;
-  final String title;
-  final String description;
-  final String? unlockedDate; // nullなら未解除
-  bool get isUnlocked => unlockedDate != null;
-
-  const _AchievementData({
-    required this.emoji,
-    required this.title,
-    required this.description,
-    this.unlockedDate,
-  });
-}
-
-/// ダミーの実績一覧
-const List<_AchievementData> _achievements = [
-  _AchievementData(
-    emoji: '🎉',
-    title: 'はじめてのすれ違い',
-    description: '初めて誰かとすれ違いました！',
-    unlockedDate: '2026/3/19',
-  ),
-  _AchievementData(
-    emoji: '👥',
-    title: '10人達成',
-    description: '累計10人とすれ違いました！',
-    unlockedDate: '2026/3/19',
-  ),
-  _AchievementData(
-    emoji: '⭐',
-    title: '50人達成',
-    description: '累計50人とすれ違いました！',
-    unlockedDate: '2026/3/19',
-  ),
-  _AchievementData(
-    emoji: '💯',
-    title: '100人達成',
-    description: '累計100人とすれ違いました！',
-    unlockedDate: '2026/3/20',
-  ),
-  _AchievementData(
-    emoji: '🎨',
-    title: 'オールロール',
-    description: '全ロールの人とすれ違いました！',
-    unlockedDate: '2026/3/19',
-  ),
-  _AchievementData(
-    emoji: '⚡',
-    title: '1日5人',
-    description: '1日で5人とすれ違いました！',
-    unlockedDate: '2026/3/19',
-  ),
-  _AchievementData(
-    emoji: '🔥',
-    title: '3日連続',
-    description: '3日連続ですれ違いました！',
-    unlockedDate: '2026/3/21',
-  ),
-  _AchievementData(
-    emoji: '🏆',
-    title: '7日連続',
-    description: '7日連続ですれ違いました！',
-    unlockedDate: '2026/3/25',
-  ),
-  _AchievementData(
-    emoji: '🌟',
-    title: 'イベント参加',
-    description: 'イベントに参加してすれ違いました！',
-    unlockedDate: '2026/3/19',
-  ),
-  _AchievementData(emoji: '🔒', title: '???', description: '条件を満たすと解除されます。'),
-];
-
-// ─────────────────────────────────────────────────────────
-//  解除状況カード（プログレスバー）
-// ─────────────────────────────────────────────────────────
 
 class _ProgressCard extends StatelessWidget {
   final int unlockedCount;
@@ -150,7 +118,6 @@ class _ProgressCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // タイトル行: 「解除状況」 と 「9 / 10」
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -162,11 +129,30 @@ class _ProgressCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              _buildCountLabel(),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$unlockedCount',
+                      style: const TextStyle(
+                        color: Color(0xFF3AAA3A),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' / $totalCount',
+                      style: const TextStyle(
+                        color: Color(0xFF757575),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          // プログレスバー
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
@@ -182,45 +168,32 @@ class _ProgressCard extends StatelessWidget {
       ),
     );
   }
-
-  /// 解除数 / 合計数 のラベル
-  Widget _buildCountLabel() {
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: '$unlockedCount',
-            style: const TextStyle(
-              color: Color(0xFF3AAA3A),
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          TextSpan(
-            text: ' / $totalCount',
-            style: const TextStyle(
-              color: Color(0xFF757575),
-              fontSize: 14,
-              fontWeight: FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// ─────────────────────────────────────────────────────────
-//  実績グリッド（2カラム）
-// ─────────────────────────────────────────────────────────
-
 class _AchievementGrid extends StatelessWidget {
-  final List<_AchievementData> achievements;
+  final List<AchievementModel> achievements;
 
   const _AchievementGrid({required this.achievements});
 
   @override
   Widget build(BuildContext context) {
+    if (achievements.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: Text(
+            '実績データがありません',
+            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -238,12 +211,8 @@ class _AchievementGrid extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────
-//  個別の実績カード
-// ─────────────────────────────────────────────────────────
-
 class _AchievementCard extends StatelessWidget {
-  final _AchievementData achievement;
+  final AchievementModel achievement;
 
   const _AchievementCard({required this.achievement});
 
@@ -267,7 +236,6 @@ class _AchievementCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 絵文字アイコン（未解除ならロックアイコン）
             Text(
               isUnlocked ? achievement.emoji : '🔒',
               style: TextStyle(
@@ -276,7 +244,6 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // 実績タイトル
             Text(
               isUnlocked ? achievement.title : '???',
               textAlign: TextAlign.center,
@@ -289,9 +256,8 @@ class _AchievementCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            // 解除日
             Text(
-              isUnlocked ? achievement.unlockedDate! : '未解除',
+              achievement.unlockedDateLabel,
               style: const TextStyle(color: Color(0xFF757575), fontSize: 11),
             ),
           ],
@@ -300,23 +266,16 @@ class _AchievementCard extends StatelessWidget {
     );
   }
 
-  /// タップ時に詳細ダイアログを表示する
   void _showDetailDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) {
-        return _AchievementDetailDialog(achievement: achievement);
-      },
+      builder: (context) => _AchievementDetailDialog(achievement: achievement),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────
-//  詳細ダイアログ（タップ時の拡大表示）
-// ─────────────────────────────────────────────────────────
-
 class _AchievementDetailDialog extends StatelessWidget {
-  final _AchievementData achievement;
+  final AchievementModel achievement;
 
   const _AchievementDetailDialog({required this.achievement});
 
@@ -330,13 +289,11 @@ class _AchievementDetailDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 絵文字（大きく表示）
             Text(
               achievement.isUnlocked ? achievement.emoji : '🔒',
               style: const TextStyle(fontSize: 56),
             ),
             const SizedBox(height: 16),
-            // タイトル
             Text(
               achievement.isUnlocked ? achievement.title : '???',
               style: const TextStyle(
@@ -346,7 +303,6 @@ class _AchievementDetailDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // 説明文
             Text(
               achievement.description,
               textAlign: TextAlign.center,
@@ -355,7 +311,7 @@ class _AchievementDetailDialog extends StatelessWidget {
             if (achievement.isUnlocked) ...[
               const SizedBox(height: 4),
               Text(
-                '達成日: ${achievement.unlockedDate}',
+                '達成日: ${achievement.unlockedDateLabel}',
                 style: const TextStyle(
                   color: Color(0xFF3AAA3A),
                   fontSize: 12,
@@ -364,23 +320,24 @@ class _AchievementDetailDialog extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 24),
-            // 閉じるボタン
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF5F5F5),
-                  foregroundColor: const Color(0xFF1A1A1A),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: const Color(0xFF3AAA3A),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: const Text(
                   '閉じる',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
