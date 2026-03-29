@@ -83,17 +83,23 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildProfileImage(UserModel profile) {
-    return Container(
+    return SizedBox(
       width: 96,
       height: 96,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0x1A3AAA3A),
-        border: Border.all(color: const Color(0xFF3AAA3A), width: 3),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipOval(child: _buildProfileImageContent(profile)),
+          IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF3AAA3A), width: 3),
+              ),
+            ),
+          ),
+        ],
       ),
-      alignment: Alignment.center,
-      clipBehavior: Clip.antiAlias,
-      child: _buildProfileImageContent(profile),
     );
   }
 
@@ -184,7 +190,7 @@ class ProfileScreen extends ConsumerWidget {
                 iconColor: const Color(0xFF1DA1F2),
                 label: 'Twitter',
                 value: profile.twitterUrl,
-                onLaunch: () => _launchUrl(profile.twitterUrl),
+                onLaunch: () => _launchUrl(_normalizeTwitterUrl(profile.twitterUrl)),
               ),
               const Divider(
                 color: Color(0xFFE0E0E0),
@@ -196,7 +202,7 @@ class ProfileScreen extends ConsumerWidget {
                 iconColor: const Color(0xFF333333),
                 label: 'GitHub',
                 value: profile.githubUrl,
-                onLaunch: () => _launchUrl(profile.githubUrl),
+                onLaunch: () => _launchUrl(_normalizeGitHubUrl(profile.githubUrl)),
               ),
               const Divider(
                 color: Color(0xFFE0E0E0),
@@ -208,11 +214,7 @@ class ProfileScreen extends ConsumerWidget {
                 iconColor: const Color(0xFFE53935),
                 label: 'Connpass',
                 value: profile.connpassUrl,
-                onLaunch: () => _launchUrl(
-                  profile.connpassUrl.isNotEmpty
-                      ? 'https://connpass.com/user/${profile.connpassUrl}/'
-                      : '',
-                ),
+                onLaunch: () => _launchUrl(_normalizeConnpassUrl(profile.connpassUrl)),
               ),
             ],
           ),
@@ -223,14 +225,33 @@ class ProfileScreen extends ConsumerWidget {
 
   Future<void> _launchUrl(String url) async {
     if (url.isEmpty) return;
-    String fullUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      fullUrl = 'https://$url';
-    }
-    final uri = Uri.parse(fullUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  String _normalizeTwitterUrl(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    final handle = value.startsWith('@') ? value.substring(1) : value;
+    return 'https://x.com/$handle';
+  }
+
+  String _normalizeGitHubUrl(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    if (value.startsWith('github.com/')) return 'https://$value';
+    return 'https://github.com/$value';
+  }
+
+  String _normalizeConnpassUrl(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return '';
+    if (value.startsWith('http://') || value.startsWith('https://')) return value;
+    final username = value.startsWith('@') ? value.substring(1) : value;
+    return 'https://connpass.com/user/$username/';
   }
 
   Widget _buildViewItem({

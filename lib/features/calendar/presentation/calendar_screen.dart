@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../domain/calendar_notifier.dart';
 import 'widgets/encounter_bubble.dart';
 import 'widgets/month_selector.dart';
@@ -59,11 +62,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         );
 
     setState(() {
-      if (dayData != null) {
-        _selectedDay = date;
-      } else {
-        _selectedDay = null;
-      }
+      // すれ違いの有無に関わらず、タップした日付を選択状態にする
+      _selectedDay = date;
     });
 
     // すれ違いデータがある場合は詳細ボトムシートを表示
@@ -76,6 +76,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _showEventDetailBottomSheet(DateTime date, Map<String, dynamic> data) {
     final count = data['count'] as int;
     final eventName = data['event'] as String?;
+    final users =
+      (data['users'] as List?)
+        ?.whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList() ??
+      const <Map<String, dynamic>>[];
 
     showModalBottomSheet(
       context: context,
@@ -209,6 +215,32 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       ),
                     ),
                   ],
+                  if (users.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    const Text(
+                      'すれ違った人',
+                      style: TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: min(300.0, users.length * 88.0),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: users.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final user = users[index];
+                          return _buildEncounterUserCard(user);
+                        },
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   // 閉じるボタン
                   SizedBox(
@@ -238,6 +270,77 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEncounterUserCard(Map<String, dynamic> user) {
+    final userId = user['id']?.toString() ?? '';
+    final name = user['name']?.toString() ?? '';
+    final comment = user['comment']?.toString() ?? '';
+    final iconUrl = user['iconUrl']?.toString() ?? '';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: userId.isEmpty ? null : () => context.push('/profile/$userId'),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE0E0E0),
+                  shape: BoxShape.circle,
+                ),
+                child: iconUrl.isNotEmpty
+                    ? ClipOval(
+                        child: Image.network(
+                          iconUrl,
+                          fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                              const Icon(Icons.person, color: Color(0xFF757575)),
+                        ),
+                      )
+                    : const Icon(Icons.person, color: Color(0xFF757575)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      comment,
+                      style: const TextStyle(
+                        color: Color(0xFF757575),
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -334,6 +437,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           eventName: data['event'] as String?,
         );
       }
+
+      // 選択日にすれ違いがない場合は 0 人を表示
+      return const EncounterBubble(count: 0);
     }
 
     // 選択されていない場合は月の合計を表示

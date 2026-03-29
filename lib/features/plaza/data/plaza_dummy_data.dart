@@ -86,5 +86,5 @@ final Map<String, String> dummyProfile = {
 List<Map<String, dynamic>> getRandomFriends() {
   final shuffled = List<Map<String, dynamic>>.from(dummyFriends);
   shuffled.shuffle();
-  return shuffled.take(5).toList();
+  return shuffled.take(7).toList();
 }

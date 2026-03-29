@@ -36,12 +36,12 @@ class PlazaNotifier extends AsyncNotifier<List<UserModel>> {
     state = await AsyncValue.guard(_fetchEncounters);
   }
 
-  /// ランダムに5人を取得
+  /// ランダムに最大7人を取得
   List<UserModel> getRandomFive() {
     final users = state.value ?? [];
     if (users.isEmpty) return [];
 
     final shuffled = List<UserModel>.from(users)..shuffle();
-    return shuffled.take(5).toList();
+    return shuffled.take(7).toList();
   }
 }

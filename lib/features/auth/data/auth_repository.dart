@@ -40,7 +40,7 @@ class AuthRepository {
         "one_word": oneWord,
         "role": role,
         "tech_stack": techStack,
-        "connpass_url": connpassUrl,
+        "connpass_username": connpassUrl,
       },
       options: Options(contentType: 'application/json'),
     );

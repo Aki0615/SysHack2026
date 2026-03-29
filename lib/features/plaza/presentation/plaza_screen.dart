@@ -343,7 +343,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     );
   }
 
-  /// ランダム表示（友達をランダムに5人表示）
+  /// ランダム表示（友達をランダムに最大7人表示）
   Widget _buildRandomFriendList() {
     final plazaState = ref.watch(plazaNotifierProvider);
 
@@ -362,7 +362,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     }
 
     final shuffled = List<UserModel>.from(users)..shuffle();
-    final randomFriends = shuffled.take(5).toList();
+    final randomFriends = shuffled.take(7).toList();
 
     final randomFriendMaps = randomFriends
         .map((user) => {
