@@ -21,6 +21,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   bool _isPasswordVisible = false;
   int _currentStep = 0; // 0: 基本情報, 1: ロール選択
   String _selectedRole = 'other';
+  String? _errorMessage;
 
   /// 選択可能なロール一覧
   final _roles = [
@@ -40,21 +41,100 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.dispose();
   }
 
+  /// 入力が変更されたらエラーメッセージをクリアする
+  void _clearErrorIfNeeded() {
+    if (_errorMessage != null) {
+      setState(() => _errorMessage = null);
+    }
+  }
+
+  /// エラーメッセージを解析してユーザーフレンドリーなメッセージに変換
+  String _parseErrorMessage(Object error) {
+    final errorStr = error.toString().toLowerCase();
+    // ユーザーID重複エラー
+    if (errorStr.contains('duplicate') ||
+        errorStr.contains('already exists') ||
+        errorStr.contains('conflict') ||
+        errorStr.contains('409')) {
+      return 'このユーザーIDまたはメールアドレスは既に使用されています';
+    }
+    // メールアドレス関連のエラー
+    if (errorStr.contains('email') && errorStr.contains('invalid')) {
+      return 'メールアドレスの形式が正しくありません';
+    }
+    // パスワード関連のエラー
+    if (errorStr.contains('password')) {
+      return 'パスワードが要件を満たしていません';
+    }
+    // ネットワークエラー
+    if (errorStr.contains('timeout') ||
+        errorStr.contains('connection') ||
+        errorStr.contains('network') ||
+        errorStr.contains('socket')) {
+      return 'ネットワークに接続できません。接続を確認してください';
+    }
+    // サーバーエラー
+    if (errorStr.contains('500') || errorStr.contains('server')) {
+      return 'サーバーエラーが発生しました。しばらくしてからお試しください';
+    }
+    // その他のエラー
+    return 'アカウント作成に失敗しました。入力内容を確認してください';
+  }
+
+  /// エラーバナーWidget
+  Widget _buildErrorBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDE8E8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline,
+            color: Color(0xFFE53935),
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: Color(0xFFB71C1C),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _errorMessage = null),
+            child: const Icon(
+              Icons.close,
+              color: Color(0xFF757575),
+              size: 20,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // サインアップ成功時・エラー時の処理
     ref.listen(authNotifierProvider, (_, next) {
       next.when(
         data: (user) {
-          if (user != null) context.go('/home');
+          if (user != null) {
+            setState(() => _errorMessage = null);
+            context.go('/home');
+          }
         },
         error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString().replaceAll('Exception: ', '')),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          String message = _parseErrorMessage(error);
+          setState(() => _errorMessage = message);
         },
         loading: () {},
       );
@@ -139,6 +219,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
               style: const TextStyle(color: Color(0xFF1A1A1A)),
+              onChanged: (_) => _clearErrorIfNeeded(),
               decoration: InputDecoration(
                 labelText: 'パスワード',
                 labelStyle: const TextStyle(color: Color(0xFF757575)),
@@ -235,6 +316,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_errorMessage != null) ...[
+            _buildErrorBanner(),
+            const SizedBox(height: 16),
+          ],
           const Text(
             'あなたの専門分野を選んでください',
             style: TextStyle(color: Color(0xFF757575), fontSize: 14),
@@ -312,6 +397,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       controller: controller,
       style: const TextStyle(color: Color(0xFF1A1A1A)),
       keyboardType: keyboardType,
+      onChanged: (_) => _clearErrorIfNeeded(),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF757575)),
