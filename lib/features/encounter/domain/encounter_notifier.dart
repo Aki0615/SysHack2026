@@ -16,9 +16,25 @@ final encounterNotifierProvider =
 
 /// すれ違いデータの取得・確認・BLE検知後の処理を管理するNotifier
 class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
+  bool _startupFilterApplied = false;
+
   @override
   FutureOr<List<EncounterModel>> build() async {
-    return await _fetchPendingEncounters();
+    final encounters = await _fetchPendingEncounters();
+
+    // 起動直後の1回だけ「前回終了時点との差分」に絞って表示する
+    if (_startupFilterApplied) return encounters;
+    _startupFilterApplied = true;
+
+    final localRepo = ref.read(pendingEncounterRepositoryProvider);
+    final lastShutdownIds = await localRepo.getLastShutdownEncounterUserIds();
+    if (lastShutdownIds.isEmpty) {
+      return encounters;
+    }
+
+    return encounters
+        .where((e) => !lastShutdownIds.contains(e.encounteredUser.id))
+        .toList();
   }
 
   /// 現在のユーザーIDを取得する
@@ -120,6 +136,16 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
       debugPrint('すれ違いデータの確認処理に失敗: $e');
       state = AsyncValue.error(e, StackTrace.current);
     }
+  }
+
+  /// 次回起動時比較用に、現在の未確認ユーザーIDを保存する
+  Future<void> saveShutdownSnapshot() async {
+    final localRepo = ref.read(pendingEncounterRepositoryProvider);
+    final current = state.value ?? await localRepo.getPending();
+
+    await localRepo.saveLastShutdownEncounterUserIds(
+      current.map((e) => e.encounteredUser.id).toList(),
+    );
   }
 
   /// 未確認データが存在するか
