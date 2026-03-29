@@ -141,11 +141,19 @@ class BleService {
       }
     } else {
       // 新規検知
-      _detectionBuffer[ephemeralId] = DetectedDevice(
+      final device = DetectedDevice(
         ephemeralId: ephemeralId,
         firstDetection: now,
       );
+      _detectionBuffer[ephemeralId] = device;
       debugPrint('新規デバイス検知: $ephemeralId');
+
+      // required countが1の場合、新規検知時点で確定させる
+      if (device.meetsEncounterCriteria(now)) {
+        device.isConfirmed = true;
+        debugPrint('すれ違い確定: $ephemeralId');
+        _onEncounterConfirmed?.call(ephemeralId);
+      }
     }
   }
 

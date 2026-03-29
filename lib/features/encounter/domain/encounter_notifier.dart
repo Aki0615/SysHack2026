@@ -16,25 +16,11 @@ final encounterNotifierProvider =
 
 /// すれ違いデータの取得・確認・BLE検知後の処理を管理するNotifier
 class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
-  bool _startupFilterApplied = false;
-
   @override
   FutureOr<List<EncounterModel>> build() async {
-    final encounters = await _fetchPendingEncounters();
-
-    // 起動直後の1回だけ「前回終了時点との差分」に絞って表示する
-    if (_startupFilterApplied) return encounters;
-    _startupFilterApplied = true;
-
-    final localRepo = ref.read(pendingEncounterRepositoryProvider);
-    final lastShutdownIds = await localRepo.getLastShutdownEncounterUserIds();
-    if (lastShutdownIds.isEmpty) {
-      return encounters;
-    }
-
-    return encounters
-        .where((e) => !lastShutdownIds.contains(e.encounteredUser.id))
-        .toList();
+    // 起動時も含め、未確認データはそのまま全件表示対象にする
+    // （アプリ非起動中のすれ違いを次回起動時に確実に表示するため）
+    return await _fetchPendingEncounters();
   }
 
   /// 現在のユーザーIDを取得する
@@ -125,8 +111,12 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
     if (currentList.isEmpty) return;
 
     try {
-      // 仕様書に confirm 系API は存在しないため、Flutterクライアント上のローカル処理のみに留める
-      // （※API連携仕様書の絶対的遵守事項「仕様書にない機能は実装しない」に基づく）
+      final userId = _currentUserId;
+      if (userId == null) return;
+
+      // 「確認してホームへ」押下時にサーバー側フラグを更新し、次回起動で同じ相手が再表示されるのを防ぐ。
+      final repo = ref.read(encounterRepositoryProvider);
+      await repo.confirmAllEncounters(userId);
 
       final localRepo = ref.read(pendingEncounterRepositoryProvider);
       await localRepo.clearAll();

@@ -1,11 +1,10 @@
-// 修正: 不要なコメントを削除し、コードを最小化
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'friend_grid_item.dart';
 
 class _IconPosition {
-  final double x, y; // 修正: 変数宣言をまとめて整理
-  const _IconPosition(this.x, this.y); // 修正: シンプルなコンストラクタに変更
+  final double x, y;
+  const _IconPosition(this.x, this.y);
 }
 
 class FriendListView extends StatefulWidget {
@@ -27,46 +26,51 @@ class _FriendListViewState extends State<FriendListView> {
   double? _lastHeight;
   String _lastLayoutKey = '';
 
-  // 修正: メソッド抽出でネストを浅く整理
   List<_IconPosition> _generatePositions(double width, double height) {
     final rand = Random();
-    final positions = <_IconPosition>[];
-    final maxX = width - _itemWidth - _pad * 2;
-    final maxY = height - _itemHeight - _pad * 2;
+    final count = widget.friends.length;
+    if (count == 0) return [];
 
-    for (int i = 0; i < widget.friends.length; i++) {
-      _tryPlaceItem(rand, maxX, maxY, positions);
-    }
-    return positions;
-  }
+    final usableWidth = max(0.0, width - _pad * 2);
+    final usableHeight = max(0.0, height - _pad * 2);
+    final minCellWidth = _itemWidth + _itemGap;
+    final minCellHeight = _itemHeight + _itemGap;
+    final maxColsByWidth = max(1, (usableWidth / minCellWidth).floor());
 
-  void _tryPlaceItem(
-    Random rand,
-    double maxX,
-    double maxY,
-    List<_IconPosition> positions,
-  ) {
-    for (int attempts = 0; attempts < 300; attempts++) {
-      final x = _pad + rand.nextDouble() * maxX;
-      final y = _pad + rand.nextDouble() * maxY;
-
-      if (!_hasOverlap(x, y, positions)) {
-        positions.add(_IconPosition(x, y));
+    int columns = maxColsByWidth;
+    for (int c = maxColsByWidth; c >= 1; c--) {
+      final rows = (count / c).ceil();
+      final cellHeight = usableHeight / rows;
+      if (cellHeight >= minCellHeight) {
+        columns = c;
         break;
       }
     }
-  }
 
-  bool _hasOverlap(double x, double y, List<_IconPosition> positions) {
-    return positions.any((p) {
-      final horizontalOverlap =
-          (x < p.x + _itemWidth + _itemGap) &&
-          (x + _itemWidth + _itemGap > p.x);
-      final verticalOverlap =
-          (y < p.y + _itemHeight + _itemGap) &&
-          (y + _itemHeight + _itemGap > p.y);
-      return horizontalOverlap && verticalOverlap;
-    });
+    final rows = (count / columns).ceil();
+    final cellWidth = usableWidth / columns;
+    final cellHeight = usableHeight / rows;
+
+    final cells = List<int>.generate(rows * columns, (i) => i)..shuffle(rand);
+    final selectedCells = cells.take(count);
+    final positions = <_IconPosition>[];
+
+    for (final cellIndex in selectedCells) {
+      final col = cellIndex % columns;
+      final row = cellIndex ~/ columns;
+
+      final cellLeft = _pad + col * cellWidth;
+      final cellTop = _pad + row * cellHeight;
+
+      final extraX = max(0.0, cellWidth - _itemWidth);
+      final extraY = max(0.0, cellHeight - _itemHeight);
+      final x = cellLeft + rand.nextDouble() * extraX;
+      final y = cellTop + rand.nextDouble() * extraY;
+
+      positions.add(_IconPosition(x, y));
+    }
+
+    return positions;
   }
 
   String _buildLayoutKey() {

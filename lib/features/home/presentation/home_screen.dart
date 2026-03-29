@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../domain/home_notifier.dart';
+import '../../mypage/data/achievement_repository.dart';
+import '../../mypage/domain/achievement_notifier.dart';
 import 'widgets/stats_row_widget.dart';
 import 'widgets/quest_progress_card.dart';
 import 'widgets/comment_card_widget.dart';
@@ -12,13 +14,19 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeNotifierProvider);
+    final achievementState = ref.watch(achievementNotifierProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: _buildAppBar(),
       body: SafeArea(
         child: homeState.when(
-          data: (data) => _buildContent(context, ref, data),
+          data: (data) => _buildContent(
+            context,
+            ref,
+            data,
+            achievementState.asData?.value,
+          ),
           loading: () => const Center(
             child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
           ),
@@ -28,7 +36,12 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, HomeState data) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    HomeState data,
+    AchievementResponse? achievementData,
+  ) {
     // randomThreeが空ならunconfirmedをフォールバックとして使用
     final commentSource =
         data.randomThree.isNotEmpty ? data.randomThree : data.unconfirmed;
@@ -41,13 +54,25 @@ class HomeScreen extends ConsumerWidget {
             })
         .toList();
 
-    // クエスト進捗（5回すれ違いをクエストとする場合）
+    // クエスト進捗: 実績APIの解除率を優先し、未取得時のみ従来の今日の進捗で表示。
+    final achievementProgress = (achievementData != null &&
+        achievementData.totalCount > 0)
+      ? (achievementData.unlockedCount / achievementData.totalCount)
+        .clamp(0.0, 1.0)
+      : null;
+
     const dailyLimit = 5;
-    final progress = (data.todayEncounters / dailyLimit).clamp(0.0, 1.0);
+    final fallbackProgress = (data.todayEncounters / dailyLimit).clamp(0.0, 1.0);
+    final progress = achievementProgress ?? fallbackProgress;
 
     return RefreshIndicator(
       color: const Color(0xFF3AAA3A),
-      onRefresh: () => ref.read(homeNotifierProvider.notifier).refresh(),
+      onRefresh: () async {
+        await Future.wait([
+          ref.read(homeNotifierProvider.notifier).refresh(),
+          ref.read(achievementNotifierProvider.notifier).refresh(),
+        ]);
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
