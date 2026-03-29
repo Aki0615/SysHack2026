@@ -16,6 +16,7 @@ final pendingEncounterRepositoryProvider = Provider<PendingEncounterRepository>(
 class PendingEncounterRepository {
   final FlutterSecureStorage _storage;
   static const _key = 'pending_encounters';
+  static const _lastShutdownIdsKey = 'last_shutdown_encounter_user_ids';
 
   PendingEncounterRepository(this._storage);
 
@@ -38,6 +39,21 @@ class PendingEncounterRepository {
   /// ローカルの未確認データをすべてクリアする
   Future<void> clearAll() async {
     await _storage.delete(key: _key);
+  }
+
+  /// 前回終了時点の未確認ユーザーID一覧を保存する
+  Future<void> saveLastShutdownEncounterUserIds(List<String> userIds) async {
+    final unique = userIds.toSet().toList();
+    await _storage.write(key: _lastShutdownIdsKey, value: jsonEncode(unique));
+  }
+
+  /// 前回終了時点の未確認ユーザーID一覧を取得する
+  Future<Set<String>> getLastShutdownEncounterUserIds() async {
+    final jsonStr = await _storage.read(key: _lastShutdownIdsKey);
+    if (jsonStr == null || jsonStr.isEmpty) return <String>{};
+
+    final list = (jsonDecode(jsonStr) as List).map((e) => e.toString());
+    return list.toSet();
   }
 
   /// リストをJSON文字列としてセキュアストレージに書き込む

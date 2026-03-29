@@ -85,6 +85,10 @@ class _FriendListViewState extends State<FriendListView> {
       child: FriendGridItem(
         name: widget.friends[index]['name']?.toString() ?? '',
         userId: widget.friends[index]['id']?.toString() ?? '',
+        iconUrl: (widget.friends[index]['iconUrl'] ??
+                widget.friends[index]['icon_url'])
+            ?.toString() ??
+            '',
       ),
     );
   }

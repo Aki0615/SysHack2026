@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../user/data/user_repository.dart';
 import '../../user/domain/user_model.dart';
-import 'widgets/info_list_item.dart';
 
 final profileProvider = FutureProvider.family<UserModel, String>((ref, userId) {
   return ref.read(userRepositoryProvider).getUser(userId);
@@ -121,12 +121,17 @@ class ProfileScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0x1A3AAA3A),
+        color: const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
-        comment,
-        style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+        comment.isEmpty ? '一言未設定' : comment,
+        style: TextStyle(
+          color: comment.isEmpty
+              ? const Color(0xFF9E9E9E)
+              : const Color(0xFF1A1A1A),
+          fontSize: 14,
+        ),
         textAlign: TextAlign.center,
       ),
     );
@@ -137,7 +142,7 @@ class ProfileScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'INFORMATION',
+          'MY INFORMATION',
           style: TextStyle(
             color: Color(0xFF757575),
             fontSize: 12,
@@ -147,49 +152,190 @@ class ProfileScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF9F9F9),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             children: [
-              InfoListItem(
+              _buildViewItem(
                 icon: Icons.code,
-                iconBackgroundColor: const Color(0xFF1565C0),
-                title: '技術スタック',
+                iconColor: const Color(0xFF1565C0),
+                label: '技術スタック',
                 value: profile.techStack,
               ),
-              InfoListItem(
-                icon: Icons.alternate_email,
-                iconBackgroundColor: const Color(0xFF1DA1F2),
-                title: 'Twitter',
-                value: profile.twitterUrl,
-                isUrl: true,
+              const Divider(
+                color: Color(0xFFE0E0E0),
+                height: 1,
+                thickness: 0.5,
               ),
-              InfoListItem(
-                icon: Icons.link,
-                iconBackgroundColor: const Color(0xFF333333),
-                title: 'GitHub',
-                value: profile.githubUrl,
-                isUrl: true,
-              ),
-              InfoListItem(
-                icon: Icons.language,
-                iconBackgroundColor: const Color(0xFF3AAA3A),
-                title: 'ポートフォリオ',
-                value: profile.portfolioUrl,
-                isUrl: true,
-              ),
-              InfoListItem(
+              _buildViewItem(
                 icon: Icons.business,
-                iconBackgroundColor: const Color(0xFFFF6F00),
-                title: '所属団体',
+                iconColor: const Color(0xFFFF6F00),
+                label: '所属団体',
                 value: profile.affiliation,
-                showDivider: false,
+              ),
+              const Divider(
+                color: Color(0xFFE0E0E0),
+                height: 1,
+                thickness: 0.5,
+              ),
+              _buildLinkItem(
+                icon: Icons.alternate_email,
+                iconColor: const Color(0xFF1DA1F2),
+                label: 'Twitter',
+                value: profile.twitterUrl,
+                onLaunch: () => _launchUrl(profile.twitterUrl),
+              ),
+              const Divider(
+                color: Color(0xFFE0E0E0),
+                height: 1,
+                thickness: 0.5,
+              ),
+              _buildLinkItem(
+                icon: Icons.link,
+                iconColor: const Color(0xFF333333),
+                label: 'GitHub',
+                value: profile.githubUrl,
+                onLaunch: () => _launchUrl(profile.githubUrl),
+              ),
+              const Divider(
+                color: Color(0xFFE0E0E0),
+                height: 1,
+                thickness: 0.5,
+              ),
+              _buildLinkItem(
+                icon: Icons.event,
+                iconColor: const Color(0xFFE53935),
+                label: 'Connpass',
+                value: profile.connpassUrl,
+                onLaunch: () => _launchUrl(
+                  profile.connpassUrl.isNotEmpty
+                      ? 'https://connpass.com/user/${profile.connpassUrl}/'
+                      : '',
+                ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    if (url.isEmpty) return;
+    String fullUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      fullUrl = 'https://$url';
+    }
+    final uri = Uri.parse(fullUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Widget _buildViewItem({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          _buildIconCircle(icon, iconColor),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF757575),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value.isEmpty ? '未設定' : value,
+                  style: TextStyle(
+                    color: value.isEmpty
+                        ? const Color(0xFF9E9E9E)
+                        : const Color(0xFF1A1A1A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLinkItem({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+    required VoidCallback onLaunch,
+  }) {
+    final isEmpty = value.isEmpty;
+
+    return InkWell(
+      onTap: isEmpty ? null : onLaunch,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            _buildIconCircle(icon, iconColor),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Color(0xFF757575),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isEmpty ? '未設定' : value,
+                    style: TextStyle(
+                      color: isEmpty
+                          ? const Color(0xFF9E9E9E)
+                          : const Color(0xFF1A1A1A),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.open_in_new,
+              color: isEmpty
+                  ? const Color(0xFFBDBDBD)
+                  : const Color(0xFF757575),
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconCircle(IconData icon, Color color) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: Icon(icon, color: Colors.white, size: 18),
     );
   }
 }
