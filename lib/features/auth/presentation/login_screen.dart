@@ -16,12 +16,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// 入力が変更されたらエラーメッセージをクリアする
+  void _clearErrorIfNeeded() {
+    if (_errorMessage != null) {
+      setState(() => _errorMessage = null);
+    }
   }
 
   @override
@@ -32,15 +40,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen(authNotifierProvider, (_, next) {
       next.when(
         data: (user) {
-          if (user != null) context.go('/home');
+          if (user != null) {
+            setState(() => _errorMessage = null);
+            context.go('/home');
+          }
         },
         error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString().replaceAll('Exception: ', '')),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          // エラーメッセージを解析してユーザーフレンドリーなメッセージに変換
+          String message = _parseErrorMessage(error);
+          setState(() => _errorMessage = message);
         },
         loading: () {},
       );
@@ -58,6 +66,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 48),
+                if (_errorMessage != null) ...[
+                  _buildErrorBanner(),
+                  const SizedBox(height: 16),
+                ],
                 _buildEmailField(),
                 const SizedBox(height: 16),
                 _buildPasswordField(),
@@ -69,6 +81,74 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// エラーメッセージを解析してユーザーフレンドリーなメッセージに変換
+  String _parseErrorMessage(Object error) {
+    final errorStr = error.toString().toLowerCase();
+    // 認証エラー（401）やパスワード・メール関連のエラー
+    if (errorStr.contains('401') ||
+        errorStr.contains('unauthorized') ||
+        errorStr.contains('invalid') ||
+        errorStr.contains('incorrect') ||
+        errorStr.contains('password') ||
+        errorStr.contains('email') ||
+        errorStr.contains('credentials')) {
+      return 'メールアドレスまたはパスワードが正しくありません';
+    }
+    // ネットワークエラー
+    if (errorStr.contains('timeout') ||
+        errorStr.contains('connection') ||
+        errorStr.contains('network') ||
+        errorStr.contains('socket')) {
+      return 'ネットワークに接続できません。接続を確認してください';
+    }
+    // サーバーエラー
+    if (errorStr.contains('500') || errorStr.contains('server')) {
+      return 'サーバーエラーが発生しました。しばらくしてからお試しください';
+    }
+    // その他のエラー
+    return 'ログインに失敗しました。入力内容を確認してください';
+  }
+
+  /// エラーバナーWidget
+  Widget _buildErrorBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDE8E8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline,
+            color: Color(0xFFE53935),
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: Color(0xFFB71C1C),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _errorMessage = null),
+            child: const Icon(
+              Icons.close,
+              color: Color(0xFF757575),
+              size: 20,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -115,6 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       controller: _emailController,
       style: const TextStyle(color: Color(0xFF1A1A1A)),
       keyboardType: TextInputType.emailAddress,
+      onChanged: (_) => _clearErrorIfNeeded(),
       decoration: _inputDecoration(
         label: 'メールアドレス',
         icon: Icons.email_outlined,
@@ -133,6 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
       style: const TextStyle(color: Color(0xFF1A1A1A)),
+      onChanged: (_) => _clearErrorIfNeeded(),
       decoration: _inputDecoration(
         label: 'パスワード',
         icon: Icons.lock_outline,
