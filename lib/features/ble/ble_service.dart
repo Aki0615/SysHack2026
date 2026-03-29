@@ -7,7 +7,7 @@ import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 const String streetPassServiceUuid = '12345678-1234-1234-1234-123456789abc';
 
 /// すれ違い確定の条件
-const int _requiredDetectionCount = 3; // 5秒以内に3回以上検知
+const int _requiredDetectionCount = 1; // 1回検知で確定（端末差による取りこぼし対策）
 const Duration _detectionWindow = Duration(seconds: 5); // 検知ウィンドウ
 const Duration _cleanupInterval = Duration(seconds: 10); // バッファクリーンアップ間隔
 
@@ -151,12 +151,18 @@ class BleService {
 
   /// ScanResultからエフェメラルIDを抽出
   String? _extractEphemeralId(ScanResult result) {
-    // デバイス名からエフェメラルIDを取得
+    // アドバタイズ名 / プラットフォーム名 の順で確認する
     // フォーマット: "SP_{ephemeralId}"
-    final name = result.device.platformName;
-    if (name.startsWith('SP_')) {
-      return name.substring(3);
+    final advertisedName = result.advertisementData.advName;
+    if (advertisedName.startsWith('SP_')) {
+      return advertisedName.substring(3);
     }
+
+    final platformName = result.device.platformName;
+    if (platformName.startsWith('SP_')) {
+      return platformName.substring(3);
+    }
+
     return null;
   }
 
