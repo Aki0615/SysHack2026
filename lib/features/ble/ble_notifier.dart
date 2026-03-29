@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/domain/auth_notifier.dart';
 import '../encounter/data/encounter_repository.dart';
+import '../encounter/domain/encounter_notifier.dart';
+import '../home/domain/home_notifier.dart';
 import 'ble_service.dart';
 
 /// BLE状態を管理するプロバイダー
@@ -131,23 +134,36 @@ class BleNotifier extends Notifier<BleState> {
     try {
       final encounterRepo = ref.read(encounterRepositoryProvider);
 
-      // 1. エフェメラルIDから実ユーザーIDを解決
-      final targetUserId = await encounterRepo.resolveEphemeralId(ephemeralId);
-
-      // 2. すれ違いをサーバーに記録
-      await encounterRepo.recordEncounter(
+      // 1. 受信したエフェメラルトークンをそのままサーバーへ渡して記録
+      final recordResult = await encounterRepo.recordEncounter(
         myId: myId,
-        targetId: targetUserId,
+        targetToken: ephemeralId,
       );
 
-      // 3. カウントを更新
+      if (!recordResult.created) {
+        debugPrint('すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}');
+        // skip/self でも最新状態には同期する
+        unawaited(ref.read(homeNotifierProvider.notifier).refresh());
+        unawaited(ref.read(encounterNotifierProvider.notifier).refresh());
+        return;
+      }
+
+      // 2. カウントを更新
       state = state.copyWith(
         confirmedEncounterCount: state.confirmedEncounterCount + 1,
       );
 
-      debugPrint('すれ違いを記録しました: $targetUserId');
+      // 3. 画面表示用データを更新
+      // Home人数は即時に+1して、後からサーバー再同期する
+      final homeNotifier = ref.read(homeNotifierProvider.notifier);
+      homeNotifier.incrementEncounterCountOptimistically();
+      await ref.read(encounterNotifierProvider.notifier).refresh();
+      unawaited(homeNotifier.refresh());
+
+      debugPrint('すれ違いを記録しました: token=$ephemeralId');
     } catch (e) {
       debugPrint('すれ違い記録エラー: $e');
+      state = state.copyWith(lastError: e.toString());
       // エラーが発生しても継続（次回リトライのためバッファは保持しない設計）
     }
   }
