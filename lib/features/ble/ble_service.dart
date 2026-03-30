@@ -18,19 +18,15 @@ class DetectedDevice {
   DateTime firstDetection;
   bool isConfirmed;
 
-  DetectedDevice({
-    required this.ephemeralId,
-    required this.firstDetection,
-  })  : detectionTimes = [firstDetection],
-        isConfirmed = false;
+  DetectedDevice({required this.ephemeralId, required this.firstDetection})
+    : detectionTimes = [firstDetection],
+      isConfirmed = false;
 
   /// 新しい検知を記録
   void addDetection(DateTime time) {
     detectionTimes.add(time);
     // 5秒より古い検知は削除
-    detectionTimes.removeWhere(
-      (t) => time.difference(t) > _detectionWindow,
-    );
+    detectionTimes.removeWhere((t) => time.difference(t) > _detectionWindow);
   }
 
   /// すれ違い確定条件を満たしているか
@@ -39,9 +35,9 @@ class DetectedDevice {
     if (isConfirmed) return false; // 既に確定済み
 
     // 5秒以内の検知回数をカウント
-    final recentCount = detectionTimes.where(
-      (t) => now.difference(t) <= _detectionWindow,
-    ).length;
+    final recentCount = detectionTimes
+        .where((t) => now.difference(t) <= _detectionWindow)
+        .length;
 
     return recentCount >= _requiredDetectionCount;
   }
