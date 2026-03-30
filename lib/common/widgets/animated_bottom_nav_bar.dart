@@ -17,6 +17,11 @@ class BottomNavItem {
 }
 
 class AnimatedBottomNavBar extends StatefulWidget {
+  // 高さ計算のために外部から参照可能な定数
+  static const double circleR = 28.0;
+  static const double barH = 64.0;
+  static const double protrude = 18.0;
+
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<BottomNavItem> items;
@@ -43,10 +48,9 @@ class _AnimatedBottomNavBarState extends State<AnimatedBottomNavBar>
   late AnimationController _controller;
   late Animation<double> _posAnim;
 
-  // 円の半径・バーの高さ・バー上への突出量
-  static const double _circleR = 28.0;
-  static const double _barH = 64.0;
-  static const double _protrude = 18.0; // バー上に突出するピクセル
+  static const double _circleR = AnimatedBottomNavBar.circleR;
+  static const double _barH = AnimatedBottomNavBar.barH;
+  static const double _protrude = AnimatedBottomNavBar.protrude;
 
   @override
   void initState() {
