@@ -20,13 +20,10 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: _buildAppBar(),
       body: SafeArea(
+        bottom: false,
         child: homeState.when(
-          data: (data) => _buildContent(
-            context,
-            ref,
-            data,
-            achievementState.asData?.value,
-          ),
+          data: (data) =>
+              _buildContent(context, ref, data, achievementState.asData?.value),
           loading: () => const Center(
             child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
           ),
@@ -43,26 +40,34 @@ class HomeScreen extends ConsumerWidget {
     AchievementResponse? achievementData,
   ) {
     // randomThreeが空ならunconfirmedをフォールバックとして使用
-    final commentSource =
-        data.randomThree.isNotEmpty ? data.randomThree : data.unconfirmed;
+    final commentSource = data.randomThree.isNotEmpty
+        ? data.randomThree
+        : data.unconfirmed;
 
     final comments = commentSource
-        .map((user) => {
-              'name': user['name']?.toString() ?? '',
-              'comment': user['one_word']?.toString() ?? '',
-              'iconUrl': user['icon_url']?.toString() ?? '',
-            })
+        .map(
+          (user) => {
+            'name': user['name']?.toString() ?? '',
+            'comment': user['one_word']?.toString() ?? '',
+            'iconUrl': user['icon_url']?.toString() ?? '',
+          },
+        )
         .toList();
 
     // クエスト進捗: 実績APIの解除率を優先し、未取得時のみ従来の今日の進捗で表示。
-    final achievementProgress = (achievementData != null &&
-        achievementData.totalCount > 0)
-      ? (achievementData.unlockedCount / achievementData.totalCount)
-        .clamp(0.0, 1.0)
-      : null;
+    final achievementProgress =
+        (achievementData != null && achievementData.totalCount > 0)
+        ? (achievementData.unlockedCount / achievementData.totalCount).clamp(
+            0.0,
+            1.0,
+          )
+        : null;
 
     const dailyLimit = 5;
-    final fallbackProgress = (data.todayEncounters / dailyLimit).clamp(0.0, 1.0);
+    final fallbackProgress = (data.todayEncounters / dailyLimit).clamp(
+      0.0,
+      1.0,
+    );
     final progress = achievementProgress ?? fallbackProgress;
 
     return RefreshIndicator(
@@ -75,7 +80,12 @@ class HomeScreen extends ConsumerWidget {
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 24,
+          bottom: 120,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -114,10 +124,7 @@ class HomeScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF3AAA3A),
             ),
-            child: const Text(
-              '再試行',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('再試行', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

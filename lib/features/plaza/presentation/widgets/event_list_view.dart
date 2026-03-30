@@ -5,15 +5,12 @@ class EventListView extends StatelessWidget {
   final List<Map<String, dynamic>> events;
   final void Function(Map<String, dynamic> event)? onEventTap;
 
-  const EventListView({
-    super.key,
-    required this.events,
-    this.onEventTap,
-  });
+  const EventListView({super.key, required this.events, this.onEventTap});
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 120),
       itemCount: events.length,
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
