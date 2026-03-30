@@ -84,6 +84,7 @@ class PlazaRepository {
         'waiting': waiting,
         'limit': limit,
         'location': map['location']?.toString() ?? '',
+        'event_url': map['event_url']?.toString() ?? '',
       };
     }).toList();
   }

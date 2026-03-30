@@ -99,6 +99,8 @@ class CalendarNotifier extends Notifier<CalendarState> {
         merged['event'] = merged['event'] ?? event['name']?.toString() ?? '';
         merged['event_location'] =
             event['location']?.toString() ?? merged['event_location']?.toString() ?? '';
+        merged['event_url'] =
+          event['event_url']?.toString() ?? merged['event_url']?.toString() ?? '';
         merged['count'] = merged['count'] ?? 0;
         merged['users'] = merged['users'] ?? const <Map<String, dynamic>>[];
 
@@ -142,6 +144,7 @@ class CalendarNotifier extends Notifier<CalendarState> {
           'count': count,
           'event': event,
           'event_location': data['event_location']?.toString() ?? '',
+          'event_url': data['event_url']?.toString() ?? '',
           'users': users,
         });
       }
