@@ -177,8 +177,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         'one_word': _commentCtrl.text, // 空でも送信（削除の意思を表現）
         'tech_stack': _techStackCtrl.text, // 空でも送信
         'affiliation': _affiliationCtrl.text,
-        'twitter_url': _twitterCtrl.text,   // 空でも送信
-        'github_url': _githubCtrl.text,     // 空でも送信
+        'twitter_url': _twitterCtrl.text, // 空でも送信
+        'github_url': _githubCtrl.text, // 空でも送信
         'connpass_username': _connpassCtrl.text, // 空でも送信
       };
 
@@ -239,7 +239,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     }
 
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && mounted) {
         ScaffoldMessenger.of(
           context,
@@ -372,10 +375,16 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
+        bottom: false,
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 24,
+                bottom: 120,
+              ),
               child: Column(
                 children: [
                   _buildProfileHeader(),
@@ -705,7 +714,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       iconColor: const Color(0xFF1DA1F2),
                       label: 'Twitter',
                       value: _twitter,
-                      onLaunch: () => _launchUrl(_normalizeTwitterUrl(_twitter)),
+                      onLaunch: () =>
+                          _launchUrl(_normalizeTwitterUrl(_twitter)),
                     ),
               const Divider(
                 color: Color(0xFFE0E0E0),
@@ -745,8 +755,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                       iconColor: const Color(0xFFE53935),
                       label: 'Connpass',
                       value: _connpass,
-                    onLaunch: () =>
-                      _launchUrl(_normalizeConnpassUrl(_connpass)),
+                      onLaunch: () =>
+                          _launchUrl(_normalizeConnpassUrl(_connpass)),
                     ),
             ],
           ),

@@ -56,6 +56,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       backgroundColor: const Color(0xFFFFFFFF),
       appBar: _buildAppBar(context, selectedIndex),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             Container(height: 1, color: const Color(0xFFE0E0E0)),
@@ -293,6 +294,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
         }
 
         return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 120),
           itemCount: filteredFriends.length,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
@@ -325,10 +327,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           return _buildEmptyState('該当するイベントが見つかりません');
         }
 
-        return EventListView(
-          events: filteredEvents,
-          onEventTap: _onEventTap,
-        );
+        return EventListView(events: filteredEvents, onEventTap: _onEventTap);
       },
       loading: () => const Center(
         child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
@@ -347,17 +346,17 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     final uri = Uri.tryParse(url);
     if (uri == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('イベントURLが不正です')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('イベントURLが不正です')));
       return;
     }
 
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('イベントURLを開けませんでした')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('イベントURLを開けませんでした')));
     }
   }
 
@@ -399,16 +398,18 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     final randomFriends = shuffled.take(7).toList();
 
     final randomFriendMaps = randomFriends
-        .map((user) => {
-              'id': user.id,
-              'name': user.name,
-              'comment': user.oneWord,
-              'iconUrl': user.iconUrl,
-            })
+        .map(
+          (user) => {
+            'id': user.id,
+            'name': user.name,
+            'comment': user.oneWord,
+            'iconUrl': user.iconUrl,
+          },
+        )
         .toList();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 136),
       child: Column(
         children: [
           // 説明テキスト
@@ -493,8 +494,10 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                         child: Image.network(
                           user.iconUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.person, color: Color(0xFF757575)),
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.person,
+                            color: Color(0xFF757575),
+                          ),
                         ),
                       )
                     : const Icon(Icons.person, color: Color(0xFF757575)),
@@ -654,7 +657,10 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                 const Divider(height: 1, color: Color(0xFFE0E0E0)),
                 // すれ違った人一覧
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       const Text(
