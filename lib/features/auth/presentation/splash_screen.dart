@@ -146,16 +146,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Bluetoothを連想させるアイコン
-        Container(
+        // アプリアイコン
+        Image.asset(
+          'assets/images/app_icon.png',
           width: 100,
           height: 100,
-          decoration: BoxDecoration(
-            color: const Color(0x1A3AAA3A),
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0x4D3AAA3A)),
-          ),
-          child: const Icon(Icons.bluetooth, size: 50, color: Color(0xFF3AAA3A)),
         ),
         const SizedBox(height: 24),
         const Text(
