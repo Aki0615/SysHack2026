@@ -130,6 +130,10 @@ class HomeScreen extends ConsumerWidget {
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
+      leading: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Image.asset('assets/images/app_icon.png'),
+      ),
       title: const Text(
         'ホーム',
         style: TextStyle(
