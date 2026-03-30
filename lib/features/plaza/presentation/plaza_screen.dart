@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../domain/plaza_notifier.dart';
 import '../../user/domain/user_model.dart';
 import 'widgets/friend_list_view.dart';
@@ -326,7 +327,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
 
         return EventListView(
           events: filteredEvents,
-          onEventTap: _showEventDetailBottomSheet,
+          onEventTap: _onEventTap,
         );
       },
       loading: () => const Center(
@@ -334,6 +335,30 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       ),
       error: (_, __) => _buildEmptyState('イベントの取得に失敗しました'),
     );
+  }
+
+  Future<void> _onEventTap(Map<String, dynamic> event) async {
+    final url = event['event_url']?.toString().trim() ?? '';
+    if (url.isEmpty) {
+      _showEventDetailBottomSheet(event);
+      return;
+    }
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベントURLが不正です')),
+      );
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベントURLを開けませんでした')),
+      );
+    }
   }
 
   Widget _buildEmptyState(String message) {
