@@ -119,7 +119,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
         'isIgnoringBatteryOptimizations',
       );
       if (ignored == true) {
-        await storage.write(key: 'battery_optimization_prompt_shown', value: '1');
+        await storage.write(
+          key: 'battery_optimization_prompt_shown',
+          value: '1',
+        );
         return;
       }
 
@@ -177,7 +180,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
   void _navigateToEncounterIfPending({required String reason}) {
     if (!mounted) return;
 
-    final pending = ref.read(encounterNotifierProvider).asData?.value ?? const [];
+    final pending =
+        ref.read(encounterNotifierProvider).asData?.value ?? const [];
     if (pending.isEmpty) {
       debugPrint('すれ違い結果遷移スキップ: pending=0 (reason=$reason)');
       return;
@@ -185,11 +189,15 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     final location = GoRouterState.of(context).matchedLocation;
     if (location == '/encounter-result') {
-      debugPrint('すれ違い結果遷移スキップ: 既に表示中 (reason=$reason, pending=${pending.length})');
+      debugPrint(
+        'すれ違い結果遷移スキップ: 既に表示中 (reason=$reason, pending=${pending.length})',
+      );
       return;
     }
 
-    debugPrint('すれ違い結果へ遷移: reason=$reason, pending=${pending.length}, from=$location');
+    debugPrint(
+      'すれ違い結果へ遷移: reason=$reason, pending=${pending.length}, from=$location',
+    );
     context.go('/encounter-result');
   }
 
@@ -208,7 +216,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
       }
     });
 
-    ref.listen<AsyncValue<List<EncounterModel>>>(encounterNotifierProvider, (previous, next) {
+    ref.listen<AsyncValue<List<EncounterModel>>>(encounterNotifierProvider, (
+      previous,
+      next,
+    ) {
       final prevCount = previous?.asData?.value.length ?? 0;
       final nextCount = next.asData?.value.length ?? 0;
       final hasNewPending = nextCount > prevCount;
@@ -222,7 +233,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
       final titles = next.newlyUnlockedAchievementTitles;
       if (titles.isEmpty) return;
 
-      final previousTitles = previous?.newlyUnlockedAchievementTitles ?? const [];
+      final previousTitles =
+          previous?.newlyUnlockedAchievementTitles ?? const [];
       if (listEquals(previousTitles, titles)) return;
 
       final message = titles.length == 1
@@ -240,7 +252,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
           ),
         );
 
-      ref.read(bleNotifierProvider.notifier).consumeUnlockedAchievementNotifications();
+      ref
+          .read(bleNotifierProvider.notifier)
+          .consumeUnlockedAchievementNotifications();
     });
 
     final pendingState = ref.watch(encounterNotifierProvider);
@@ -253,6 +267,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
+      extendBody: true, // タブバーの背後まで画面を広げる
       body: widget.navigationShell,
       bottomNavigationBar: _buildBottomNav(context),
     );
