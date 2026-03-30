@@ -134,7 +134,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: const Color(0xFFFFFFFF),
       body: Center(
         child: FadeTransition(opacity: _fadeAnimation, child: _buildLogo()),
       ),
@@ -151,29 +151,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           width: 100,
           height: 100,
           decoration: BoxDecoration(
+            color: const Color(0x1A3AAA3A),
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.blue.shade800],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            border: Border.all(color: const Color(0x4D3AAA3A)),
           ),
-          child: const Icon(Icons.bluetooth, size: 50, color: Colors.white),
+          child: const Icon(Icons.bluetooth, size: 50, color: Color(0xFF3AAA3A)),
         ),
         const SizedBox(height: 24),
         const Text(
           'StreetPass',
           style: TextStyle(
-            color: Colors.white,
+            color: Color(0xFF1A1A1A),
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        const Text(
           'すれ違いで、つながる',
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+          style: TextStyle(color: Color(0xFF757575), fontSize: 14),
         ),
       ],
     );
