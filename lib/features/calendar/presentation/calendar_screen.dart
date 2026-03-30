@@ -1,8 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../domain/calendar_notifier.dart';
 import 'widgets/encounter_bubble.dart';
 import 'widgets/month_selector.dart';
@@ -76,6 +75,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _showEventDetailBottomSheet(DateTime date, Map<String, dynamic> data) {
     final count = data['count'] as int;
     final eventName = data['event'] as String?;
+    final normalizedEventName = eventName?.trim() ?? '';
+    final hasEventName = normalizedEventName.isNotEmpty;
+    final eventLocation = data['event_location'] as String?;
+    final eventUrl = data['event_url'] as String?;
+    final hasEventUrl = hasEventName && eventUrl != null && eventUrl.trim().isNotEmpty;
     final users =
       (data['users'] as List?)
         ?.whereType<Map>()
@@ -88,189 +92,236 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFFFFFFFF),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ハンドル
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE0E0E0),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  // 日付
-                  Text(
-                    '${date.year}年${date.month}月${date.day}日',
-                    style: const TextStyle(
-                      color: Color(0xFF757575),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // イベント名またはタイトル
-                  Text(
-                    eventName ?? 'すれ違い記録',
-                    style: const TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // すれ違い人数
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.people,
-                          color: Color(0xFF3AAA3A),
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'すれ違った人数',
-                          style: const TextStyle(
-                            color: Color(0xFF757575),
-                            fontSize: 14,
+        return FractionallySizedBox(
+          heightFactor: 0.9,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFFFFF),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE0E0E0),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        const Spacer(),
-                        Text(
-                          '$count人',
-                          style: const TextStyle(
-                            color: Color(0xFF3AAA3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (eventName != null) ...[
-                    const SizedBox(height: 16),
-                    // イベント情報
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.event,
-                            color: Color(0xFF757575),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'イベント',
-                                  style: TextStyle(
-                                    color: Color(0xFF757575),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  eventName,
-                                  style: const TextStyle(
-                                    color: Color(0xFF1A1A1A),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (users.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    const Text(
-                      'すれ違った人',
-                      style: TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: min(300.0, users.length * 88.0),
-                      ),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: users.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final user = users[index];
-                          return _buildEncounterUserCard(user);
-                        },
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  // 閉じるボタン
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3AAA3A),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 20),
+                      Text(
+                        '${date.year}年${date.month}月${date.day}日',
+                        style: const TextStyle(
+                          color: Color(0xFF757575),
+                          fontSize: 14,
                         ),
                       ),
-                      child: const Text(
-                        '閉じる',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
+                      const SizedBox(height: 8),
+                      Text(
+                        hasEventName ? normalizedEventName : 'イベントなし',
+                        style: const TextStyle(
+                          color: Color(0xFF1A1A1A),
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.people,
+                              color: Color(0xFF3AAA3A),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'すれ違った人数',
+                              style: TextStyle(
+                                color: Color(0xFF757575),
+                                fontSize: 14,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '$count人',
+                              style: const TextStyle(
+                                color: Color(0xFF3AAA3A),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: hasEventUrl
+                              ? () => _openEventUrl(context, eventUrl)
+                              : null,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.event,
+                                  color: Color(0xFF757575),
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        hasEventUrl ? 'イベント（タップで開く）' : 'イベント',
+                                        style: const TextStyle(
+                                          color: Color(0xFF757575),
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        hasEventName ? normalizedEventName : 'イベントなし',
+                                        style: const TextStyle(
+                                          color: Color(0xFF1A1A1A),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (eventLocation != null && eventLocation.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          eventLocation,
+                                          style: const TextStyle(
+                                            color: Color(0xFF757575),
+                                            fontSize: 12,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                if (hasEventUrl)
+                                  const Icon(
+                                    Icons.open_in_new,
+                                    color: Color(0xFF3AAA3A),
+                                    size: 20,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (users.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        const Text(
+                          'すれ違った人',
+                          style: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: users.length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final user = users[index];
+                            return _buildEncounterUserCard(user);
+                          },
+                        ),
+                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3AAA3A),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          '閉じる',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         );
       },
     );
+  }
+
+  Future<void> _openEventUrl(BuildContext context, String? rawUrl) async {
+    final url = rawUrl?.trim() ?? '';
+    if (url.isEmpty) return;
+
+    final uri = Uri.tryParse(url);
+    if (uri == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベントURLが不正です')),
+      );
+      return;
+    }
+
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('イベントURLを開けませんでした')),
+      );
+    }
   }
 
   Widget _buildEncounterUserCard(Map<String, dynamic> user) {
@@ -432,14 +483,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
       if (entry != null) {
         final data = entry.value;
+        final rawEventName = data['event'] as String?;
+        final normalizedEventName = rawEventName?.trim() ?? '';
         return EncounterBubble(
           count: data['count'] as int,
-          eventName: data['event'] as String?,
+          eventName: normalizedEventName.isNotEmpty
+              ? normalizedEventName
+              : 'イベントなし',
         );
       }
 
       // 選択日にすれ違いがない場合は 0 人を表示
-      return const EncounterBubble(count: 0);
+      return const EncounterBubble(count: 0, eventName: 'イベントなし');
     }
 
     // 選択されていない場合は月の合計を表示

@@ -5,6 +5,7 @@ class CalendarDayCell extends StatelessWidget {
   final DateTime date;
   final bool isToday;
   final bool hasEncounter;
+  final bool hasEvent;
   final String? eventName;
   final VoidCallback onTap;
 
@@ -13,6 +14,7 @@ class CalendarDayCell extends StatelessWidget {
     required this.date,
     required this.isToday,
     required this.hasEncounter,
+    required this.hasEvent,
     this.eventName,
     required this.onTap,
   });
@@ -30,7 +32,7 @@ class CalendarDayCell extends StatelessWidget {
   }
 
   Widget _buildCellContent() {
-    // すれ違いがある場合: 緑の丸背景 + 白文字 + イベント名
+    // すれ違いがある日は元の表示（緑の丸背景 + 白文字 + イベント名）
     if (hasEncounter) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -71,6 +73,28 @@ class CalendarDayCell extends StatelessWidget {
       );
     }
 
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: _buildDayNumber(),
+          ),
+          if (hasEvent)
+            const Positioned(
+              top: 1,
+              right: 1,
+              child: _EventDot(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDayNumber() {
     // 今日の場合: 緑の枠線 + 緑文字（太字）
     if (isToday) {
       return Container(
@@ -103,5 +127,22 @@ class CalendarDayCell extends StatelessWidget {
   String _truncateEventName(String name) {
     if (name.length <= 6) return name;
     return '${name.substring(0, 5)}…';
+  }
+}
+
+class _EventDot extends StatelessWidget {
+  const _EventDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0xFF3AAA3A), width: 1),
+      ),
+    );
   }
 }

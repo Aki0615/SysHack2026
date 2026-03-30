@@ -23,4 +23,21 @@ class CalendarRepository {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  /// 月内のイベント一覧を取得する（GET /events）
+  Future<List<Map<String, dynamic>>> fetchMonthEvents(DateTime month) async {
+    final response = await _dio.get('/events');
+    final data = response.data;
+    if (data is! List) return const [];
+
+    return data
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .where((event) {
+          final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
+          if (startAt == null) return false;
+          return startAt.year == month.year && startAt.month == month.month;
+        })
+        .toList();
+  }
 }

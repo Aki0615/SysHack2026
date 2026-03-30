@@ -40,4 +40,52 @@ class PlazaRepository {
     }
     return [];
   }
+
+  /// イベント一覧を取得する（GET /events）
+  ///
+  /// 画面の既存UIに合わせ、`name/date/count/location` のMap形式へ変換して返す。
+  Future<List<Map<String, dynamic>>> fetchEvents() async {
+    final response = await _dio.get('/events');
+    final data = response.data;
+    if (data is! List) return [];
+
+    return data.whereType<Map>().map((raw) {
+      final map = Map<String, dynamic>.from(raw);
+      final startAt = DateTime.tryParse(map['start_at']?.toString() ?? '');
+      final date = startAt == null
+          ? ''
+          : '${startAt.year.toString().padLeft(4, '0')}/${startAt.month.toString().padLeft(2, '0')}/${startAt.day.toString().padLeft(2, '0')}';
+
+      final countValue = map['count'];
+        final acceptedValue = map['accepted'];
+        final waitingValue = map['waiting'];
+        final limitValue = map['limit'];
+
+        final accepted = acceptedValue is int
+          ? acceptedValue
+          : int.tryParse(acceptedValue?.toString() ?? '') ?? 0;
+        final waiting = waitingValue is int
+          ? waitingValue
+          : int.tryParse(waitingValue?.toString() ?? '') ?? 0;
+        final limit = limitValue is int
+          ? limitValue
+          : int.tryParse(limitValue?.toString() ?? '') ?? 0;
+
+        final count = countValue is int
+          ? countValue
+          : int.tryParse(countValue?.toString() ?? '') ?? accepted;
+
+      return {
+        'id': map['id'],
+        'name': map['name']?.toString() ?? '',
+        'date': date,
+        'count': count,
+        'accepted': accepted,
+        'waiting': waiting,
+        'limit': limit,
+        'location': map['location']?.toString() ?? '',
+        'event_url': map['event_url']?.toString() ?? '',
+      };
+    }).toList();
+  }
 }

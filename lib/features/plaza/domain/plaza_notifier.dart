@@ -8,6 +8,11 @@ import '../../auth/domain/auth_notifier.dart';
 final plazaNotifierProvider =
     AsyncNotifierProvider<PlazaNotifier, List<UserModel>>(PlazaNotifier.new);
 
+final plazaEventNotifierProvider =
+    AsyncNotifierProvider<PlazaEventNotifier, List<Map<String, dynamic>>>(
+      PlazaEventNotifier.new,
+    );
+
 /// 広場画面のデータ管理を行うNotifier
 class PlazaNotifier extends AsyncNotifier<List<UserModel>> {
   @override
@@ -43,5 +48,26 @@ class PlazaNotifier extends AsyncNotifier<List<UserModel>> {
 
     final shuffled = List<UserModel>.from(users)..shuffle();
     return shuffled.take(7).toList();
+  }
+}
+
+class PlazaEventNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
+  @override
+  FutureOr<List<Map<String, dynamic>>> build() async {
+    return await _fetchEvents();
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchEvents() async {
+    try {
+      final repo = ref.read(plazaRepositoryProvider);
+      return await repo.fetchEvents();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(_fetchEvents);
   }
 }
