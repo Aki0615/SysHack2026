@@ -65,6 +65,8 @@ class CalendarNotifier extends Notifier<CalendarState> {
       );
       int monthTotal = 0;
 
+      final monthEventsFuture = repo.fetchMonthEvents(month);
+
       // 月の各日のデータを取得（並列で取得）
       final futures = <Future<MapEntry<DateTime, Map<String, dynamic>>?>>[];
 
@@ -77,12 +79,30 @@ class CalendarNotifier extends Notifier<CalendarState> {
       }
 
       final results = await Future.wait(futures);
+      final monthEvents = await monthEventsFuture;
 
       for (final entry in results) {
         if (entry != null) {
           newEncounterDays[entry.key] = entry.value;
           monthTotal += (entry.value['count'] as int?) ?? 0;
         }
+      }
+
+      for (final event in monthEvents) {
+        final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
+        if (startAt == null) continue;
+        final date = DateTime(startAt.year, startAt.month, startAt.day);
+
+        final existing = newEncounterDays[date] ?? const <String, dynamic>{};
+        final merged = Map<String, dynamic>.from(existing);
+
+        merged['event'] = merged['event'] ?? event['name']?.toString() ?? '';
+        merged['event_location'] =
+            event['location']?.toString() ?? merged['event_location']?.toString() ?? '';
+        merged['count'] = merged['count'] ?? 0;
+        merged['users'] = merged['users'] ?? const <Map<String, dynamic>>[];
+
+        newEncounterDays[date] = merged;
       }
 
       state = CalendarState(
@@ -121,6 +141,7 @@ class CalendarNotifier extends Notifier<CalendarState> {
         return MapEntry(date, {
           'count': count,
           'event': event,
+          'event_location': data['event_location']?.toString() ?? '',
           'users': users,
         });
       }

@@ -76,6 +76,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _showEventDetailBottomSheet(DateTime date, Map<String, dynamic> data) {
     final count = data['count'] as int;
     final eventName = data['event'] as String?;
+    final eventLocation = data['event_location'] as String?;
     final users =
       (data['users'] as List?)
         ?.whereType<Map>()
@@ -208,6 +209,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                if (eventLocation != null && eventLocation.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    eventLocation,
+                                    style: const TextStyle(
+                                      color: Color(0xFF757575),
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ],
                             ),
                           ),

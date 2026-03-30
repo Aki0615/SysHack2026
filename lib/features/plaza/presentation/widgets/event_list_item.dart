@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 class EventListItem extends StatelessWidget {
   final String eventName;
   final String date;
-  final String count;
+  final String location;
   final VoidCallback? onTap;
 
   const EventListItem({
     super.key,
     required this.eventName,
     required this.date,
-    required this.count,
+    required this.location,
     this.onTap,
   });
 
@@ -80,11 +80,15 @@ class EventListItem extends StatelessWidget {
               style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.people, color: Color(0xFF757575), size: 12),
+            const Icon(Icons.location_on, color: Color(0xFF757575), size: 12),
             const SizedBox(width: 4),
-            Text(
-              '$count人',
-              style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+            Expanded(
+              child: Text(
+                location,
+                style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

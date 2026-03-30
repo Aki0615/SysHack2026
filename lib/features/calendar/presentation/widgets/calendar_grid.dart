@@ -110,13 +110,16 @@ class CalendarGrid extends StatelessWidget {
               e.key.day == date.day,
           orElse: () => null,
         );
-        final hasEncounter = encounterEntry != null;
+        final count = (encounterEntry?.value['count'] as int?) ?? 0;
+        final hasEncounter = count > 0;
         final eventName = encounterEntry?.value['event'] as String?;
+        final hasEvent = eventName != null && eventName.isNotEmpty;
 
         return CalendarDayCell(
           date: date,
           isToday: isToday,
           hasEncounter: hasEncounter,
+          hasEvent: hasEvent,
           eventName: eventName,
           onTap: () => onDaySelected(date),
         );

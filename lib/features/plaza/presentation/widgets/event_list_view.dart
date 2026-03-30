@@ -21,7 +21,7 @@ class EventListView extends StatelessWidget {
         return EventListItem(
           eventName: event['name']?.toString() ?? '',
           date: event['date']?.toString() ?? '',
-          count: event['count']?.toString() ?? '',
+          location: event['location']?.toString() ?? '',
           onTap: onEventTap != null ? () => onEventTap!(event) : null,
         );
       },

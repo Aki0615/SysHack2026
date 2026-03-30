@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/plaza_dummy_data.dart';
 import '../domain/plaza_notifier.dart';
 import '../../user/domain/user_model.dart';
 import 'widgets/friend_list_view.dart';
@@ -310,20 +309,30 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
 
   /// フィルタリングされたイベントリスト
   Widget _buildFilteredEventList(String query) {
-    final filteredEvents = query.isEmpty
-        ? dummyEvents
-        : dummyEvents.where((event) {
-            final name = event['name']?.toString().toLowerCase() ?? '';
-            return name.contains(query.toLowerCase());
-          }).toList();
+    final eventState = ref.watch(plazaEventNotifierProvider);
 
-    if (filteredEvents.isEmpty) {
-      return _buildEmptyState('該当するイベントが見つかりません');
-    }
+    return eventState.when(
+      data: (events) {
+        final filteredEvents = query.isEmpty
+            ? events
+            : events.where((event) {
+                final name = event['name']?.toString().toLowerCase() ?? '';
+                return name.contains(query.toLowerCase());
+              }).toList();
 
-    return EventListView(
-      events: filteredEvents,
-      onEventTap: _showEventDetailBottomSheet,
+        if (filteredEvents.isEmpty) {
+          return _buildEmptyState('該当するイベントが見つかりません');
+        }
+
+        return EventListView(
+          events: filteredEvents,
+          onEventTap: _showEventDetailBottomSheet,
+        );
+      },
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+      ),
+      error: (_, __) => _buildEmptyState('イベントの取得に失敗しました'),
     );
   }
 
@@ -502,10 +511,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
 
   /// イベント詳細ボトムシートを表示
   void _showEventDetailBottomSheet(Map<String, dynamic> event) {
-    final participants = (event['participants'] as List<dynamic>?) ?? [];
-    final participantUsers = dummyFriends
-        .where((f) => participants.contains(f['id']))
-        .toList();
+    final participantUsers = const <Map<String, dynamic>>[];
 
     showModalBottomSheet(
       context: context,
@@ -645,51 +651,59 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     ],
                   ),
                 ),
-                // 参加者リスト
-                Flexible(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    shrinkWrap: true,
-                    itemCount: participantUsers.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final user = participantUsers[index];
-                      return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFFE0E0E0),
-                                shape: BoxShape.circle,
+                if (participantUsers.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    child: Text(
+                      '参加者の詳細データはまだありません',
+                      style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      shrinkWrap: true,
+                      itemCount: participantUsers.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final user = participantUsers[index];
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F5F5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE0E0E0),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.person,
+                                  color: Color(0xFF757575),
+                                  size: 20,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.person,
-                                color: Color(0xFF757575),
-                                size: 20,
+                              const SizedBox(width: 12),
+                              Text(
+                                user['name'] ?? '',
+                                style: const TextStyle(
+                                  color: Color(0xFF1A1A1A),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              user['name'] ?? '',
-                              style: const TextStyle(
-                                color: Color(0xFF1A1A1A),
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
                 const SizedBox(height: 20),
               ],
             ),
