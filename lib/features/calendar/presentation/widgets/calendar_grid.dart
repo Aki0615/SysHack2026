@@ -84,7 +84,7 @@ class CalendarGrid extends StatelessWidget {
         crossAxisCount: 7,
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
-        childAspectRatio: 0.8, // 縦長にしてイベント名表示用のスペースを確保
+        childAspectRatio: 1.0,
       ),
       itemCount: totalCells,
       itemBuilder: (context, index) {
@@ -120,7 +120,6 @@ class CalendarGrid extends StatelessWidget {
           isToday: isToday,
           hasEncounter: hasEncounter,
           hasEvent: hasEvent,
-          eventName: eventName,
           onTap: () => onDaySelected(date),
         );
       },
