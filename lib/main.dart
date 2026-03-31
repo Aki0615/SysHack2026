@@ -5,12 +5,12 @@ import 'common/router/app_router.dart';
 
 void main() {
   // Riverpodの状態管理スコープでアプリ全体をラップ
-  runApp(const ProviderScope(child: StreetPassApp()));
+  runApp(const ProviderScope(child: PasslyApp()));
 }
 
 /// アプリのルートWidget
-class StreetPassApp extends ConsumerWidget {
-  const StreetPassApp({super.key});
+class PasslyApp extends ConsumerWidget {
+  const PasslyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,7 +18,7 @@ class StreetPassApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'StreetPass',
+      title: 'Passly',
       debugShowCheckedModeBanner: false,
       // 日本語ロケール設定
       locale: const Locale('ja', 'JP'),

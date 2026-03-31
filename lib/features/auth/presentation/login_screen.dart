@@ -164,7 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         const SizedBox(height: 16),
         const Text(
-          'StreetPass',
+          'Passly',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 28,
