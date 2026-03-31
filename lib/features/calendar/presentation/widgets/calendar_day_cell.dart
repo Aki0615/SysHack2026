@@ -6,7 +6,6 @@ class CalendarDayCell extends StatelessWidget {
   final bool isToday;
   final bool hasEncounter;
   final bool hasEvent;
-  final String? eventName;
   final VoidCallback onTap;
 
   const CalendarDayCell({
@@ -15,7 +14,6 @@ class CalendarDayCell extends StatelessWidget {
     required this.isToday,
     required this.hasEncounter,
     required this.hasEvent,
-    this.eventName,
     required this.onTap,
   });
 
@@ -32,44 +30,42 @@ class CalendarDayCell extends StatelessWidget {
   }
 
   Widget _buildCellContent() {
-    // すれ違いがある日は元の表示（緑の丸背景 + 白文字 + イベント名）
+    // すれ違いがある日は緑の丸背景。イベントがあれば右上に印を表示。
     if (hasEncounter) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: const BoxDecoration(
-              color: Color(0xFF3AAA3A),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '${date.day}',
-              style: const TextStyle(
-                color: Color(0xFFFFFFFF),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+      return SizedBox(
+        width: 28,
+        height: 28,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF3AAA3A),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${date.day}',
+                  style: const TextStyle(
+                    color: Color(0xFFFFFFFF),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ),
-          if (eventName != null && eventName!.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              _truncateEventName(eventName!),
-              style: const TextStyle(
-                color: Color(0xFF3AAA3A),
-                fontSize: 8,
-                fontWeight: FontWeight.bold,
+            if (hasEvent)
+              const Positioned(
+                top: 1,
+                right: 1,
+                child: _EventDot(),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
           ],
-        ],
+        ),
       );
     }
 
@@ -123,11 +119,6 @@ class CalendarDayCell extends StatelessWidget {
     );
   }
 
-  /// イベント名を短縮表示（最大6文字）
-  String _truncateEventName(String name) {
-    if (name.length <= 6) return name;
-    return '${name.substring(0, 5)}…';
-  }
 }
 
 class _EventDot extends StatelessWidget {
