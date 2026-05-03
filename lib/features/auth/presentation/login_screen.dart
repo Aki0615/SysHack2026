@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../domain/auth_notifier.dart';
 
 /// ログイン画面Widget
@@ -55,7 +56,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
@@ -118,23 +119,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDE8E8),
+        color: AppColors.errorBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: Color(0xFFE53935),
-            size: 24,
-          ),
+          const Icon(Icons.error_outline, color: AppColors.error, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               _errorMessage!,
               style: const TextStyle(
-                color: Color(0xFFB71C1C),
+                color: AppColors.errorDark,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -144,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             onTap: () => setState(() => _errorMessage = null),
             child: const Icon(
               Icons.close,
-              color: Color(0xFF757575),
+              color: AppColors.textSecondary,
               size: 20,
             ),
           ),
@@ -157,16 +154,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Image.asset(
-          'assets/images/app_icon.png',
-          width: 80,
-          height: 80,
-        ),
+        Image.asset('assets/images/app_icon.png', width: 80, height: 80),
         const SizedBox(height: 16),
         const Text(
           'Passly',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -174,7 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: 8),
         const Text(
           'ログインしてすれ違いを始めよう',
-          style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
       ],
     );
@@ -184,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
-      style: const TextStyle(color: Color(0xFF1A1A1A)),
+      style: const TextStyle(color: AppColors.textPrimary),
       keyboardType: TextInputType.emailAddress,
       onChanged: (_) => _clearErrorIfNeeded(),
       decoration: _inputDecoration(
@@ -204,7 +197,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
-      style: const TextStyle(color: Color(0xFF1A1A1A)),
+      style: const TextStyle(color: AppColors.textPrimary),
       onChanged: (_) => _clearErrorIfNeeded(),
       decoration: _inputDecoration(
         label: 'パスワード',
@@ -232,8 +225,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return ElevatedButton(
       onPressed: isLoading ? null : _handleLogin,
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF3AAA3A),
-        disabledBackgroundColor: const Color(0xFF3AAA3A).withValues(alpha: 0.5),
+        backgroundColor: AppColors.primary,
+        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -264,12 +257,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: RichText(
         text: const TextSpan(
           text: 'アカウントをお持ちでない方は',
-          style: TextStyle(color: Color(0xFF757575)),
+          style: TextStyle(color: AppColors.textSecondary),
           children: [
             TextSpan(
               text: '新規登録',
               style: TextStyle(
-                color: Color(0xFF3AAA3A),
+                color: AppColors.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -298,22 +291,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF757575)),
+      labelStyle: const TextStyle(color: AppColors.textSecondary),
       prefixIcon: Icon(icon, color: const Color(0xFF757575)),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: const Color(0xFFF5F5F5),
+      fillColor: AppColors.backgroundGrey,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderSide: const BorderSide(color: AppColors.divider),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+        borderSide: const BorderSide(color: AppColors.primary),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
