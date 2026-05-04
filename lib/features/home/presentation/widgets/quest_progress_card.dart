@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class QuestProgressCard extends StatelessWidget {
   final String questName;
@@ -30,7 +31,7 @@ class QuestProgressCard extends StatelessWidget {
   // 修正: BoxDecorationを分離
   BoxDecoration _buildDecoration() {
     return BoxDecoration(
-      color: const Color(0xFFFFFFFF),
+      color: AppColors.backgroundWhite,
       borderRadius: BorderRadius.circular(20),
       border: Border.all(color: const Color(0x4D3AAA3A)),
       boxShadow: const [
@@ -50,7 +51,7 @@ class QuestProgressCard extends StatelessWidget {
         const Text(
           '🎯 クエスト進捗',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -59,7 +60,7 @@ class QuestProgressCard extends StatelessWidget {
           onTap: onViewAllTap,
           child: const Text(
             'すべて見る',
-            style: TextStyle(color: Color(0xFF3AAA3A), fontSize: 12),
+            style: TextStyle(color: AppColors.primary, fontSize: 12),
           ),
         ),
       ],
@@ -74,7 +75,7 @@ class QuestProgressCard extends StatelessWidget {
       children: [
         Text(
           questName,
-          style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
         ),
         const SizedBox(height: 8),
         Row(
@@ -85,7 +86,7 @@ class QuestProgressCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,
-                  color: const Color(0xFF3AAA3A),
+                  color: AppColors.primary,
                   backgroundColor: const Color(0x4D3AAA3A),
                 ),
               ),
@@ -94,7 +95,7 @@ class QuestProgressCard extends StatelessWidget {
             Text(
               percentText,
               style: const TextStyle(
-                color: Color(0xFF3AAA3A),
+                color: AppColors.primary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),

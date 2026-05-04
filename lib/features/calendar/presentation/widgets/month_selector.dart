@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 表示月を切り替えるヘッダーWidget
 class MonthSelector extends StatelessWidget {
@@ -27,7 +28,7 @@ class MonthSelector extends StatelessWidget {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 '＜ 先月',
-                style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             ),
           ),
@@ -35,7 +36,7 @@ class MonthSelector extends StatelessWidget {
           Text(
             '${currentMonth.year}年 ${currentMonth.month}月',
             style: const TextStyle(
-              color: Color(0xFF1A1A1A),
+              color: AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -47,7 +48,7 @@ class MonthSelector extends StatelessWidget {
               padding: EdgeInsets.all(8.0),
               child: Text(
                 '次月 ＞',
-                style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             ),
           ),

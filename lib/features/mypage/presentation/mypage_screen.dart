@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../auth/domain/auth_notifier.dart';
 import '../../user/data/user_repository.dart';
 import 'widgets/profile_icon_widget.dart';
@@ -306,7 +307,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text(
                 'キャンセル',
-                style: TextStyle(color: Color(0xFF757575)),
+                style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
             TextButton(
@@ -343,7 +344,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('アカウントを削除しました'),
-            backgroundColor: Color(0xFF3AAA3A),
+            backgroundColor: AppColors.primary,
           ),
         );
       }
@@ -367,13 +368,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFFFFFFFF),
+        backgroundColor: AppColors.backgroundWhite,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
         bottom: false,
         child: Stack(
@@ -464,8 +465,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       _name.isEmpty ? '名前を入力' : _name,
       style: TextStyle(
         color: _name.isEmpty
-            ? const Color(0xFF9E9E9E)
-            : const Color(0xFF1A1A1A),
+            ? AppColors.textDisabled
+            : AppColors.textPrimary,
         fontSize: 24,
         fontWeight: FontWeight.bold,
       ),
@@ -478,27 +479,27 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       controller: _nameCtrl,
       textAlign: TextAlign.center,
       style: const TextStyle(
-        color: Color(0xFF1A1A1A),
+        color: AppColors.textPrimary,
         fontSize: 24,
         fontWeight: FontWeight.bold,
       ),
       decoration: InputDecoration(
         hintText: '名前を入力',
-        hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+        hintStyle: const TextStyle(color: AppColors.textDisabled),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: AppColors.backgroundGrey,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A), width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
     );
@@ -509,15 +510,15 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: AppColors.backgroundGrey,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
         _comment.isEmpty ? '一言を入力' : _comment,
         style: TextStyle(
           color: _comment.isEmpty
-              ? const Color(0xFF9E9E9E)
-              : const Color(0xFF1A1A1A),
+              ? AppColors.textDisabled
+              : AppColors.textPrimary,
           fontSize: 14,
         ),
       ),
@@ -530,27 +531,27 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       controller: _commentCtrl,
       textAlign: TextAlign.center,
       maxLines: 2,
-      style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: '一言を入力',
-        hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+        hintStyle: const TextStyle(color: AppColors.textDisabled),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: AppColors.backgroundGrey,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A), width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
     );
@@ -571,7 +572,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               onPressed: _cancelEdit,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: Color(0xFF757575)),
+                side: const BorderSide(color: AppColors.textSecondary),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -579,7 +580,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               child: const Text(
                 'キャンセル',
                 style: TextStyle(
-                  color: Color(0xFF757575),
+                  color: AppColors.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -592,7 +593,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             child: ElevatedButton(
               onPressed: _isSaving ? null : _saveAll,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3AAA3A),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 0,
@@ -621,9 +622,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF3AAA3A),
+          foregroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          side: const BorderSide(color: Color(0xFF3AAA3A)),
+          side: const BorderSide(color: AppColors.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -643,7 +644,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         const Text(
           'MY INFORMATION',
           style: TextStyle(
-            color: Color(0xFF757575),
+            color: AppColors.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -651,7 +652,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
+            color: AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -659,7 +660,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               // スタンプカード（モードに関係なく常に表示）
               StampCardItem(onTap: () => context.push('/stamp-card')),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
@@ -667,18 +668,18 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               _isEditing
                   ? _buildEditField(
                       icon: Icons.code,
-                      iconColor: const Color(0xFF1565C0),
+                      iconColor: AppColors.iconBlue,
                       label: '技術スタック',
                       controller: _techStackCtrl,
                     )
                   : _buildViewItem(
                       icon: Icons.code,
-                      iconColor: const Color(0xFF1565C0),
+                      iconColor: AppColors.iconBlue,
                       label: '技術スタック',
                       value: _techStack,
                     ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
@@ -686,18 +687,18 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               _isEditing
                   ? _buildEditField(
                       icon: Icons.business,
-                      iconColor: const Color(0xFFFF6F00),
+                      iconColor: AppColors.iconOrange,
                       label: '所属団体',
                       controller: _affiliationCtrl,
                     )
                   : _buildViewItem(
                       icon: Icons.business,
-                      iconColor: const Color(0xFFFF6F00),
+                      iconColor: AppColors.iconOrange,
                       label: '所属団体',
                       value: _affiliation,
                     ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
@@ -705,20 +706,20 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               _isEditing
                   ? _buildEditField(
                       icon: Icons.alternate_email,
-                      iconColor: const Color(0xFF1DA1F2),
+                      iconColor: AppColors.iconTwitter,
                       label: 'Twitter',
                       controller: _twitterCtrl,
                     )
                   : _buildLinkItem(
                       icon: Icons.alternate_email,
-                      iconColor: const Color(0xFF1DA1F2),
+                      iconColor: AppColors.iconTwitter,
                       label: 'Twitter',
                       value: _twitter,
                       onLaunch: () =>
                           _launchUrl(_normalizeTwitterUrl(_twitter)),
                     ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
@@ -726,19 +727,19 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               _isEditing
                   ? _buildEditField(
                       icon: Icons.link,
-                      iconColor: const Color(0xFF333333),
+                      iconColor: AppColors.iconGitHub,
                       label: 'GitHub',
                       controller: _githubCtrl,
                     )
                   : _buildLinkItem(
                       icon: Icons.link,
-                      iconColor: const Color(0xFF333333),
+                      iconColor: AppColors.iconGitHub,
                       label: 'GitHub',
                       value: _github,
                       onLaunch: () => _launchUrl(_normalizeGitHubUrl(_github)),
                     ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
@@ -746,13 +747,13 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               _isEditing
                   ? _buildEditField(
                       icon: Icons.event,
-                      iconColor: const Color(0xFFE53935),
+                      iconColor: AppColors.error,
                       label: 'Connpass',
                       controller: _connpassCtrl,
                     )
                   : _buildLinkItem(
                       icon: Icons.event,
-                      iconColor: const Color(0xFFE53935),
+                      iconColor: AppColors.error,
                       label: 'Connpass',
                       value: _connpass,
                       onLaunch: () =>
@@ -785,7 +786,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Color(0xFF757575),
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -794,8 +795,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   value.isEmpty ? '未設定' : value,
                   style: TextStyle(
                     color: value.isEmpty
-                        ? const Color(0xFF9E9E9E)
-                        : const Color(0xFF1A1A1A),
+                        ? AppColors.textDisabled
+                        : AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -829,7 +830,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Color(0xFF757575),
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -840,8 +841,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                     value.isEmpty ? '未設定' : value,
                     style: TextStyle(
                       color: value.isEmpty
-                          ? const Color(0xFF9E9E9E)
-                          : const Color(0xFF1565C0),
+                          ? AppColors.textDisabled
+                          : AppColors.iconBlue,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       decoration: value.isNotEmpty
@@ -858,7 +859,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               onPressed: onLaunch,
               icon: const Icon(
                 Icons.open_in_new,
-                color: Color(0xFF1565C0),
+                color: AppColors.iconBlue,
                 size: 20,
               ),
               tooltip: '開く',
@@ -885,18 +886,18 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             child: TextField(
               controller: controller,
               style: const TextStyle(
-                color: Color(0xFF1A1A1A),
+                color: AppColors.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
               decoration: InputDecoration(
                 labelText: label,
                 labelStyle: const TextStyle(
-                  color: Color(0xFF757575),
+                  color: AppColors.textSecondary,
                   fontSize: 12,
                 ),
                 hintText: '$labelを入力',
-                hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+                hintStyle: const TextStyle(color: AppColors.textDisabled),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 10,
@@ -904,12 +905,12 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 isDense: true,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  borderSide: const BorderSide(color: AppColors.divider),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(
-                    color: Color(0xFF3AAA3A),
+                    color: AppColors.primary,
                     width: 2,
                   ),
                 ),
@@ -942,7 +943,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         const Text(
           'SETTINGS',
           style: TextStyle(
-            color: Color(0xFF757575),
+            color: AppColors.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -950,7 +951,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
+            color: AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -958,39 +959,39 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               _buildSettingsRow(
                 Icons.open_in_new,
                 '利用規約',
-                const Color(0xFF757575),
-                const Color(0xFF1A1A1A),
+                AppColors.textSecondary,
+                AppColors.textPrimary,
                 trailing: Icons.chevron_right,
                 onTap: () => _launchUrl('https://example.com/terms'),
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildSettingsRow(
                 Icons.open_in_new,
                 'プライバシーポリシー',
-                const Color(0xFF757575),
-                const Color(0xFF1A1A1A),
+                AppColors.textSecondary,
+                AppColors.textPrimary,
                 trailing: Icons.chevron_right,
                 onTap: () => _launchUrl('https://example.com/privacy'),
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildSettingsRow(
                 Icons.logout,
                 'ログアウト',
-                const Color(0xFF757575),
-                const Color(0xFF1A1A1A),
+                AppColors.textSecondary,
+                AppColors.textPrimary,
                 onTap: () {
                   _showConfirmDialog(
                     'ログアウトしますか？',
                     'ログアウト',
-                    const Color(0xFFE53935),
+                    AppColors.error,
                     () {
                       ref.read(authNotifierProvider.notifier).logout();
                     },
@@ -998,20 +999,20 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 },
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildSettingsRow(
                 Icons.delete,
                 'アカウント削除',
-                const Color(0xFFE53935),
-                const Color(0xFFE53935),
+                AppColors.error,
+                AppColors.error,
                 onTap: () {
                   _showConfirmDialog(
                     '本当に削除しますか？\n（この操作は取り消せません）',
                     '削除する',
-                    const Color(0xFFE53935),
+                    AppColors.error,
                     _handleDeleteAccount,
                   );
                 },
@@ -1046,7 +1047,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ),
             ),
             if (trailing != null)
-              Icon(trailing, color: const Color(0xFF9E9E9E)),
+              Icon(trailing, color: AppColors.textDisabled),
           ],
         ),
       ),

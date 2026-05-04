@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// マイページの「MY INFORMATION」内に表示するスタンプカード行のWidget
 class StampCardItem extends StatelessWidget {
@@ -19,7 +20,7 @@ class StampCardItem extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: const BoxDecoration(
-                color: Color(0xFFF59E0B),
+                color: AppColors.stampGold,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -36,18 +37,18 @@ class StampCardItem extends StatelessWidget {
                 children: [
                   Text(
                     'スタンプカード',
-                    style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   SizedBox(height: 2),
                   Text(
                     '実績の確認',
-                    style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                 ],
               ),
             ),
             // 右側の矢印
-            const Icon(Icons.chevron_right, color: Color(0xFF9E9E9E)),
+            const Icon(Icons.chevron_right, color: AppColors.textDisabled),
           ],
         ),
       ),

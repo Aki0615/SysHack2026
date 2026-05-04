@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 名前と編集アイコンを表示し、自分自身でダイアログを開いて修正するWidget
 class NameEditWidget extends StatelessWidget {
@@ -23,7 +24,7 @@ class NameEditWidget extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
               child: const Text(
                 'キャンセル',
-                style: TextStyle(color: Color(0xFF757575)),
+                style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
             TextButton(
@@ -34,7 +35,7 @@ class NameEditWidget extends StatelessWidget {
               child: const Text(
                 '保存',
                 style: TextStyle(
-                  color: Color(0xFF3AAA3A),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -57,14 +58,14 @@ class NameEditWidget extends StatelessWidget {
             name.isEmpty ? '名前を入力' : name,
             style: TextStyle(
               color: name.isEmpty
-                  ? const Color(0xFF9E9E9E)
-                  : const Color(0xFF1A1A1A),
+                  ? AppColors.textDisabled
+                  : AppColors.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(width: 8),
-          const Icon(Icons.edit, color: Color(0xFF757575), size: 16),
+          const Icon(Icons.edit, color: AppColors.textSecondary, size: 16),
         ],
       ),
     );

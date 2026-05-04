@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// カレンダーの各日付セルを描画するWidget
 class CalendarDayCell extends StatelessWidget {
@@ -44,14 +45,14 @@ class CalendarDayCell extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF3AAA3A),
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   '${date.day}',
                   style: const TextStyle(
-                    color: Color(0xFFFFFFFF),
+                    color: AppColors.backgroundWhite,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -98,13 +99,13 @@ class CalendarDayCell extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF3AAA3A), width: 1.5),
+          border: Border.all(color: AppColors.primary, width: 1.5),
         ),
         alignment: Alignment.center,
         child: Text(
           '${date.day}',
           style: const TextStyle(
-            color: Color(0xFF3AAA3A),
+            color: AppColors.primary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -115,7 +116,7 @@ class CalendarDayCell extends StatelessWidget {
     // 通常の日付: 黒文字
     return Text(
       '${date.day}',
-      style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 12),
+      style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
     );
   }
 
@@ -130,9 +131,9 @@ class _EventDot extends StatelessWidget {
       width: 7,
       height: 7,
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: AppColors.backgroundWhite,
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFF3AAA3A), width: 1),
+        border: Border.all(color: AppColors.primary, width: 1),
       ),
     );
   }

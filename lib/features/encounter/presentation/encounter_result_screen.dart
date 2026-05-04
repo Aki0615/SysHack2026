@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../ble/ble_notifier.dart';
 import '../domain/encounter_model.dart';
 import '../domain/encounter_notifier.dart';
@@ -55,7 +56,7 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
     final encounterState = ref.watch(encounterNotifierProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: AppColors.backgroundDark,
       body: SafeArea(
         child: encounterState.when(
           data: (encounters) => _buildContent(encounters),
@@ -226,7 +227,7 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
         margin: const EdgeInsets.symmetric(horizontal: 32),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: AppColors.surfaceDark,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
           boxShadow: [

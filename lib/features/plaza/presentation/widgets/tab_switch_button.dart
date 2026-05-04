@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除とコードの最小化
 class TabSwitchButton extends StatelessWidget {
@@ -44,7 +45,7 @@ class TabSwitchButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF3AAA3A) : const Color(0xFFE0E0E0),
+          color: isSelected ? AppColors.primary : AppColors.divider,
           borderRadius: BorderRadius.circular(24),
         ),
         alignment: Alignment.center,
@@ -52,8 +53,8 @@ class TabSwitchButton extends StatelessWidget {
           title,
           style: TextStyle(
             color: isSelected
-                ? const Color(0xFFFFFFFF)
-                : const Color(0xFF757575),
+                ? AppColors.backgroundWhite
+                : AppColors.textSecondary,
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),

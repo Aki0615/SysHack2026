@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除と階層の整理
 class InfoListItem extends StatelessWidget {
@@ -58,13 +59,13 @@ class InfoListItem extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -76,7 +77,7 @@ class InfoListItem extends StatelessWidget {
   Widget _buildUrlArrow() {
     return const Padding(
       padding: EdgeInsets.only(left: 8),
-      child: Icon(Icons.chevron_right, color: Color(0xFF9E9E9E)),
+      child: Icon(Icons.chevron_right, color: AppColors.textDisabled),
     );
   }
 
@@ -84,7 +85,7 @@ class InfoListItem extends StatelessWidget {
     return const Divider(
       height: 1,
       thickness: 0.5,
-      color: Color(0xFFE0E0E0),
+      color: AppColors.divider,
       indent: 16,
       endIndent: 16,
     );

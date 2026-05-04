@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../domain/auth_notifier.dart';
 
 /// アカウント作成画面Widget
@@ -86,15 +87,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDE8E8),
+        color: AppColors.errorBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.error_outline,
-            color: Color(0xFFE53935),
+            color: AppColors.error,
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -102,7 +103,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             child: Text(
               _errorMessage!,
               style: const TextStyle(
-                color: Color(0xFFB71C1C),
+                color: AppColors.errorDark,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -112,7 +113,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             onTap: () => setState(() => _errorMessage = null),
             child: const Icon(
               Icons.close,
-              color: Color(0xFF757575),
+              color: AppColors.textSecondary,
               size: 20,
             ),
           ),
@@ -141,13 +142,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFFFFF),
+        backgroundColor: AppColors.backgroundWhite,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () {
             if (_currentStep > 0) {
               setState(() => _currentStep--);
@@ -159,7 +160,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         title: Text(
           _currentStep == 0 ? '新規登録' : 'ロール選択',
           style: const TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -218,38 +219,38 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             TextFormField(
               controller: _passwordController,
               obscureText: !_isPasswordVisible,
-              style: const TextStyle(color: Color(0xFF1A1A1A)),
+              style: const TextStyle(color: AppColors.textPrimary),
               onChanged: (_) => _clearErrorIfNeeded(),
               decoration: InputDecoration(
                 labelText: 'パスワード（6文字以上）',
-                labelStyle: const TextStyle(color: Color(0xFF757575)),
+                labelStyle: const TextStyle(color: AppColors.textSecondary),
                 prefixIcon: const Icon(
                   Icons.lock_outline,
-                  color: Color(0xFF757575),
+                  color: AppColors.textSecondary,
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _isPasswordVisible
                         ? Icons.visibility
                         : Icons.visibility_off,
-                    color: const Color(0xFF757575),
+                    color: AppColors.textSecondary,
                   ),
                   onPressed: () =>
                       setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
+                fillColor: AppColors.backgroundGrey,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                  borderSide: const BorderSide(color: AppColors.divider),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -276,7 +277,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             const SizedBox(height: 8),
             const Text(
               '※ Connpassアカウントを連携すると、イベント情報を取得できます',
-              style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -286,7 +287,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3AAA3A),
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -322,7 +323,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ],
           const Text(
             'あなたの専門分野を選んでください',
-            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
           const SizedBox(height: 24),
           ...List.generate(_roles.length, (index) {
@@ -339,9 +340,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ElevatedButton(
             onPressed: authState.isLoading ? null : _handleSignUp,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3AAA3A),
+              backgroundColor: AppColors.primary,
               disabledBackgroundColor:
-                  const Color(0xFF3AAA3A).withValues(alpha: 0.5),
+                  AppColors.primary.withValues(alpha: 0.5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -395,26 +396,26 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(color: Color(0xFF1A1A1A)),
+      style: const TextStyle(color: AppColors.textPrimary),
       keyboardType: keyboardType,
       onChanged: (_) => _clearErrorIfNeeded(),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF757575)),
-        prefixIcon: Icon(icon, color: const Color(0xFF757575)),
+        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        prefixIcon: Icon(icon, color: AppColors.textSecondary),
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: AppColors.backgroundGrey,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderSide: const BorderSide(color: AppColors.divider),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF3AAA3A)),
+          borderSide: const BorderSide(color: AppColors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -455,13 +456,13 @@ class _RoleOption extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF3AAA3A).withValues(alpha: 0.1)
-                : const Color(0xFFF5F5F5),
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFF3AAA3A)
-                  : const Color(0xFFE0E0E0),
+                  ? AppColors.primary
+                  : AppColors.divider,
             ),
           ),
           child: Row(
@@ -472,15 +473,15 @@ class _RoleOption extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: isSelected
-                      ? const Color(0xFF3AAA3A)
-                      : const Color(0xFF1A1A1A),
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               const Spacer(),
               if (isSelected)
-                const Icon(Icons.check_circle, color: Color(0xFF3AAA3A)),
+                const Icon(Icons.check_circle, color: AppColors.primary),
             ],
           ),
         ),

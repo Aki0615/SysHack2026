@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/app_colors.dart';
 
 import '../domain/achievement_model.dart';
 import '../domain/achievement_notifier.dart';
@@ -13,11 +14,11 @@ class StampCardScreen extends ConsumerWidget {
     final achievementState = ref.watch(achievementNotifierProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: _buildAppBar(context),
       body: achievementState.when(
         data: (data) => RefreshIndicator(
-          color: const Color(0xFF3AAA3A),
+          color: AppColors.primary,
           onRefresh: () => ref.read(achievementNotifierProvider.notifier).refresh(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -35,7 +36,7 @@ class StampCardScreen extends ConsumerWidget {
           ),
         ),
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
         error: (_, _) => _buildErrorState(context, ref),
       ),
@@ -44,18 +45,18 @@ class StampCardScreen extends ConsumerWidget {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1A1A1A)),
+        icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
       centerTitle: true,
       title: const Text(
         'スタンプカード',
         style: TextStyle(
-          color: Color(0xFF1A1A1A),
+          color: AppColors.textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
@@ -70,12 +71,12 @@ class StampCardScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 56, color: Color(0xFF9E9E9E)),
+            const Icon(Icons.error_outline, size: 56, color: AppColors.textDisabled),
             const SizedBox(height: 12),
             const Text(
               '実績の取得に失敗しました',
               style: TextStyle(
-                color: Color(0xFF757575),
+                color: AppColors.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -83,7 +84,7 @@ class StampCardScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () => ref.read(achievementNotifierProvider.notifier).refresh(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3AAA3A),
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -113,7 +114,7 @@ class _ProgressCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: AppColors.backgroundGrey,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -124,7 +125,7 @@ class _ProgressCard extends StatelessWidget {
               const Text(
                 '解除状況',
                 style: TextStyle(
-                  color: Color(0xFF1A1A1A),
+                  color: AppColors.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -135,7 +136,7 @@ class _ProgressCard extends StatelessWidget {
                     TextSpan(
                       text: '$unlockedCount',
                       style: const TextStyle(
-                        color: Color(0xFF3AAA3A),
+                        color: AppColors.primary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -143,7 +144,7 @@ class _ProgressCard extends StatelessWidget {
                     TextSpan(
                       text: ' / $totalCount',
                       style: const TextStyle(
-                        color: Color(0xFF757575),
+                        color: AppColors.textSecondary,
                         fontSize: 14,
                       ),
                     ),
@@ -158,9 +159,9 @@ class _ProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: const Color(0xFFE0E0E0),
+              backgroundColor: AppColors.divider,
               valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF3AAA3A),
+                AppColors.primary,
               ),
             ),
           ),
@@ -182,13 +183,13 @@ class _AchievementGrid extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 32),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: AppColors.backgroundGrey,
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Center(
           child: Text(
             '実績データがありません',
-            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
         ),
       );
@@ -224,11 +225,11 @@ class _AchievementCard extends StatelessWidget {
       onTap: () => _showDetailDialog(context),
       child: Container(
         decoration: BoxDecoration(
-          color: isUnlocked ? const Color(0xFFF5F5F5) : const Color(0xFFE8E8E8),
+          color: isUnlocked ? AppColors.backgroundGrey : const Color(0xFFE8E8E8),
           borderRadius: BorderRadius.circular(16),
           border: isUnlocked
               ? Border.all(
-                  color: const Color(0xFF3AAA3A).withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   width: 1.5,
                 )
               : null,
@@ -240,7 +241,7 @@ class _AchievementCard extends StatelessWidget {
               isUnlocked ? achievement.emoji : '🔒',
               style: TextStyle(
                 fontSize: 36,
-                color: isUnlocked ? null : const Color(0xFF9E9E9E),
+                color: isUnlocked ? null : AppColors.textDisabled,
               ),
             ),
             const SizedBox(height: 8),
@@ -249,8 +250,8 @@ class _AchievementCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isUnlocked
-                    ? const Color(0xFF1A1A1A)
-                    : const Color(0xFF9E9E9E),
+                    ? AppColors.textPrimary
+                    : AppColors.textDisabled,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -258,7 +259,7 @@ class _AchievementCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               achievement.unlockedDateLabel,
-              style: const TextStyle(color: Color(0xFF757575), fontSize: 11),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
             ),
           ],
         ),
@@ -282,7 +283,7 @@ class _AchievementDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -297,7 +298,7 @@ class _AchievementDetailDialog extends StatelessWidget {
             Text(
               achievement.isUnlocked ? achievement.title : '???',
               style: const TextStyle(
-                color: Color(0xFF1A1A1A),
+                color: AppColors.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -306,14 +307,14 @@ class _AchievementDetailDialog extends StatelessWidget {
             Text(
               achievement.description,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF757575), fontSize: 14),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
             ),
             if (achievement.isUnlocked) ...[
               const SizedBox(height: 4),
               Text(
                 '達成日: ${achievement.unlockedDateLabel}',
                 style: const TextStyle(
-                  color: Color(0xFF3AAA3A),
+                  color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -325,7 +326,7 @@ class _AchievementDetailDialog extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3AAA3A),
+                  backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

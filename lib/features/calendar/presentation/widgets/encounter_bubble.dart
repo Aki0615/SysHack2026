@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 吹き出しの尻尾を描画するカスタムペインター
 class _BubbleTailPainter extends CustomPainter {
@@ -41,7 +42,7 @@ class EncounterBubble extends StatelessWidget {
           width: screenWidth * 0.6,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFF3AAA3A),
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -49,7 +50,7 @@ class EncounterBubble extends StatelessWidget {
               Text(
                 '$count人',
                 style: const TextStyle(
-                  color: Color(0xFFFFFFFF),
+                  color: AppColors.backgroundWhite,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
@@ -59,7 +60,7 @@ class EncounterBubble extends StatelessWidget {
                 Text(
                   eventName!,
                   style: const TextStyle(
-                    color: Color(0xFFFFFFFF),
+                    color: AppColors.backgroundWhite,
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -73,7 +74,7 @@ class EncounterBubble extends StatelessWidget {
         // 吹き出しの尻尾（下向き三角形）
         CustomPaint(
           size: const Size(20, 10),
-          painter: _BubbleTailPainter(color: const Color(0xFF3AAA3A)),
+          painter: _BubbleTailPainter(color: AppColors.primary),
         ),
       ],
     );

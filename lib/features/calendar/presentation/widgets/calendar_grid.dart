@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import 'calendar_day_cell.dart';
 
 /// 曜日ヘッダーと日付セルで構成されるカレンダーグリッド
@@ -21,7 +22,7 @@ class CalendarGrid extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: AppColors.backgroundGrey,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -38,13 +39,13 @@ class CalendarGrid extends StatelessWidget {
   Widget _buildWeekdayHeader() {
     final weekdays = ['日', '月', '火', '水', '木', '金', '土'];
     final colors = [
-      const Color(0xFFE53935), // 日
-      const Color(0xFF757575), // 月
-      const Color(0xFF757575), // 火
-      const Color(0xFF757575), // 水
-      const Color(0xFF757575), // 木
-      const Color(0xFF757575), // 金
-      const Color(0xFF1565C0), // 土
+      AppColors.calendarSunday, // 日
+      AppColors.textSecondary, // 月
+      AppColors.textSecondary, // 火
+      AppColors.textSecondary, // 水
+      AppColors.textSecondary, // 木
+      AppColors.textSecondary, // 金
+      AppColors.calendarSaturday, // 土
     ];
 
     return Row(

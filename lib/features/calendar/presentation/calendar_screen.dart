@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_colors.dart';
 import '../domain/calendar_notifier.dart';
 import 'widgets/encounter_bubble.dart';
 import 'widgets/month_selector.dart';
@@ -97,7 +98,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           heightFactor: 0.9,
           child: Container(
             decoration: const BoxDecoration(
-              color: Color(0xFFFFFFFF),
+              color: AppColors.backgroundWhite,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: SafeArea(
@@ -116,7 +117,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 width: 40,
                                 height: 4,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE0E0E0),
+                                  color: AppColors.divider,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -125,7 +126,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             Text(
                               '${date.year}年${date.month}月${date.day}日',
                               style: const TextStyle(
-                                color: Color(0xFF757575),
+                                color: AppColors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -133,7 +134,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             Text(
                               hasEventName ? normalizedEventName : 'イベントなし',
                               style: const TextStyle(
-                                color: Color(0xFF1A1A1A),
+                                color: AppColors.textPrimary,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -145,23 +146,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF3AAA3A,
-                                ).withValues(alpha: 0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 children: [
                                   const Icon(
                                     Icons.people,
-                                    color: Color(0xFF3AAA3A),
+                                    color: AppColors.primary,
                                     size: 24,
                                   ),
                                   const SizedBox(width: 12),
                                   const Text(
                                     'すれ違った人数',
                                     style: TextStyle(
-                                      color: Color(0xFF757575),
+                                      color: AppColors.textSecondary,
                                       fontSize: 14,
                                     ),
                                   ),
@@ -169,7 +168,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                   Text(
                                     '$count人',
                                     style: const TextStyle(
-                                      color: Color(0xFF3AAA3A),
+                                      color: AppColors.primary,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -191,14 +190,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     vertical: 12,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF5F5F5),
+                                    color: AppColors.backgroundGrey,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Row(
                                     children: [
                                       const Icon(
                                         Icons.event,
-                                        color: Color(0xFF757575),
+                                        color: AppColors.textSecondary,
                                         size: 24,
                                       ),
                                       const SizedBox(width: 12),
@@ -212,7 +211,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                   ? 'イベント（タップで開く）'
                                                   : 'イベント',
                                               style: const TextStyle(
-                                                color: Color(0xFF757575),
+                                                color: AppColors.textSecondary,
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -222,7 +221,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                   ? normalizedEventName
                                                   : 'イベントなし',
                                               style: const TextStyle(
-                                                color: Color(0xFF1A1A1A),
+                                                color: AppColors.textPrimary,
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -233,7 +232,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                               Text(
                                                 eventLocation,
                                                 style: const TextStyle(
-                                                  color: Color(0xFF757575),
+                                                  color: AppColors.textSecondary,
                                                   fontSize: 12,
                                                 ),
                                                 maxLines: 1,
@@ -246,7 +245,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                       if (hasEventUrl)
                                         const Icon(
                                           Icons.open_in_new,
-                                          color: Color(0xFF3AAA3A),
+                                          color: AppColors.primary,
                                           size: 20,
                                         ),
                                     ],
@@ -259,7 +258,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               const Text(
                                 'すれ違った人',
                                 style: TextStyle(
-                                  color: Color(0xFF1A1A1A),
+                                  color: AppColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -287,7 +286,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3AAA3A),
+                          backgroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -348,7 +347,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
+            color: AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -357,7 +356,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 width: 48,
                 height: 48,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFE0E0E0),
+                  color: AppColors.divider,
                   shape: BoxShape.circle,
                 ),
                 child: iconUrl.isNotEmpty
@@ -367,11 +366,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => const Icon(
                             Icons.person,
-                            color: Color(0xFF757575),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       )
-                    : const Icon(Icons.person, color: Color(0xFF757575)),
+                    : const Icon(Icons.person, color: AppColors.textSecondary),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -381,7 +380,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     Text(
                       name,
                       style: const TextStyle(
-                        color: Color(0xFF1A1A1A),
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -390,7 +389,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     Text(
                       comment,
                       style: const TextStyle(
-                        color: Color(0xFF757575),
+                        color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -399,7 +398,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -410,13 +409,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: _buildAppBar(),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            Container(height: 1, color: const Color(0xFFE0E0E0)),
+            Container(height: 1, color: AppColors.divider),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(
@@ -436,14 +435,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
       title: const Text(
         'カレンダー',
         style: TextStyle(
-          color: Color(0xFF1A1A1A),
+          color: AppColors.textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),
@@ -469,7 +468,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         if (calendarState.isLoading)
           const Padding(
             padding: EdgeInsets.all(40),
-            child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+            child: CircularProgressIndicator(color: AppColors.primary),
           )
         else
           CalendarGrid(

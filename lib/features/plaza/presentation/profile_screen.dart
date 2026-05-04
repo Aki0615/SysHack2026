@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../user/data/user_repository.dart';
 import '../../user/domain/user_model.dart';
 
@@ -17,7 +18,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (userId.isEmpty) {
       return Scaffold(
-        backgroundColor: const Color(0xFFFFFFFF),
+        backgroundColor: AppColors.backgroundWhite,
         appBar: _buildAppBar(),
         body: const Center(child: Text('プロフィールIDが不正です')),
       );
@@ -26,7 +27,7 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider(userId));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: _buildAppBar(),
       body: profileAsync.when(
         data: (profile) => SingleChildScrollView(
@@ -40,7 +41,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
         error: (error, _) => Center(
           child: Text('プロフィールの取得に失敗しました\n$error', textAlign: TextAlign.center),
@@ -51,10 +52,10 @@ class ProfileScreen extends ConsumerWidget {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
       scrolledUnderElevation: 0,
-      leading: const BackButton(color: Color(0xFF1A1A1A)),
+      leading: const BackButton(color: AppColors.textPrimary),
     );
   }
 
@@ -66,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
         Text(
           profile.name,
           style: const TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -89,7 +90,7 @@ class ProfileScreen extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF3AAA3A), width: 3),
+                border: Border.all(color: AppColors.primary, width: 3),
               ),
             ),
           ),
@@ -109,28 +110,28 @@ class ProfileScreen extends ConsumerWidget {
         height: 96,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
+          return const Icon(Icons.person, color: AppColors.primary, size: 48);
         },
       );
     }
 
     // デフォルトアイコン
-    return const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 48);
+    return const Icon(Icons.person, color: AppColors.primary, size: 48);
   }
 
   Widget _buildCommentBadge(String comment) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: AppColors.backgroundGrey,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
         comment.isEmpty ? '一言未設定' : comment,
         style: TextStyle(
           color: comment.isEmpty
-              ? const Color(0xFF9E9E9E)
-              : const Color(0xFF1A1A1A),
+              ? AppColors.textDisabled
+              : AppColors.textPrimary,
           fontSize: 14,
         ),
         textAlign: TextAlign.center,
@@ -145,7 +146,7 @@ class ProfileScreen extends ConsumerWidget {
         const Text(
           'MY INFORMATION',
           style: TextStyle(
-            color: Color(0xFF757575),
+            color: AppColors.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -153,60 +154,60 @@ class ProfileScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
+            color: AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
             children: [
               _buildViewItem(
                 icon: Icons.code,
-                iconColor: const Color(0xFF1565C0),
+                iconColor: AppColors.iconBlue,
                 label: '技術スタック',
                 value: profile.techStack,
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildViewItem(
                 icon: Icons.business,
-                iconColor: const Color(0xFFFF6F00),
+                iconColor: AppColors.iconOrange,
                 label: '所属団体',
                 value: profile.affiliation,
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildLinkItem(
                 icon: Icons.alternate_email,
-                iconColor: const Color(0xFF1DA1F2),
+                iconColor: AppColors.iconTwitter,
                 label: 'Twitter',
                 value: profile.twitterUrl,
                 onLaunch: () => _launchUrl(_normalizeTwitterUrl(profile.twitterUrl)),
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildLinkItem(
                 icon: Icons.link,
-                iconColor: const Color(0xFF333333),
+                iconColor: AppColors.iconGitHub,
                 label: 'GitHub',
                 value: profile.githubUrl,
                 onLaunch: () => _launchUrl(_normalizeGitHubUrl(profile.githubUrl)),
               ),
               const Divider(
-                color: Color(0xFFE0E0E0),
+                color: AppColors.divider,
                 height: 1,
                 thickness: 0.5,
               ),
               _buildLinkItem(
                 icon: Icons.event,
-                iconColor: const Color(0xFFE53935),
+                iconColor: AppColors.error,
                 label: 'Connpass',
                 value: profile.connpassUrl,
                 onLaunch: () => _launchUrl(_normalizeConnpassUrl(profile.connpassUrl)),
@@ -268,7 +269,7 @@ class ProfileScreen extends ConsumerWidget {
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Color(0xFF757575),
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -277,8 +278,8 @@ class ProfileScreen extends ConsumerWidget {
                   value.isEmpty ? '未設定' : value,
                   style: TextStyle(
                     color: value.isEmpty
-                        ? const Color(0xFF9E9E9E)
-                        : const Color(0xFF1A1A1A),
+                        ? AppColors.textDisabled
+                        : AppColors.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -315,7 +316,7 @@ class ProfileScreen extends ConsumerWidget {
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Color(0xFF757575),
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -324,8 +325,8 @@ class ProfileScreen extends ConsumerWidget {
                     isEmpty ? '未設定' : value,
                     style: TextStyle(
                       color: isEmpty
-                          ? const Color(0xFF9E9E9E)
-                          : const Color(0xFF1A1A1A),
+                          ? AppColors.textDisabled
+                          : AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -336,8 +337,8 @@ class ProfileScreen extends ConsumerWidget {
             Icon(
               Icons.open_in_new,
               color: isEmpty
-                  ? const Color(0xFFBDBDBD)
-                  : const Color(0xFF757575),
+                  ? AppColors.textLight
+                  : AppColors.textSecondary,
               size: 18,
             ),
           ],

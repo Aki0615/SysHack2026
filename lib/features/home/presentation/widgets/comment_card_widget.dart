@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import 'comment_item_widget.dart';
 
 // 修正: 不要コメントの削除、UI構成のメソッド化
@@ -15,7 +16,7 @@ class CommentCardWidget extends StatelessWidget {
         const Text(
           'みんなの一言 💬',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -45,7 +46,7 @@ class CommentCardWidget extends StatelessWidget {
           ? const Center(
               child: Text(
                 'まだコメントがありません',
-                style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             )
           : Column(children: _buildCommentItems()),

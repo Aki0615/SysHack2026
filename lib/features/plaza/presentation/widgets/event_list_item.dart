@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class EventListItem extends StatelessWidget {
   final String eventName;
@@ -26,7 +27,7 @@ class EventListItem extends StatelessWidget {
             _buildLeadingIcon(),
             const SizedBox(width: 12),
             Expanded(child: _buildEventInfo()),
-            const Icon(Icons.chevron_right, color: Color(0xFF9E9E9E)),
+            const Icon(Icons.chevron_right, color: AppColors.textDisabled),
           ],
         ),
       ),
@@ -35,7 +36,7 @@ class EventListItem extends StatelessWidget {
 
   BoxDecoration _buildDecoration() {
     return BoxDecoration(
-      color: const Color(0xFFFFFFFF),
+      color: AppColors.backgroundWhite,
       borderRadius: BorderRadius.circular(12),
       border: Border.all(color: const Color(0x4D3AAA3A), width: 1),
     );
@@ -52,7 +53,7 @@ class EventListItem extends StatelessWidget {
       alignment: Alignment.center,
       child: const Icon(
         Icons.event_available,
-        color: Color(0xFF3AAA3A),
+        color: AppColors.primary,
         size: 32,
       ),
     );
@@ -65,7 +66,7 @@ class EventListItem extends StatelessWidget {
         Text(
           eventName,
           style: const TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -77,15 +78,15 @@ class EventListItem extends StatelessWidget {
           children: [
             Text(
               date,
-              style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.location_on, color: Color(0xFF757575), size: 12),
+            const Icon(Icons.location_on, color: AppColors.textSecondary, size: 12),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
                 location,
-                style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

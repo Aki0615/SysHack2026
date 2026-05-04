@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../domain/home_notifier.dart';
 import '../../mypage/data/achievement_repository.dart';
 import '../../mypage/domain/achievement_notifier.dart';
@@ -17,7 +18,7 @@ class HomeScreen extends ConsumerWidget {
     final achievementState = ref.watch(achievementNotifierProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: _buildAppBar(),
       body: SafeArea(
         bottom: false,
@@ -25,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
           data: (data) =>
               _buildContent(context, ref, data, achievementState.asData?.value),
           loading: () => const Center(
-            child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+            child: CircularProgressIndicator(color: AppColors.primary),
           ),
           error: (error, _) => _buildErrorState(ref),
         ),
@@ -71,7 +72,7 @@ class HomeScreen extends ConsumerWidget {
     final progress = achievementProgress ?? fallbackProgress;
 
     return RefreshIndicator(
-      color: const Color(0xFF3AAA3A),
+      color: AppColors.primary,
       onRefresh: () async {
         await Future.wait([
           ref.read(homeNotifierProvider.notifier).refresh(),
@@ -112,17 +113,17 @@ class HomeScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: Color(0xFF757575)),
+          const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
           const SizedBox(height: 16),
           const Text(
             'データの取得に失敗しました',
-            style: TextStyle(color: Color(0xFF757575), fontSize: 16),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => ref.read(homeNotifierProvider.notifier).refresh(),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3AAA3A),
+              backgroundColor: AppColors.primary,
             ),
             child: const Text('再試行', style: TextStyle(color: Colors.white)),
           ),
@@ -133,14 +134,14 @@ class HomeScreen extends ConsumerWidget {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
       title: const Text(
         'ホーム',
         style: TextStyle(
-          color: Color(0xFF1A1A1A),
+          color: AppColors.textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.bold,
         ),

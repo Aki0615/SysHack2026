@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 // 修正: 不要コメント削除、UI要素のコンポーネント化によりネスト軽減
 class CommentItemWidget extends StatelessWidget {
@@ -34,7 +35,7 @@ class CommentItemWidget extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: const Color(0x333AAA3A),
-            border: Border.all(color: const Color(0xFF3AAA3A), width: 2),
+            border: Border.all(color: AppColors.primary, width: 2),
           ),
           child: ClipOval(
             child: iconUrl.isNotEmpty
@@ -43,18 +44,18 @@ class CommentItemWidget extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const Icon(
                       Icons.person,
-                      color: Color(0xFF3AAA3A),
+                      color: AppColors.primary,
                       size: 28,
                     ),
                   )
-                : const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 28),
+                : const Icon(Icons.person, color: AppColors.primary, size: 28),
           ),
         ),
         const SizedBox(height: 4),
         Text(
           name,
           style: const TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
@@ -71,7 +72,7 @@ class CommentItemWidget extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: const BoxDecoration(
-        color: Color(0xFFFFFFFF),
+        color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
@@ -88,7 +89,7 @@ class CommentItemWidget extends StatelessWidget {
       ),
       child: Text(
         displayComment,
-        style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
       ),
     );
   }

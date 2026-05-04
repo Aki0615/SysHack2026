@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 各情報を表示および編集するための汎用行Widget
 class InfoEditItem extends StatelessWidget {
@@ -44,7 +45,7 @@ class InfoEditItem extends StatelessWidget {
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Color(0xFF757575),
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -52,7 +53,7 @@ class InfoEditItem extends StatelessWidget {
                   Text(
                     value,
                     style: const TextStyle(
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -61,7 +62,7 @@ class InfoEditItem extends StatelessWidget {
               ),
             ),
             // 右側の編集アイコン
-            const Icon(Icons.edit, color: Color(0xFF757575), size: 20),
+            const Icon(Icons.edit, color: AppColors.textSecondary, size: 20),
           ],
         ),
       ),

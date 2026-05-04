@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 「一言」を表示し、必要に応じてダイアログから編集できるカプセル型Widget
 class CommentEditWidget extends StatelessWidget {
@@ -28,7 +29,7 @@ class CommentEditWidget extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
               child: const Text(
                 'キャンセル',
-                style: TextStyle(color: Color(0xFF757575)),
+                style: TextStyle(color: AppColors.textSecondary),
               ),
             ),
             TextButton(
@@ -39,7 +40,7 @@ class CommentEditWidget extends StatelessWidget {
               child: const Text(
                 '保存',
                 style: TextStyle(
-                  color: Color(0xFF3AAA3A),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -57,7 +58,7 @@ class CommentEditWidget extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: AppColors.backgroundGrey,
           borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
@@ -68,8 +69,8 @@ class CommentEditWidget extends StatelessWidget {
                 comment.isEmpty ? '一言を入力' : comment,
                 style: TextStyle(
                   color: comment.isEmpty
-                      ? const Color(0xFF9E9E9E)
-                      : const Color(0xFF1A1A1A),
+                      ? AppColors.textDisabled
+                      : AppColors.textPrimary,
                   fontSize: 14,
                 ),
                 maxLines: 2,
@@ -77,7 +78,7 @@ class CommentEditWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.edit, color: Color(0xFF757575), size: 16),
+            const Icon(Icons.edit, color: AppColors.textSecondary, size: 16),
           ],
         ),
       ),

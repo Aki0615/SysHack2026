@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/network/dio_client.dart';
 import '../domain/auth_notifier.dart';
 import '../../encounter/domain/encounter_notifier.dart';
@@ -134,7 +135,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       body: Center(
         child: FadeTransition(opacity: _fadeAnimation, child: _buildLogo()),
       ),
@@ -156,7 +157,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         const Text(
           'Passly',
           style: TextStyle(
-            color: Color(0xFF1A1A1A),
+            color: AppColors.textPrimary,
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
@@ -165,7 +166,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         const SizedBox(height: 8),
         const Text(
           'すれ違いで、つながる',
-          style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
       ],
     );

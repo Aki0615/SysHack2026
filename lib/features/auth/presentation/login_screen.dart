@@ -205,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         suffixIcon: IconButton(
           icon: Icon(
             _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: const Color(0xFF757575),
+            color: AppColors.textSecondary,
           ),
           onPressed: () =>
               setState(() => _isPasswordVisible = !_isPasswordVisible),
@@ -292,7 +292,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(color: AppColors.textSecondary),
-      prefixIcon: Icon(icon, color: const Color(0xFF757575)),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: AppColors.backgroundGrey,

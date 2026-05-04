@@ -16,6 +16,14 @@ class DetectedDevice {
   final String ephemeralId;
   final List<DateTime> detectionTimes;
   DateTime firstDetection;
+
+
+
+
+
+
+
+
   bool isConfirmed;
 
   DetectedDevice({required this.ephemeralId, required this.firstDetection})

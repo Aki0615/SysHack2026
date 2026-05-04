@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除、コードのネスト解消
 class FriendGridItem extends StatelessWidget {
@@ -37,7 +38,7 @@ class FriendGridItem extends StatelessWidget {
         height: 64,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF3AAA3A), width: 2),
+          border: Border.all(color: AppColors.primary, width: 2),
         ),
         child: ClipOval(
           child: Image.network(
@@ -59,17 +60,17 @@ class FriendGridItem extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: const Color(0x263AAA3A),
-        border: Border.all(color: const Color(0xFF3AAA3A), width: 2),
+        border: Border.all(color: AppColors.primary, width: 2),
       ),
       alignment: Alignment.center,
-      child: const Icon(Icons.person, color: Color(0xFF3AAA3A), size: 32),
+      child: const Icon(Icons.person, color: AppColors.primary, size: 32),
     );
   }
 
   Widget _buildNameText() {
     return Text(
       name,
-      style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 11),
+      style: const TextStyle(color: AppColors.textPrimary, fontSize: 11),
       textAlign: TextAlign.center,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,

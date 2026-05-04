@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 
 // 修正: 不要なコメントを削除、定数とレイアウトを整理
 class PlazaCountCard extends StatelessWidget {
@@ -39,12 +40,12 @@ class PlazaCountCard extends StatelessWidget {
   Widget _buildLabel() {
     return Row(
       children: [
-        const Icon(Icons.people, color: Color(0xFF3AAA3A), size: 16),
+        const Icon(Icons.people, color: AppColors.primary, size: 16),
         const SizedBox(width: 4),
         Flexible(
           child: Text(
             '広場の人数',
-            style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
@@ -64,7 +65,7 @@ class PlazaCountCard extends StatelessWidget {
           Text(
             '$count',
             style: const TextStyle(
-              color: Color(0xFF1A1A1A),
+              color: AppColors.textPrimary,
               fontSize: 32,
               fontWeight: FontWeight.bold,
             ),
@@ -72,7 +73,7 @@ class PlazaCountCard extends StatelessWidget {
           const SizedBox(width: 4),
           const Text(
             '人',
-            style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
         ],
       ),

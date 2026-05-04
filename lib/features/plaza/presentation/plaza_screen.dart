@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/constants/app_colors.dart';
 import '../domain/plaza_notifier.dart';
 import '../../user/domain/user_model.dart';
 import 'widgets/friend_list_view.dart';
@@ -53,13 +54,13 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     final searchQuery = ref.watch(plazaSearchQueryProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       appBar: _buildAppBar(context, selectedIndex),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            Container(height: 1, color: const Color(0xFFE0E0E0)),
+            Container(height: 1, color: AppColors.divider),
             Expanded(child: _buildContent(selectedIndex, searchQuery)),
           ],
         ),
@@ -70,21 +71,21 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
   PreferredSizeWidget _buildAppBar(BuildContext context, int selectedIndex) {
     final titles = ['友達一覧', 'イベント一覧', 'ランダム表示'];
     return AppBar(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
       title: Text(
         titles[selectedIndex],
         style: const TextStyle(
-          color: Color(0xFF1A1A1A),
+          color: AppColors.textPrimary,
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.menu, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.menu, color: AppColors.textPrimary),
           onPressed: () => _showMenuBottomSheet(context),
         ),
       ],
@@ -101,7 +102,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       builder: (context) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFFFFFFF),
+            color: AppColors.backgroundWhite,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SafeArea(
@@ -114,7 +115,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0E0E0),
+                    color: AppColors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -125,7 +126,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                   child: Text(
                     '表示切替',
                     style: TextStyle(
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -142,7 +143,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     Navigator.pop(context);
                   },
                 ),
-                const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                const Divider(height: 1, color: AppColors.divider),
                 // イベント一覧
                 _buildMenuItem(
                   icon: Icons.event,
@@ -153,7 +154,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     Navigator.pop(context);
                   },
                 ),
-                const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                const Divider(height: 1, color: AppColors.divider),
                 // ランダム表示
                 _buildMenuItem(
                   icon: Icons.shuffle,
@@ -184,15 +185,15 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         color: isSelected
-            ? const Color(0xFF3AAA3A).withValues(alpha: 0.1)
+            ? AppColors.primary.withValues(alpha: 0.1)
             : Colors.transparent,
         child: Row(
           children: [
             Icon(
               icon,
               color: isSelected
-                  ? const Color(0xFF3AAA3A)
-                  : const Color(0xFF757575),
+                  ? AppColors.primary
+                  : AppColors.textSecondary,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -200,14 +201,14 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                 title,
                 style: TextStyle(
                   color: isSelected
-                      ? const Color(0xFF3AAA3A)
-                      : const Color(0xFF1A1A1A),
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
-            if (isSelected) const Icon(Icons.check, color: Color(0xFF3AAA3A)),
+            if (isSelected) const Icon(Icons.check, color: AppColors.primary),
           ],
         ),
       ),
@@ -243,23 +244,23 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       padding: const EdgeInsets.only(top: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFF3AAA3A), width: 1),
+          border: Border.all(color: AppColors.primary, width: 1),
         ),
         child: TextField(
           controller: _searchController,
-          style: const TextStyle(color: Color(0xFF1A1A1A), fontSize: 14),
+          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
           onChanged: (value) {
             ref.read(plazaSearchQueryProvider.notifier).setQuery(value);
           },
           decoration: InputDecoration(
             hintText: '人名・イベント名で検索',
-            hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 14),
-            prefixIcon: const Icon(Icons.search, color: Color(0xFF3AAA3A)),
+            hintStyle: const TextStyle(color: AppColors.textDisabled, fontSize: 14),
+            prefixIcon: const Icon(Icons.search, color: AppColors.primary),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear, color: Color(0xFF757575)),
+                    icon: const Icon(Icons.clear, color: AppColors.textSecondary),
                     onPressed: () {
                       _searchController.clear();
                       ref.read(plazaSearchQueryProvider.notifier).clear();
@@ -304,7 +305,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
         );
       },
       loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+        child: CircularProgressIndicator(color: AppColors.primary),
       ),
       error: (_, __) => _buildEmptyState('データの取得に失敗しました'),
     );
@@ -330,7 +331,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
         return EventListView(events: filteredEvents, onEventTap: _onEventTap);
       },
       loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+        child: CircularProgressIndicator(color: AppColors.primary),
       ),
       error: (_, __) => _buildEmptyState('イベントの取得に失敗しました'),
     );
@@ -365,11 +366,11 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.search_off, size: 64, color: Color(0xFFE0E0E0)),
+          const Icon(Icons.search_off, size: 64, color: AppColors.divider),
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(color: Color(0xFF757575), fontSize: 16),
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
           ),
         ],
       ),
@@ -383,7 +384,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
     return plazaState.when(
       data: (users) => _buildRandomFriendContent(users),
       loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF3AAA3A)),
+        child: CircularProgressIndicator(color: AppColors.primary),
       ),
       error: (_, __) => _buildEmptyState('データの取得に失敗しました'),
     );
@@ -416,18 +417,18 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Row(
               children: [
-                Icon(Icons.shuffle, color: Color(0xFF3AAA3A)),
+                Icon(Icons.shuffle, color: AppColors.primary),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'ランダムに選ばれた友達です',
                     style: TextStyle(
-                      color: Color(0xFF3AAA3A),
+                      color: AppColors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -453,7 +454,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3AAA3A),
+                backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -476,7 +477,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
+            color: AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -486,7 +487,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                 width: 48,
                 height: 48,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFE0E0E0),
+                  color: AppColors.divider,
                   shape: BoxShape.circle,
                 ),
                 child: user.iconUrl.isNotEmpty
@@ -496,11 +497,11 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.person,
-                            color: Color(0xFF757575),
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       )
-                    : const Icon(Icons.person, color: Color(0xFF757575)),
+                    : const Icon(Icons.person, color: AppColors.textSecondary),
               ),
               const SizedBox(width: 16),
               // 名前とコメント
@@ -511,7 +512,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     Text(
                       user.name,
                       style: const TextStyle(
-                        color: Color(0xFF1A1A1A),
+                        color: AppColors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -520,7 +521,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     Text(
                       user.oneWord,
                       style: const TextStyle(
-                        color: Color(0xFF757575),
+                        color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -529,7 +530,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF757575)),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -551,7 +552,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
             maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
           decoration: const BoxDecoration(
-            color: Color(0xFFFFFFFF),
+            color: AppColors.backgroundWhite,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: SafeArea(
@@ -564,7 +565,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0E0E0),
+                    color: AppColors.divider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -578,7 +579,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                       Text(
                         event['date'] ?? '',
                         style: const TextStyle(
-                          color: Color(0xFF757575),
+                          color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
                       ),
@@ -587,7 +588,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                       Text(
                         event['name'] ?? '',
                         style: const TextStyle(
-                          color: Color(0xFF1A1A1A),
+                          color: AppColors.textPrimary,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
@@ -598,7 +599,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                         children: [
                           const Icon(
                             Icons.location_on,
-                            color: Color(0xFF757575),
+                            color: AppColors.textSecondary,
                             size: 18,
                           ),
                           const SizedBox(width: 8),
@@ -606,7 +607,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                             child: Text(
                               event['location'] ?? '',
                               style: const TextStyle(
-                                color: Color(0xFF757575),
+                                color: AppColors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -621,21 +622,21 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3AAA3A).withValues(alpha: 0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               Icons.people,
-                              color: Color(0xFF3AAA3A),
+                              color: AppColors.primary,
                               size: 24,
                             ),
                             const SizedBox(width: 12),
                             const Text(
                               'すれ違った人数',
                               style: TextStyle(
-                                color: Color(0xFF757575),
+                                color: AppColors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -643,7 +644,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                             Text(
                               '${event['count']}人',
                               style: const TextStyle(
-                                color: Color(0xFF3AAA3A),
+                                color: AppColors.primary,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -654,7 +655,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                const Divider(height: 1, color: AppColors.divider),
                 // すれ違った人一覧
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -666,7 +667,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                       const Text(
                         'すれ違った人',
                         style: TextStyle(
-                          color: Color(0xFF1A1A1A),
+                          color: AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -675,7 +676,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                       Text(
                         '${participantUsers.length}人',
                         style: const TextStyle(
-                          color: Color(0xFF757575),
+                          color: AppColors.textSecondary,
                           fontSize: 14,
                         ),
                       ),
@@ -687,7 +688,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     child: Text(
                       '参加者の詳細データはまだありません',
-                      style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                     ),
                   )
                 else
@@ -702,7 +703,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                         return Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5F5F5),
+                            color: AppColors.backgroundGrey,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -711,12 +712,12 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                                 width: 40,
                                 height: 40,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFFE0E0E0),
+                                  color: AppColors.divider,
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.person,
-                                  color: Color(0xFF757575),
+                                  color: AppColors.textSecondary,
                                   size: 20,
                                 ),
                               ),
@@ -724,7 +725,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                               Text(
                                 user['name'] ?? '',
                                 style: const TextStyle(
-                                  color: Color(0xFF1A1A1A),
+                                  color: AppColors.textPrimary,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),

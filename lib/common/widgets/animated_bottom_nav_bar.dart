@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 
 class BottomNavItem {
   final IconData icon;
@@ -34,8 +35,8 @@ class AnimatedBottomNavBar extends StatefulWidget {
     required this.currentIndex,
     required this.onTap,
     required this.items,
-    this.activeColor = const Color(0xFF3AAA3A),
-    this.inactiveColor = const Color(0xFF9E9E9E),
+    this.activeColor = AppColors.primary,
+    this.inactiveColor = AppColors.textDisabled,
     this.barColor = Colors.white,
   });
 

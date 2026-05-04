@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'common/widgets/animated_bottom_nav_bar.dart';
+import 'core/constants/app_colors.dart';
 import 'core/network/dio_client.dart';
 import 'features/ble/ble_notifier.dart';
 import 'features/auth/domain/auth_notifier.dart';
@@ -246,7 +247,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
         ..showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: const Color(0xFF3AAA3A),
+            backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 3),
           ),
@@ -266,7 +267,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: AppColors.backgroundWhite,
       extendBody: true, // タブバーの背後まで画面を広げる
       body: widget.navigationShell,
       bottomNavigationBar: _buildBottomNav(context),
