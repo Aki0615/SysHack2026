@@ -18,9 +18,7 @@ class DetectedDevice {
   DateTime firstDetection;
 
 
-
-
-
+ 
 
 
 
