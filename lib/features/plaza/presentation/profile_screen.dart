@@ -217,10 +217,10 @@ class _BackButton extends StatelessWidget {
     return Material(
       color: AppColors.divider,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(100),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(100),
         onTap: () {
           if (context.canPop()) {
             context.pop();
