@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'last_encounter.dart';
 import 'user_role.dart';
 
 part 'user_model.freezed.dart';
@@ -46,6 +47,18 @@ abstract class UserModel with _$UserModel {
     /// 所属（バックエンド: affiliation）
     @Default('') String affiliation,
 
+    /// カバー画像URL（プロフィールヘッダー用、バックエンド: cover_url）
+    @Default('') String coverUrl,
+
+    /// 自己紹介文（バックエンド: about）
+    @Default('') String about,
+
+    /// この相手を「親しい友達」に登録済みか（バックエンド: is_close_friend）
+    @Default(false) bool isCloseFriend,
+
+    /// この相手と最後にすれ違った時の情報（バックエンド: last_encounter）
+    LastEncounter? lastEncounter,
+
     DateTime? createdAt,
     DateTime? updatedAt,
   }) = _UserModel;
@@ -81,6 +94,17 @@ abstract class UserModel with _$UserModel {
       return null;
     }
 
+    LastEncounter? parseLastEncounter(dynamic value) {
+      if (value is! Map) return null;
+      final map = Map<String, dynamic>.from(value);
+      final metAt = parseDateTime(map['met_at']);
+      if (metAt == null) return null;
+      return LastEncounter(
+        metAt: metAt,
+        eventName: _readString(map, 'event_name'),
+      );
+    }
+
     return UserModel(
       id: _readString(json, 'id'),
       name: _readString(json, 'name'),
@@ -96,6 +120,10 @@ abstract class UserModel with _$UserModel {
           ? _readString(json, 'connpass_url')
           : _readString(json, 'connpass_username'),
       affiliation: _readString(json, 'affiliation'),
+      coverUrl: _readString(json, 'cover_url'),
+      about: _readString(json, 'about'),
+      isCloseFriend: json['is_close_friend'] as bool? ?? false,
+      lastEncounter: parseLastEncounter(json['last_encounter']),
       createdAt: parseDateTime(json['created_at']),
       updatedAt: parseDateTime(json['updated_at']),
     );
