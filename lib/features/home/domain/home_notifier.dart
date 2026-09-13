@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/home_repository.dart';
 import '../../auth/domain/auth_notifier.dart';
+import 'recent_encounter.dart';
 
 /// ホーム画面のデータ状態
 class HomeState {
@@ -10,11 +11,16 @@ class HomeState {
   final List<Map<String, dynamic>> unconfirmed;
   final List<Map<String, dynamic>> randomThree;
 
+  /// 「最近の出会い」セクション（バックエンド: recent_encounters）。
+  /// サーバー未実装の間は常に空配列としてパースされる。
+  final List<RecentEncounter> recentEncounters;
+
   const HomeState({
     required this.totalEncounters,
     required this.todayEncounters,
     required this.unconfirmed,
     required this.randomThree,
+    this.recentEncounters = const [],
   });
 
   factory HomeState.empty() => const HomeState(
@@ -22,6 +28,7 @@ class HomeState {
         todayEncounters: 0,
         unconfirmed: [],
         randomThree: [],
+        recentEncounters: [],
       );
 
   factory HomeState.fromJson(Map<String, dynamic> json) {
@@ -36,6 +43,13 @@ class HomeState {
               ?.map((e) => e as Map<String, dynamic>)
               .toList() ??
           [],
+      recentEncounters: (json['recent_encounters'] as List<dynamic>?)
+              ?.whereType<Map>()
+              .map((e) => RecentEncounter.fromJson(
+                    Map<String, dynamic>.from(e),
+                  ))
+              .toList() ??
+          const [],
     );
   }
 }
@@ -86,6 +100,7 @@ class HomeNotifier extends AsyncNotifier<HomeState> {
         todayEncounters: current.todayEncounters + 1,
         unconfirmed: current.unconfirmed,
         randomThree: current.randomThree,
+        recentEncounters: current.recentEncounters,
       ),
     );
   }
