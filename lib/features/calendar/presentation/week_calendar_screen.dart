@@ -65,6 +65,20 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
     setState(() => _selectedDate = date);
   }
 
+  /// 検索アイコンタップ → イベント検索画面 → 選択日を受け取って反映
+  Future<void> _openEventSearch() async {
+    final selected = await context.push<DateTime>('/events/search');
+    if (selected == null || !mounted) return;
+
+    final nextMonth = _monthOf(selected);
+    final currentMonth = _monthOf(_selectedDate);
+    if (nextMonth.year != currentMonth.year ||
+        nextMonth.month != currentMonth.month) {
+      ref.read(calendarNotifierProvider.notifier).fetchMonthData(nextMonth);
+    }
+    setState(() => _selectedDate = selected);
+  }
+
   @override
   Widget build(BuildContext context) {
     final calendarState = ref.watch(calendarNotifierProvider);
@@ -79,7 +93,7 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
         bottom: false,
         child: Column(
           children: [
-            _Header(user: authUser),
+            _Header(user: authUser, onSearchTap: _openEventSearch),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(15, 24, 15, 120),
@@ -135,8 +149,9 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
 
 class _Header extends StatelessWidget {
   final UserModel? user;
+  final VoidCallback onSearchTap;
 
-  const _Header({this.user});
+  const _Header({this.user, required this.onSearchTap});
 
   @override
   Widget build(BuildContext context) {
@@ -178,17 +193,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              // TODO(passly): 検索画面の実装後にルート追加
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('検索機能は準備中です'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-            },
+            onPressed: onSearchTap,
             icon: const Icon(
               Icons.search,
               color: AppColors.textPrimary,
