@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 
-/// StreetPassアプリ専用のBLEサービスUUID
+/// Passlyアプリ専用のBLEサービスUUID
 const String streetPassServiceUuid = '12345678-1234-1234-1234-123456789abc';
 
 /// すれ違い確定の条件
@@ -98,7 +98,7 @@ class BleService {
     // バッファクリーンアップタイマーを開始
     _startCleanupTimer();
 
-    // StreetPassのサービスUUIDを持つデバイスのみをスキャン
+    // PasslyのサービスUUIDを持つデバイスのみをスキャン
     FlutterBluePlus.startScan(
       withServices: [Guid(streetPassServiceUuid)],
       timeout: const Duration(hours: 24), // 長時間スキャン
