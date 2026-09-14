@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
 
 final homeRepositoryProvider = Provider<HomeRepository>((ref) {
   return HomeRepository(ref.read(dioProvider));

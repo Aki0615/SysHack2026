@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 各タブ用のプレースホルダー画面（Feature実装前に使用）
 class PlaceholderScreen extends StatelessWidget {

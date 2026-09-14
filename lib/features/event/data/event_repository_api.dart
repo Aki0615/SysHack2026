@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import '../domain/event_model.dart';
-import 'event_repository.dart';
+import 'package:syshack2026/features/event/domain/event_model.dart';
+import 'package:syshack2026/features/event/data/event_repository.dart';
 
 /// 実バックエンド向けの EventRepository 実装。
 ///

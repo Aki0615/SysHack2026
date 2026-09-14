@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/config/feature_flags.dart';
-import '../../../core/network/dio_client.dart';
-import '../../user/domain/user_model.dart';
-import 'close_friend_repository_api.dart';
-import 'close_friend_repository_mock.dart';
+import 'package:syshack2026/core/config/feature_flags.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/features/close_friend/data/close_friend_repository_api.dart';
+import 'package:syshack2026/features/close_friend/data/close_friend_repository_mock.dart';
 
 /// 「親しい友達」機能の抽象インターフェース。
 ///
@@ -15,10 +15,7 @@ import 'close_friend_repository_mock.dart';
 /// 実体は UserModel。専用モデルは作らず UserModel を再利用する。
 abstract class CloseFriendRepository {
   /// POST /users/:id/close-friends — 相手を親しい友達に追加する。
-  Future<void> addCloseFriend({
-    required String myId,
-    required String targetId,
-  });
+  Future<void> addCloseFriend({required String myId, required String targetId});
 
   /// DELETE /users/:id/close-friends/:target_id — 親しい友達から解除する。
   Future<void> removeCloseFriend({

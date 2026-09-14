@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import 'calendar_day_cell.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/calendar_day_cell.dart';
 
 /// 曜日ヘッダーと日付セルで構成されるカレンダーグリッド
 class CalendarGrid extends StatelessWidget {
@@ -103,14 +103,16 @@ class CalendarGrid extends StatelessWidget {
             date.day == now.day;
 
         // すれ違いデータの確認。時刻部分を無視して年月日で一致判定
-        final encounterEntry = encounterDays.entries.cast<MapEntry<DateTime, Map<String, dynamic>>?>().firstWhere(
-          (e) =>
-              e != null &&
-              e.key.year == date.year &&
-              e.key.month == date.month &&
-              e.key.day == date.day,
-          orElse: () => null,
-        );
+        final encounterEntry = encounterDays.entries
+            .cast<MapEntry<DateTime, Map<String, dynamic>>?>()
+            .firstWhere(
+              (e) =>
+                  e != null &&
+                  e.key.year == date.year &&
+                  e.key.month == date.month &&
+                  e.key.day == date.day,
+              orElse: () => null,
+            );
         final count = (encounterEntry?.value['count'] as int?) ?? 0;
         final hasEncounter = count > 0;
         final eventName = encounterEntry?.value['event'] as String?;

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'last_encounter.dart';
-import 'user_role.dart';
+import 'package:syshack2026/features/user/domain/last_encounter.dart';
+import 'package:syshack2026/features/user/domain/user_role.dart';
 
 part 'user_model.freezed.dart';
 
@@ -116,7 +116,7 @@ abstract class UserModel with _$UserModel {
       twitterUrl: _readString(json, 'twitter_url'),
       githubUrl: _readString(json, 'github_url'),
       portfolioUrl: _readString(json, 'portfolio_url'),
-        connpassUrl: _readString(json, 'connpass_url').isNotEmpty
+      connpassUrl: _readString(json, 'connpass_url').isNotEmpty
           ? _readString(json, 'connpass_url')
           : _readString(json, 'connpass_username'),
       affiliation: _readString(json, 'affiliation'),

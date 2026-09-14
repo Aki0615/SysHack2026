@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 「その日のイベントカード」— 画像 + 名前 + 日時 + 場所 + 参加者数。
 ///
@@ -171,11 +171,7 @@ class _EventImage extends StatelessWidget {
 
   Widget _placeholder() {
     return const Center(
-      child: Icon(
-        Icons.event,
-        color: AppColors.textLight,
-        size: 40,
-      ),
+      child: Icon(Icons.event, color: AppColors.textLight, size: 40),
     );
   }
 }

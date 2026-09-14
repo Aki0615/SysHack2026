@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../auth/domain/auth_notifier.dart';
-import '../data/achievement_repository.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/mypage/data/achievement_repository.dart';
 
 final achievementNotifierProvider =
     AsyncNotifierProvider<AchievementNotifier, AchievementResponse>(

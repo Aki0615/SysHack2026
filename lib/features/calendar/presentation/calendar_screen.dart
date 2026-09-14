@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../domain/calendar_notifier.dart';
-import 'widgets/encounter_bubble.dart';
-import 'widgets/month_selector.dart';
-import 'widgets/calendar_grid.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/encounter_bubble.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/month_selector.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/calendar_grid.dart';
 
 /// カレンダー画面本体Widget
 class CalendarScreen extends ConsumerStatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 名前と編集アイコンを表示し、自分自身でダイアログを開いて修正するWidget
 class NameEditWidget extends StatelessWidget {

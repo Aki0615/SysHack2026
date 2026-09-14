@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
 
 final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
   return CalendarRepository(ref.read(dioProvider));
@@ -30,15 +30,13 @@ class CalendarRepository {
     final data = response.data;
     if (data is! List) return const [];
 
-    return data
-        .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
-        .where((event) {
-          final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
-          if (startAt == null) return false;
-          return startAt.year == month.year && startAt.month == month.month;
-        })
-        .toList();
+    return data.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).where(
+      (event) {
+        final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
+        if (startAt == null) return false;
+        return startAt.year == month.year && startAt.month == month.month;
+      },
+    ).toList();
   }
 
   /// 指定月のすれ違い情報を「日付 → data」のマップで返す。
@@ -108,8 +106,9 @@ class CalendarRepository {
       final map = Map<String, dynamic>.from(raw);
       final date = DateTime.tryParse(map['date']?.toString() ?? '');
       if (date == null) continue;
-      result[DateTime(date.year, date.month, date.day)] =
-          _normalizeDayData(map);
+      result[DateTime(date.year, date.month, date.day)] = _normalizeDayData(
+        map,
+      );
     }
     return result;
   }
@@ -142,9 +141,9 @@ class CalendarRepository {
     final event =
         data['event'] as String? ??
         ((data['event_names'] as List?)?.cast<String?>().firstWhere(
-              (name) => name != null && name.isNotEmpty,
-              orElse: () => null,
-            ));
+          (name) => name != null && name.isNotEmpty,
+          orElse: () => null,
+        ));
     final users = _parseEncounterUsers(data);
     return {
       'count': count,

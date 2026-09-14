@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 各情報を表示および編集するための汎用行Widget
 class InfoEditItem extends StatelessWidget {

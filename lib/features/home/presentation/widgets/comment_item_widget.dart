@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要コメント削除、UI要素のコンポーネント化によりネスト軽減
 class CommentItemWidget extends StatelessWidget {
@@ -42,7 +42,7 @@ class CommentItemWidget extends StatelessWidget {
                 ? Image.network(
                     iconUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    errorBuilder: (_, _, _) => const Icon(
                       Icons.person,
                       color: AppColors.primary,
                       size: 28,

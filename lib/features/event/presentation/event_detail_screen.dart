@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../data/event_repository.dart';
-import '../domain/event_model.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/event/data/event_repository.dart';
+import 'package:syshack2026/features/event/domain/event_model.dart';
 
 /// イベント詳細画面のプロバイダー。
 ///
 /// eventId をキーに `eventRepositoryProvider.fetchEventDetail()` を叩く。
 /// FeatureFlags.useMockEventDetail によりモック / 実 API を切替。
-final eventDetailProvider =
-    FutureProvider.family<EventModel, int>((ref, eventId) {
+final eventDetailProvider = FutureProvider.family<EventModel, int>((
+  ref,
+  eventId,
+) {
   return ref.read(eventRepositoryProvider).fetchEventDetail(eventId);
 });
 
@@ -86,10 +88,7 @@ class EventDetailScreen extends ConsumerWidget {
               label: _formatDateRange(event.startAt!, event.endAt),
             ),
           if (event.location.isNotEmpty)
-            _MetaRow(
-              icon: Icons.location_on_outlined,
-              label: event.location,
-            ),
+            _MetaRow(icon: Icons.location_on_outlined, label: event.location),
           _MetaRow(
             icon: Icons.groups,
             label:
@@ -131,10 +130,7 @@ class EventDetailScreen extends ConsumerWidget {
           if (event.participants.isEmpty)
             const Text(
               '参加者情報がまだありません',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
             )
           else
             ...event.participants.map(_buildParticipantTile),
@@ -166,10 +162,8 @@ class EventDetailScreen extends ConsumerWidget {
                     child: Image.network(
                       participant.iconUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const Icon(
-                        Icons.person,
-                        color: AppColors.textLight,
-                      ),
+                      errorBuilder: (_, _, _) =>
+                          const Icon(Icons.person, color: AppColors.textLight),
                     ),
                   )
                 : const Icon(Icons.person, color: AppColors.textLight),
@@ -224,9 +218,7 @@ class EventDetailScreen extends ConsumerWidget {
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('URL を開けませんでした')),
-        );
+        ..showSnackBar(const SnackBar(content: Text('URL を開けませんでした')));
     }
   }
 }

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/constants/app_colors.dart';
-import '../domain/plaza_notifier.dart';
-import '../../user/domain/user_model.dart';
-import 'widgets/friend_list_view.dart';
-import 'widgets/event_list_view.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/plaza/domain/plaza_notifier.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/features/plaza/presentation/widgets/friend_list_view.dart';
+import 'package:syshack2026/features/plaza/presentation/widgets/event_list_view.dart';
 
 /// 広場のタブ状態管理
 class PlazaTabNotifier extends Notifier<int> {
@@ -191,18 +191,14 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.textSecondary,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.textPrimary,
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -256,11 +252,17 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           },
           decoration: InputDecoration(
             hintText: '人名・イベント名で検索',
-            hintStyle: const TextStyle(color: AppColors.textDisabled, fontSize: 14),
+            hintStyle: const TextStyle(
+              color: AppColors.textDisabled,
+              fontSize: 14,
+            ),
             prefixIcon: const Icon(Icons.search, color: AppColors.primary),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppColors.textSecondary,
+                    ),
                     onPressed: () {
                       _searchController.clear();
                       ref.read(plazaSearchQueryProvider.notifier).clear();
@@ -297,7 +299,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
         return ListView.separated(
           padding: const EdgeInsets.only(bottom: 120),
           itemCount: filteredFriends.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final user = filteredFriends[index];
             return _buildUserCard(user);
@@ -307,7 +309,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
-      error: (_, __) => _buildEmptyState('データの取得に失敗しました'),
+      error: (_, _) => _buildEmptyState('データの取得に失敗しました'),
     );
   }
 
@@ -333,7 +335,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
-      error: (_, __) => _buildEmptyState('イベントの取得に失敗しました'),
+      error: (_, _) => _buildEmptyState('イベントの取得に失敗しました'),
     );
   }
 
@@ -370,7 +372,10 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 16,
+            ),
           ),
         ],
       ),
@@ -386,7 +391,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
-      error: (_, __) => _buildEmptyState('データの取得に失敗しました'),
+      error: (_, _) => _buildEmptyState('データの取得に失敗しました'),
     );
   }
 
@@ -495,7 +500,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                         child: Image.network(
                           user.iconUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
+                          errorBuilder: (_, _, _) => const Icon(
                             Icons.person,
                             color: AppColors.textSecondary,
                           ),
@@ -688,7 +693,10 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     child: Text(
                       '参加者の詳細データはまだありません',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
                   )
                 else
@@ -697,7 +705,7 @@ class _PlazaScreenState extends ConsumerState<PlazaScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       shrinkWrap: true,
                       itemCount: participantUsers.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final user = participantUsers[index];
                         return Container(

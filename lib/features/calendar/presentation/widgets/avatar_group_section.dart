@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 「この日に出会った人」「親しい友達」共通のアバター横並びセクション。
 ///
@@ -131,11 +131,7 @@ class _Avatar extends StatelessWidget {
   }
 
   Widget _fallback() {
-    return const Icon(
-      Icons.person,
-      color: AppColors.textLight,
-      size: 24,
-    );
+    return const Icon(Icons.person, color: AppColors.textLight, size: 24);
   }
 }
 

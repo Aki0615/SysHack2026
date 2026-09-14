@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要なコメントを削除、定数とレイアウトを整理
 class TodayEncounterCard extends StatelessWidget {
   final int todayCount;
 
-  const TodayEncounterCard({
-    super.key,
-    required this.todayCount,
-  });
+  const TodayEncounterCard({super.key, required this.todayCount});
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +45,10 @@ class TodayEncounterCard extends StatelessWidget {
         Flexible(
           child: Text(
             '今日のすれ違い回数',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

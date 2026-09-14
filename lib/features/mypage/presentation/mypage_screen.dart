@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../auth/domain/auth_notifier.dart';
-import '../../user/data/user_repository.dart';
-import 'widgets/profile_icon_widget.dart';
-import 'widgets/stamp_card_item.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/user/data/user_repository.dart';
+import 'package:syshack2026/features/mypage/presentation/widgets/profile_icon_widget.dart';
+import 'package:syshack2026/features/mypage/presentation/widgets/stamp_card_item.dart';
 
 /// マイページ本体
 /// 閲覧モードと編集モードを切り替え、編集モードでは全項目を一括で編集・保存する
@@ -184,7 +184,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       };
 
       // デバッグ: 送信データを表示
-      print('Sending update data: $updateData');
+      debugPrint('Sending update data: $updateData');
 
       // フィールドを送信
       await repo.updateUser(user.id, updateData);
@@ -212,7 +212,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     } catch (e) {
       if (mounted) {
         // エラー詳細を表示
-        print('Save error: $e');
+        debugPrint('Save error: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('保存に失敗しました: $e'),
@@ -464,9 +464,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     return Text(
       _name.isEmpty ? '名前を入力' : _name,
       style: TextStyle(
-        color: _name.isEmpty
-            ? AppColors.textDisabled
-            : AppColors.textPrimary,
+        color: _name.isEmpty ? AppColors.textDisabled : AppColors.textPrimary,
         fontSize: 24,
         fontWeight: FontWeight.bold,
       ),
@@ -1046,8 +1044,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                 style: TextStyle(color: textColor, fontSize: 14),
               ),
             ),
-            if (trailing != null)
-              Icon(trailing, color: AppColors.textDisabled),
+            if (trailing != null) Icon(trailing, color: AppColors.textDisabled),
           ],
         ),
       ),

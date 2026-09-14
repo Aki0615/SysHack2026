@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../auth/domain/auth_notifier.dart';
-import '../../home/data/home_repository.dart';
-import '../data/encounter_repository.dart';
-import '../data/pending_encounter_repository.dart';
-import '../domain/encounter_model.dart';
-import 'daily_limit_service.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/home/data/home_repository.dart';
+import 'package:syshack2026/features/encounter/data/encounter_repository.dart';
+import 'package:syshack2026/features/encounter/data/pending_encounter_repository.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
+import 'package:syshack2026/features/encounter/domain/daily_limit_service.dart';
 
 /// 未確認すれ違いデータの状態を管理するプロバイダー
 final encounterNotifierProvider =
@@ -87,7 +87,10 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
     try {
       final repo = ref.read(encounterRepositoryProvider);
       // API仕様書通り my_id, target_id のみを送信する (eventIdは送らない)
-      final result = await repo.recordEncounter(myId: myId, targetId: targetUserId);
+      final result = await repo.recordEncounter(
+        myId: myId,
+        targetId: targetUserId,
+      );
       if (result.created) {
         await limitService.increment();
       } else {

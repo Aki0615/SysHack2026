@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../auth/domain/auth_notifier.dart';
-import '../encounter/domain/encounter_notifier.dart';
-import '../encounter/data/encounter_repository.dart';
-import 'ble_service.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
+import 'package:syshack2026/features/encounter/data/encounter_repository.dart';
+import 'package:syshack2026/features/ble/ble_service.dart';
 
 /// BLE状態を管理するプロバイダー
 final bleNotifierProvider = NotifierProvider<BleNotifier, BleState>(
@@ -41,7 +41,8 @@ class BleState {
       isScanning: isScanning ?? this.isScanning,
       isAdvertising: isAdvertising ?? this.isAdvertising,
       currentEphemeralId: currentEphemeralId ?? this.currentEphemeralId,
-      confirmedEncounterCount: confirmedEncounterCount ?? this.confirmedEncounterCount,
+      confirmedEncounterCount:
+          confirmedEncounterCount ?? this.confirmedEncounterCount,
       newlyUnlockedAchievementTitles:
           newlyUnlockedAchievementTitles ?? this.newlyUnlockedAchievementTitles,
       lastError: lastError,
@@ -174,7 +175,9 @@ class BleNotifier extends Notifier<BleState> {
       );
 
       if (!recordResult.created) {
-        debugPrint('すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}');
+        debugPrint(
+          'すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}',
+        );
         // 起動中のホーム表示は固定したいので、この場ではUI再取得しない
         return;
       }
@@ -238,7 +241,9 @@ class BleNotifier extends Notifier<BleState> {
       if (newlyUnlocked.isEmpty) return;
 
       state = state.copyWith(
-        newlyUnlockedAchievementTitles: newlyUnlocked.map((a) => a.title).toList(),
+        newlyUnlockedAchievementTitles: newlyUnlocked
+            .map((a) => a.title)
+            .toList(),
       );
     } catch (e) {
       debugPrint('新規実績の検知に失敗: $e');

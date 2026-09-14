@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除と階層の整理
 class InfoListItem extends StatelessWidget {

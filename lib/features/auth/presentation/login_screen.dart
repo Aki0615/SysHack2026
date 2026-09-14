@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../domain/auth_notifier.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 
 /// ログイン画面Widget
 class LoginScreen extends ConsumerStatefulWidget {

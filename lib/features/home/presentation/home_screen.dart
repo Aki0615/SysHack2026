@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../domain/home_notifier.dart';
-import '../../mypage/data/achievement_repository.dart';
-import '../../mypage/domain/achievement_notifier.dart';
-import 'widgets/stats_row_widget.dart';
-import 'widgets/quest_progress_card.dart';
-import 'widgets/comment_card_widget.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/home/domain/home_notifier.dart';
+import 'package:syshack2026/features/mypage/data/achievement_repository.dart';
+import 'package:syshack2026/features/mypage/domain/achievement_notifier.dart';
+import 'package:syshack2026/features/home/presentation/widgets/stats_row_widget.dart';
+import 'package:syshack2026/features/home/presentation/widgets/quest_progress_card.dart';
+import 'package:syshack2026/features/home/presentation/widgets/comment_card_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -113,7 +113,11 @@ class HomeScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: AppColors.textSecondary,
+          ),
           const SizedBox(height: 16),
           const Text(
             'データの取得に失敗しました',
@@ -122,9 +126,7 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => ref.read(homeNotifierProvider.notifier).refresh(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('再試行', style: TextStyle(color: Colors.white)),
           ),
         ],

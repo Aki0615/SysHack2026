@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/home_repository.dart';
-import '../../auth/domain/auth_notifier.dart';
-import 'recent_encounter.dart';
+import 'package:syshack2026/features/home/data/home_repository.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/home/domain/recent_encounter.dart';
 
 /// ホーム画面のデータ状態
 class HomeState {
@@ -24,30 +24,33 @@ class HomeState {
   });
 
   factory HomeState.empty() => const HomeState(
-        totalEncounters: 0,
-        todayEncounters: 0,
-        unconfirmed: [],
-        randomThree: [],
-        recentEncounters: [],
-      );
+    totalEncounters: 0,
+    todayEncounters: 0,
+    unconfirmed: [],
+    randomThree: [],
+    recentEncounters: [],
+  );
 
   factory HomeState.fromJson(Map<String, dynamic> json) {
     return HomeState(
       totalEncounters: json['total_encounters'] as int? ?? 0,
       todayEncounters: json['today_encounters'] as int? ?? 0,
-      unconfirmed: (json['unconfirmed'] as List<dynamic>?)
+      unconfirmed:
+          (json['unconfirmed'] as List<dynamic>?)
               ?.map((e) => e as Map<String, dynamic>)
               .toList() ??
           [],
-      randomThree: (json['random_three'] as List<dynamic>?)
+      randomThree:
+          (json['random_three'] as List<dynamic>?)
               ?.map((e) => e as Map<String, dynamic>)
               .toList() ??
           [],
-      recentEncounters: (json['recent_encounters'] as List<dynamic>?)
+      recentEncounters:
+          (json['recent_encounters'] as List<dynamic>?)
               ?.whereType<Map>()
-              .map((e) => RecentEncounter.fromJson(
-                    Map<String, dynamic>.from(e),
-                  ))
+              .map(
+                (e) => RecentEncounter.fromJson(Map<String, dynamic>.from(e)),
+              )
               .toList() ??
           const [],
     );
@@ -55,8 +58,9 @@ class HomeState {
 }
 
 /// ホーム画面のデータを管理するプロバイダー
-final homeNotifierProvider =
-    AsyncNotifierProvider<HomeNotifier, HomeState>(HomeNotifier.new);
+final homeNotifierProvider = AsyncNotifierProvider<HomeNotifier, HomeState>(
+  HomeNotifier.new,
+);
 
 /// ホーム画面のデータ管理を行うNotifier
 class HomeNotifier extends AsyncNotifier<HomeState> {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'event_list_item.dart';
+import 'package:syshack2026/features/plaza/presentation/widgets/event_list_item.dart';
 
 class EventListView extends StatelessWidget {
   final List<Map<String, dynamic>> events;

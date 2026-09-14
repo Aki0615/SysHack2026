@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../auth/domain/auth_notifier.dart';
-import '../../close_friend/domain/close_friend_list_notifier.dart';
-import '../../user/domain/user_model.dart';
-import '../domain/calendar_notifier.dart';
-import 'widgets/avatar_group_section.dart';
-import 'widgets/day_event_card.dart';
-import 'widgets/week_day_pill.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/avatar_group_section.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/day_event_card.dart';
+import 'package:syshack2026/features/calendar/presentation/widgets/week_day_pill.dart';
 
 /// 週表示のカレンダー画面（新規デフォルト）。
 ///
@@ -23,8 +23,7 @@ class WeekCalendarScreen extends ConsumerStatefulWidget {
   const WeekCalendarScreen({super.key});
 
   @override
-  ConsumerState<WeekCalendarScreen> createState() =>
-      _WeekCalendarScreenState();
+  ConsumerState<WeekCalendarScreen> createState() => _WeekCalendarScreenState();
 }
 
 class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
@@ -146,9 +145,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: const BoxDecoration(
         color: AppColors.backgroundWhite,
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
       ),
       alignment: Alignment.center,
       child: Row(
@@ -234,11 +231,7 @@ class _HeaderAvatar extends StatelessWidget {
   }
 
   Widget _fallback() {
-    return const Icon(
-      Icons.person,
-      color: AppColors.textLight,
-      size: 24,
-    );
+    return const Icon(Icons.person, color: AppColors.textLight, size: 24);
   }
 }
 
@@ -318,10 +311,7 @@ class _WeekStrip extends StatelessWidget {
   final DateTime selectedDate;
   final void Function(DateTime date) onSelect;
 
-  const _WeekStrip({
-    required this.selectedDate,
-    required this.onSelect,
-  });
+  const _WeekStrip({required this.selectedDate, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -353,10 +343,7 @@ class _EventCardSection extends StatelessWidget {
   final Map<String, dynamic>? dayData;
   final DateTime selectedDate;
 
-  const _EventCardSection({
-    required this.dayData,
-    required this.selectedDate,
-  });
+  const _EventCardSection({required this.dayData, required this.selectedDate});
 
   @override
   Widget build(BuildContext context) {
@@ -370,7 +357,9 @@ class _EventCardSection extends StatelessWidget {
     // TODO(passly): カレンダー daily/monthly API が participant_count を返すようになったら埋める
     final count = (dayData?['participant_count'] as int?) ?? 0;
     final eventIdRaw = dayData?['event_id'];
-    final eventId = eventIdRaw is int ? eventIdRaw : int.tryParse('$eventIdRaw');
+    final eventId = eventIdRaw is int
+        ? eventIdRaw
+        : int.tryParse('$eventIdRaw');
 
     return DayEventCard(
       eventName: eventName,
@@ -423,23 +412,24 @@ class _EncounterSection extends StatelessWidget {
   final DateTime selectedDate;
   final Map<String, dynamic>? dayData;
 
-  const _EncounterSection({
-    required this.selectedDate,
-    required this.dayData,
-  });
+  const _EncounterSection({required this.selectedDate, required this.dayData});
 
   @override
   Widget build(BuildContext context) {
     final count = (dayData?['count'] as int?) ?? 0;
     final rawUsers = dayData?['users'];
     final users = rawUsers is List
-        ? rawUsers.whereType<Map>().map((raw) {
-            final map = Map<String, dynamic>.from(raw);
-            return AvatarItem(
-              userId: map['id']?.toString() ?? '',
-              iconUrl: map['iconUrl']?.toString() ?? '',
-            );
-          }).where((u) => u.userId.isNotEmpty).toList()
+        ? rawUsers
+              .whereType<Map>()
+              .map((raw) {
+                final map = Map<String, dynamic>.from(raw);
+                return AvatarItem(
+                  userId: map['id']?.toString() ?? '',
+                  iconUrl: map['iconUrl']?.toString() ?? '',
+                );
+              })
+              .where((u) => u.userId.isNotEmpty)
+              .toList()
         : const <AvatarItem>[];
 
     return AvatarGroupSection(

@@ -1,5 +1,5 @@
-import '../domain/event_model.dart';
-import 'event_repository.dart';
+import 'package:syshack2026/features/event/domain/event_model.dart';
+import 'package:syshack2026/features/event/data/event_repository.dart';
 
 /// バックエンド未実装時に UI 開発を進めるためのモック実装。
 ///
@@ -17,7 +17,8 @@ class EventRepositoryMock implements EventRepository {
       endAt: DateTime.now().add(const Duration(days: 3, hours: 3)),
       location: '東京都渋谷区 サンプルホール',
       eventUrl: 'https://example.connpass.com/event/$eventId/',
-      description: 'エンジニア同士のカジュアルな交流イベントです。'
+      description:
+          'エンジニア同士のカジュアルな交流イベントです。'
           'すれ違い機能を体験しながら、次のプロジェクトのきっかけを見つけましょう。',
       accepted: 42,
       waiting: 5,

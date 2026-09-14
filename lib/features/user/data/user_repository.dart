@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
-import '../domain/user_model.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
 
 /// ユーザーリポジトリのプロバイダー
 final userRepositoryProvider = Provider<UserRepository>((ref) {
@@ -20,13 +21,13 @@ class UserRepository {
   Future<UserModel> getUser(String id) async {
     try {
       final response = await _dio.get('/users/$id');
-      print('User response data: ${response.data}');
+      debugPrint('User response data: ${response.data}');
       return UserModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      print('DioException: ${e.message}, ${e.response?.data}');
+      debugPrint('DioException: ${e.message}, ${e.response?.data}');
       throw Exception('ユーザー情報の取得に失敗しました: ${e.message}');
     } catch (e) {
-      print('Error parsing user data: $e');
+      debugPrint('Error parsing user data: $e');
       throw Exception('ユーザー情報の解析に失敗しました: $e');
     }
   }
@@ -34,10 +35,10 @@ class UserRepository {
   /// ユーザー情報を更新する（PATCH /users/:id）
   Future<UserModel> updateUser(String id, Map<String, dynamic> data) async {
     try {
-      print('PATCH /users/$id with data: $data');
+      debugPrint('PATCH /users/$id with data: $data');
       final response = await _dio.patch('/users/$id', data: data);
-      print('Update response status: ${response.statusCode}');
-      print('Update response data: ${response.data}');
+      debugPrint('Update response status: ${response.statusCode}');
+      debugPrint('Update response data: ${response.data}');
 
       // レスポンスがユーザーデータを含む場合はそのまま返す
       if (response.data is Map &&
@@ -49,10 +50,10 @@ class UserRepository {
       // messageのみのレスポンス（更新成功）の場合は、最新データを再取得
       return await getUser(id);
     } on DioException catch (e) {
-      print('DioException: ${e.message}, ${e.response?.data}');
+      debugPrint('DioException: ${e.message}, ${e.response?.data}');
       throw Exception('ユーザー情報の更新に失敗しました: ${e.message}');
     } catch (e) {
-      print('Error updating user: $e');
+      debugPrint('Error updating user: $e');
       throw Exception('ユーザー情報の更新に失敗しました: $e');
     }
   }
@@ -61,12 +62,12 @@ class UserRepository {
   Future<void> deleteUser(String id) async {
     try {
       await _dio.delete('/users/$id');
-      print('User deleted: $id');
+      debugPrint('User deleted: $id');
     } on DioException catch (e) {
-      print('DioException: ${e.message}, ${e.response?.data}');
+      debugPrint('DioException: ${e.message}, ${e.response?.data}');
       throw Exception('アカウントの削除に失敗しました: ${e.message}');
     } catch (e) {
-      print('Error deleting user: $e');
+      debugPrint('Error deleting user: $e');
       throw Exception('アカウントの削除に失敗しました: $e');
     }
   }
@@ -88,10 +89,7 @@ class UserRepository {
         ),
       });
 
-      final response = await _dio.post(
-        '/users/$id/avatar',
-        data: formData,
-      );
+      final response = await _dio.post('/users/$id/avatar', data: formData);
 
       if (response.statusCode == 200) {
         return response.data['icon_url'] as String;

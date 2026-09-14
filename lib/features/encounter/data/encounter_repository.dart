@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
 
 final encounterRepositoryProvider = Provider<EncounterRepository>((ref) {
   return EncounterRepository(ref.read(dioProvider));
@@ -29,10 +29,7 @@ class EncounterRepository {
     try {
       final response = await _dio.post(
         '/encounters/resolve',
-        data: {
-          "token": ephemeralId,
-          "ephemeral_id": ephemeralId,
-        },
+        data: {"token": ephemeralId, "ephemeral_id": ephemeralId},
       );
       return response.data['user_id'] as String;
     } on DioException catch (e) {
@@ -70,12 +67,11 @@ class EncounterRepository {
 
     final status = response.statusCode ?? 0;
     final body = response.data;
-    final message = body is Map<String, dynamic> ? body['message']?.toString() : null;
+    final message = body is Map<String, dynamic>
+        ? body['message']?.toString()
+        : null;
 
-    return EncounterRecordResult(
-      created: status == 201,
-      message: message,
-    );
+    return EncounterRecordResult(created: status == 201, message: message);
   }
 
   /// すれ違い結果を確認済みにする（PUT /users/:id/encounters/confirm）
@@ -84,7 +80,9 @@ class EncounterRepository {
   }
 
   /// 解除済み実績一覧を取得する（GET /users/:id/achievements）
-  Future<List<UnlockedAchievement>> fetchUnlockedAchievements(String userId) async {
+  Future<List<UnlockedAchievement>> fetchUnlockedAchievements(
+    String userId,
+  ) async {
     final response = await _dio.get('/users/$userId/achievements');
     final body = response.data;
     if (body is! Map<String, dynamic>) {
@@ -111,10 +109,7 @@ class EncounterRecordResult {
   final bool created;
   final String? message;
 
-  const EncounterRecordResult({
-    required this.created,
-    this.message,
-  });
+  const EncounterRecordResult({required this.created, this.message});
 }
 
 class UnlockedAchievement {

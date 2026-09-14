@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 「その日に出会った人一覧」「親しい友達一覧」など、
 /// 同じレイアウトでデータソースだけ違う人物リスト画面のための共通ウィジェット。
@@ -85,10 +85,7 @@ class PersonListView extends StatelessWidget {
           return const SizedBox.shrink();
         }
         final item = items[itemIndex];
-        return _PersonCard(
-          item: item,
-          onTap: () => onItemTap(item.userId),
-        );
+        return _PersonCard(item: item, onTap: () => onItemTap(item.userId));
       },
     ).let((child) {
       // items が空の場合は emptyMessage を出す
@@ -152,9 +149,7 @@ class _Header extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: AppColors.backgroundWhite,
-        border: Border(
-          bottom: BorderSide(color: AppColors.divider, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       child: Column(
@@ -201,9 +196,7 @@ class _BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.divider,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(100),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       child: InkWell(
         borderRadius: BorderRadius.circular(100),
         onTap: () {
@@ -354,11 +347,7 @@ class _Avatar extends StatelessWidget {
   }
 
   Widget _fallback() {
-    return const Icon(
-      Icons.person,
-      color: AppColors.textLight,
-      size: 28,
-    );
+    return const Icon(Icons.person, color: AppColors.textLight, size: 28);
   }
 }
 

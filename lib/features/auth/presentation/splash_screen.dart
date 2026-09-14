@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/network/dio_client.dart';
-import '../domain/auth_notifier.dart';
-import '../../encounter/domain/encounter_notifier.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 
 /// スプラッシュ画面Widget
 /// 2秒間ロゴを表示した後、認証状態に応じて適切な画面へ遷移する
@@ -148,11 +148,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // アプリアイコン
-        Image.asset(
-          'assets/images/app_icon.png',
-          width: 100,
-          height: 100,
-        ),
+        Image.asset('assets/images/app_icon.png', width: 100, height: 100),
         const SizedBox(height: 24),
         const Text(
           'Passly',

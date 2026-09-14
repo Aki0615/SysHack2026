@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/calendar_repository.dart';
-import '../../auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/calendar/data/calendar_repository.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 
 /// カレンダー画面のデータ状態
 class CalendarState {
@@ -20,10 +20,8 @@ class CalendarState {
     this.isLoading = false,
   });
 
-  factory CalendarState.empty() => const CalendarState(
-        encounterDays: {},
-        monthTotal: 0,
-      );
+  factory CalendarState.empty() =>
+      const CalendarState(encounterDays: {}, monthTotal: 0);
 
   CalendarState copyWith({
     Map<DateTime, Map<String, dynamic>>? encounterDays,
@@ -89,10 +87,12 @@ class CalendarNotifier extends Notifier<CalendarState> {
         final merged = Map<String, dynamic>.from(existing);
 
         merged['event'] = merged['event'] ?? event['name']?.toString() ?? '';
-        merged['event_location'] = event['location']?.toString() ??
+        merged['event_location'] =
+            event['location']?.toString() ??
             merged['event_location']?.toString() ??
             '';
-        merged['event_url'] = event['event_url']?.toString() ??
+        merged['event_url'] =
+            event['event_url']?.toString() ??
             merged['event_url']?.toString() ??
             '';
         merged['event_id'] = merged['event_id'] ?? event['id'];
