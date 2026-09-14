@@ -9,6 +9,7 @@ import 'package:syshack2026/features/close_friend/presentation/close_friend_list
 import 'package:syshack2026/features/encounter/presentation/daily_encounter_list_screen.dart';
 import 'package:syshack2026/features/encounter/presentation/encounter_result_screen.dart';
 import 'package:syshack2026/features/event/presentation/event_detail_screen.dart';
+import 'package:syshack2026/features/event/presentation/event_search_screen.dart';
 import 'package:syshack2026/features/home/presentation/home_screen.dart';
 import 'package:syshack2026/features/plaza/presentation/plaza_screen.dart';
 import 'package:syshack2026/features/plaza/presentation/profile_screen.dart';
@@ -109,6 +110,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/calendar/month',
         builder: (context, state) => const CalendarScreen(),
+      ),
+
+      // イベント検索画面
+      // NOTE: /events/:id より前に置くこと。GoRouter は静的パスを優先するが、
+      // 順序を入れ替えると混乱するので明示的に上に配置。
+      GoRoute(
+        path: '/events/search',
+        builder: (context, state) => const EventSearchScreen(),
       ),
 
       // イベント詳細画面
