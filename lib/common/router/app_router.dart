@@ -5,6 +5,8 @@ import '../../features/auth/domain/auth_notifier.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/close_friend/presentation/close_friend_list_screen.dart';
+import '../../features/encounter/presentation/daily_encounter_list_screen.dart';
 import '../../features/encounter/presentation/encounter_result_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/plaza/presentation/plaza_screen.dart';
@@ -83,6 +85,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/stamp-card',
         builder: (context, state) => const StampCardScreen(),
+      ),
+
+      // 指定日のすれ違い相手一覧画面
+      GoRoute(
+        path: '/encounters/day/:date',
+        builder: (context, state) {
+          final raw = state.pathParameters['date'] ?? '';
+          final date = DateTime.tryParse(raw) ?? DateTime.now();
+          return DailyEncounterListScreen(date: date);
+        },
+      ),
+
+      // 親しい友達一覧画面
+      GoRoute(
+        path: '/close-friends',
+        builder: (context, state) => const CloseFriendListScreen(),
       ),
 
       // メイン画面（4タブのBottomNavigationBar）
