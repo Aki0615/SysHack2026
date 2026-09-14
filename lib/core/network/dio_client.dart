@@ -13,7 +13,7 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       // 実際のRenderデプロイURLに変更
-      baseUrl: 'https://streetpass-backend.onrender.com',
+      baseUrl: 'https://passly-backend.onrender.com',
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {'Content-Type': 'application/json'},
