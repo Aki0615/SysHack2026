@@ -8,10 +8,12 @@ import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/close_friend/presentation/close_friend_list_screen.dart';
 import '../../features/encounter/presentation/daily_encounter_list_screen.dart';
 import '../../features/encounter/presentation/encounter_result_screen.dart';
+import '../../features/event/presentation/event_detail_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/plaza/presentation/plaza_screen.dart';
 import '../../features/plaza/presentation/profile_screen.dart';
 import '../../features/calendar/presentation/calendar_screen.dart';
+import '../../features/calendar/presentation/week_calendar_screen.dart';
 import '../../features/mypage/presentation/mypage_screen.dart';
 import '../../features/mypage/presentation/stamp_card_screen.dart';
 import '../../main_screen.dart';
@@ -103,6 +105,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const CloseFriendListScreen(),
       ),
 
+      // 月表示のカレンダー画面（週表示から「月表示はこちら」で遷移）
+      GoRoute(
+        path: '/calendar/month',
+        builder: (context, state) => const CalendarScreen(),
+      ),
+
+      // イベント詳細画面
+      GoRoute(
+        path: '/events/:id',
+        builder: (context, state) {
+          final raw = state.pathParameters['id'] ?? '';
+          final id = int.tryParse(raw) ?? 0;
+          return EventDetailScreen(eventId: id);
+        },
+      ),
+
       // メイン画面（4タブのBottomNavigationBar）
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -129,12 +147,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // タブ3: カレンダー
+          // タブ3: カレンダー（週表示がデフォルト）
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/calendar',
-                builder: (context, state) => const CalendarScreen(),
+                builder: (context, state) => const WeekCalendarScreen(),
               ),
             ],
           ),
