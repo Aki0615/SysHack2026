@@ -47,7 +47,10 @@ class CalendarNotifier extends Notifier<CalendarState> {
     return CalendarState.empty();
   }
 
-  /// 指定月のデータを取得
+  /// 指定月のデータを取得。
+  ///
+  /// 日別ループは Repository 側の fetchMonthlyCalendar に集約したため、
+  /// この Notifier は取得後のマージだけを担当する。
   Future<void> fetchMonthData(DateTime month) async {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) return;
@@ -56,36 +59,25 @@ class CalendarNotifier extends Notifier<CalendarState> {
 
     try {
       final repo = ref.read(calendarRepositoryProvider);
-      final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
+
+      // 日別データとイベント一覧を並列取得
+      final results = await Future.wait([
+        repo.fetchMonthlyCalendar(userId: user.id, month: month),
+        repo.fetchMonthEvents(month),
+      ]);
+      final daily = results[0] as Map<DateTime, Map<String, dynamic>>;
+      final monthEvents = results[1] as List<Map<String, dynamic>>;
 
       final newEncounterDays = Map<DateTime, Map<String, dynamic>>.from(
         state.encounterDays,
-      );
+      )..addAll(daily);
+
       int monthTotal = 0;
-
-      final monthEventsFuture = repo.fetchMonthEvents(month);
-
-      // 月の各日のデータを取得（並列で取得）
-      final futures = <Future<MapEntry<DateTime, Map<String, dynamic>>?>>[];
-
-      for (int day = 1; day <= daysInMonth; day++) {
-        final date = DateTime(month.year, month.month, day);
-        final dateString =
-            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-        futures.add(_fetchDayData(repo, user.id, date, dateString));
+      for (final entry in daily.entries) {
+        monthTotal += (entry.value['count'] as int?) ?? 0;
       }
 
-      final results = await Future.wait(futures);
-      final monthEvents = await monthEventsFuture;
-
-      for (final entry in results) {
-        if (entry != null) {
-          newEncounterDays[entry.key] = entry.value;
-          monthTotal += (entry.value['count'] as int?) ?? 0;
-        }
-      }
-
+      // 参加予定イベントを日付にマージ（イベントだけ登録された日を作る）
       for (final event in monthEvents) {
         final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
         if (startAt == null) continue;
@@ -103,6 +95,7 @@ class CalendarNotifier extends Notifier<CalendarState> {
             event['event_url']?.toString() ??
             merged['event_url']?.toString() ??
             '';
+        merged['event_id'] = merged['event_id'] ?? event['id'];
         merged['count'] = merged['count'] ?? 0;
         merged['users'] = merged['users'] ?? const <Map<String, dynamic>>[];
 
@@ -119,72 +112,6 @@ class CalendarNotifier extends Notifier<CalendarState> {
     }
   }
 
-  Future<MapEntry<DateTime, Map<String, dynamic>>?> _fetchDayData(
-    CalendarRepository repo,
-    String userId,
-    DateTime date,
-    String dateString,
-  ) async {
-    try {
-      final data = await repo.fetchDailyEncounters(
-        userId: userId,
-        dateString: dateString,
-      );
-
-      final count =
-          (data['encounter_count'] as int?) ?? (data['count'] as int?) ?? 0;
-      final event =
-          data['event'] as String? ??
-          ((data['event_names'] as List?)?.cast<String?>().firstWhere(
-            (name) => name != null && name.isNotEmpty,
-            orElse: () => null,
-          ));
-      final users = _parseEncounterUsers(data);
-
-      if (count > 0) {
-        return MapEntry(date, {
-          'count': count,
-          'event': event,
-          'event_location': data['event_location']?.toString() ?? '',
-          'event_url': data['event_url']?.toString() ?? '',
-          'users': users,
-        });
-      }
-    } catch (_) {
-      // エラーは無視
-    }
-    return null;
-  }
-
-  List<Map<String, dynamic>> _parseEncounterUsers(Map<String, dynamic> data) {
-    final candidates = [
-      data['users'],
-      data['encounter_users'],
-      data['encounters'],
-    ];
-
-    for (final candidate in candidates) {
-      if (candidate is List) {
-        return candidate
-            .whereType<Map>()
-            .map(
-              (raw) => {
-                'id': raw['id']?.toString() ?? '',
-                'name': raw['name']?.toString() ?? '',
-                'iconUrl':
-                    (raw['icon_url'] ?? raw['iconUrl'])?.toString() ?? '',
-                'comment':
-                    (raw['one_word'] ?? raw['comment'])?.toString() ?? '',
-              },
-            )
-            .where((user) => user['id']!.isNotEmpty)
-            .toList();
-      }
-    }
-
-    return const [];
-  }
-
   /// 特定日のデータを取得
   Map<String, dynamic>? getDayData(DateTime date) {
     return state.encounterDays.entries
@@ -198,12 +125,5 @@ class CalendarNotifier extends Notifier<CalendarState> {
           orElse: () => null,
         )
         ?.value;
-  }
-}
-
-/// DateUtils補助クラス
-class DateUtils {
-  static int getDaysInMonth(int year, int month) {
-    return DateTime(year, month + 1, 0).day;
   }
 }
