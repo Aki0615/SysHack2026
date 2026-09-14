@@ -40,4 +40,146 @@ class CalendarRepository {
         })
         .toList();
   }
+
+  /// 指定月のすれ違い情報を「日付 → data」のマップで返す。
+  ///
+  /// 呼び出し側は日別 API のループを直接組む必要がなくなる。
+  ///
+  /// ## バックエンド切替ポイント
+  /// サーバー側で GET /users/:id/calendar/monthly?month=YYYY-MM が実装されたら、
+  /// 内部を [_fetchByMonthlyApi] に差し替える。それまでは日別 API を
+  /// 内部でループする [_fetchByDailyLoop] を使う。
+  Future<Map<DateTime, Map<String, dynamic>>> fetchMonthlyCalendar({
+    required String userId,
+    required DateTime month,
+  }) {
+    // TODO(passly): サーバー側 monthly API がデプロイされたら
+    // _fetchByMonthlyApi に差し替える。
+    return _fetchByDailyLoop(userId: userId, month: month);
+  }
+
+  /// 従来の日別 API を月内全日に対して並列で叩く実装。
+  Future<Map<DateTime, Map<String, dynamic>>> _fetchByDailyLoop({
+    required String userId,
+    required DateTime month,
+  }) async {
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    final futures = <Future<MapEntry<DateTime, Map<String, dynamic>>?>>[];
+
+    for (int day = 1; day <= daysInMonth; day++) {
+      final date = DateTime(month.year, month.month, day);
+      final dateString =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      futures.add(_fetchOneDay(userId, date, dateString));
+    }
+
+    final results = await Future.wait(futures);
+    final map = <DateTime, Map<String, dynamic>>{};
+    for (final entry in results) {
+      if (entry != null) {
+        map[entry.key] = entry.value;
+      }
+    }
+    return map;
+  }
+
+  /// 将来の monthly API 実装用プレースホルダ。
+  /// バックエンド側の実装完了後に有効化する。
+  // ignore: unused_element
+  Future<Map<DateTime, Map<String, dynamic>>> _fetchByMonthlyApi({
+    required String userId,
+    required DateTime month,
+  }) async {
+    final monthString =
+        '${month.year}-${month.month.toString().padLeft(2, '0')}';
+    final response = await _dio.get(
+      '/users/$userId/calendar/monthly',
+      queryParameters: {'month': monthString},
+    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) return const {};
+
+    final rawDays = data['days'];
+    if (rawDays is! List) return const {};
+
+    final result = <DateTime, Map<String, dynamic>>{};
+    for (final raw in rawDays) {
+      if (raw is! Map) continue;
+      final map = Map<String, dynamic>.from(raw);
+      final date = DateTime.tryParse(map['date']?.toString() ?? '');
+      if (date == null) continue;
+      result[DateTime(date.year, date.month, date.day)] =
+          _normalizeDayData(map);
+    }
+    return result;
+  }
+
+  Future<MapEntry<DateTime, Map<String, dynamic>>?> _fetchOneDay(
+    String userId,
+    DateTime date,
+    String dateString,
+  ) async {
+    try {
+      final data = await fetchDailyEncounters(
+        userId: userId,
+        dateString: dateString,
+      );
+      final normalized = _normalizeDayData(data);
+      final count = normalized['count'] as int? ?? 0;
+      if (count > 0) {
+        return MapEntry(date, normalized);
+      }
+    } catch (_) {
+      // 個別失敗は無視して他日のデータを返す
+    }
+    return null;
+  }
+
+  /// daily / monthly 双方のレスポンス差異を吸収して統一形式で返す。
+  Map<String, dynamic> _normalizeDayData(Map<String, dynamic> data) {
+    final count =
+        (data['encounter_count'] as int?) ?? (data['count'] as int?) ?? 0;
+    final event =
+        data['event'] as String? ??
+        ((data['event_names'] as List?)?.cast<String?>().firstWhere(
+              (name) => name != null && name.isNotEmpty,
+              orElse: () => null,
+            ));
+    final users = _parseEncounterUsers(data);
+    return {
+      'count': count,
+      'event': event,
+      'event_location': data['event_location']?.toString() ?? '',
+      'event_url': data['event_url']?.toString() ?? '',
+      'event_id': data['event_id'],
+      'users': users,
+    };
+  }
+
+  List<Map<String, dynamic>> _parseEncounterUsers(Map<String, dynamic> data) {
+    final candidates = [
+      data['users'],
+      data['encounter_users'],
+      data['encounters'],
+    ];
+    for (final candidate in candidates) {
+      if (candidate is List) {
+        return candidate
+            .whereType<Map>()
+            .map(
+              (raw) => {
+                'id': raw['id']?.toString() ?? '',
+                'name': raw['name']?.toString() ?? '',
+                'iconUrl':
+                    (raw['icon_url'] ?? raw['iconUrl'])?.toString() ?? '',
+                'comment':
+                    (raw['one_word'] ?? raw['comment'])?.toString() ?? '',
+              },
+            )
+            .where((user) => user['id']!.isNotEmpty)
+            .toList();
+      }
+    }
+    return const [];
+  }
 }
