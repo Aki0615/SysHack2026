@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import 'comment_item_widget.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/home/presentation/widgets/comment_item_widget.dart';
 
 // 修正: 不要コメントの削除、UI構成のメソッド化
 class CommentCardWidget extends StatelessWidget {

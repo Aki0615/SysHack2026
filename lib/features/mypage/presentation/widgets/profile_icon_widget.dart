@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 円形のプロフィール写真と、画像アップロード用のカメラボタンを含むWidget
 class ProfileIconWidget extends StatelessWidget {
@@ -77,7 +77,7 @@ class ProfileIconWidget extends StatelessWidget {
         height: 96,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error: $error');
+          debugPrint('Image load error: $error');
           return const Icon(Icons.person, color: AppColors.primary, size: 48);
         },
       );
@@ -91,7 +91,7 @@ class ProfileIconWidget extends StatelessWidget {
         height: 96,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          print('Local file error: $error');
+          debugPrint('Local file error: $error');
           return const Icon(Icons.person, color: AppColors.primary, size: 48);
         },
       );

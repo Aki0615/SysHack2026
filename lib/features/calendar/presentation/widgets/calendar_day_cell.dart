@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// カレンダーの各日付セルを描画するWidget
 class CalendarDayCell extends StatelessWidget {
@@ -23,10 +23,7 @@ class CalendarDayCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        alignment: Alignment.center,
-        child: _buildCellContent(),
-      ),
+      child: Container(alignment: Alignment.center, child: _buildCellContent()),
     );
   }
 
@@ -60,11 +57,7 @@ class CalendarDayCell extends StatelessWidget {
               ),
             ),
             if (hasEvent)
-              const Positioned(
-                top: 1,
-                right: 1,
-                child: _EventDot(),
-              ),
+              const Positioned(top: 1, right: 1, child: _EventDot()),
           ],
         ),
       );
@@ -76,16 +69,8 @@ class CalendarDayCell extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Align(
-            alignment: Alignment.center,
-            child: _buildDayNumber(),
-          ),
-          if (hasEvent)
-            const Positioned(
-              top: 1,
-              right: 1,
-              child: _EventDot(),
-            ),
+          Align(alignment: Alignment.center, child: _buildDayNumber()),
+          if (hasEvent) const Positioned(top: 1, right: 1, child: _EventDot()),
         ],
       ),
     );
@@ -119,7 +104,6 @@ class CalendarDayCell extends StatelessWidget {
       style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
     );
   }
-
 }
 
 class _EventDot extends StatelessWidget {

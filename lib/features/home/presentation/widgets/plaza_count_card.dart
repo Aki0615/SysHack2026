@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要なコメントを削除、定数とレイアウトを整理
 class PlazaCountCard extends StatelessWidget {
@@ -45,7 +45,10 @@ class PlazaCountCard extends StatelessWidget {
         Flexible(
           child: Text(
             '広場の人数',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

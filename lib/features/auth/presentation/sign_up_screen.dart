@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../domain/auth_notifier.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 
 /// アカウント作成画面Widget
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -93,11 +93,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: AppColors.error,
-            size: 24,
-          ),
+          const Icon(Icons.error_outline, color: AppColors.error, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -341,8 +337,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             onPressed: authState.isLoading ? null : _handleSignUp,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              disabledBackgroundColor:
-                  AppColors.primary.withValues(alpha: 0.5),
+              disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -460,9 +455,7 @@ class _RoleOption extends StatelessWidget {
                 : AppColors.backgroundGrey,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.divider,
+              color: isSelected ? AppColors.primary : AppColors.divider,
             ),
           ),
           child: Row(
@@ -472,9 +465,7 @@ class _RoleOption extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.textPrimary,
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),

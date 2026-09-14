@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// マイページの「MY INFORMATION」内に表示するスタンプカード行のWidget
 class StampCardItem extends StatelessWidget {
@@ -37,12 +37,18 @@ class StampCardItem extends StatelessWidget {
                 children: [
                   Text(
                     'スタンプカード',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                   SizedBox(height: 2),
                   Text(
                     '実績の確認',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),

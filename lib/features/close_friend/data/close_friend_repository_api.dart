@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import '../../user/domain/user_model.dart';
-import 'close_friend_repository.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/features/close_friend/data/close_friend_repository.dart';
 
 /// 実バックエンド向けの CloseFriendRepository 実装。
 ///

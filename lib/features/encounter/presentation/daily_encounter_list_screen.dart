@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../common/widgets/person_list_view.dart';
-import '../../calendar/domain/calendar_notifier.dart';
+import 'package:syshack2026/common/widgets/person_list_view.dart';
+import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
 
 /// 指定日のすれ違い相手一覧画面。
 ///
@@ -59,16 +59,20 @@ class DailyEncounterListScreen extends ConsumerWidget {
 
     final eventName = (dayData['event'] as String?)?.trim() ?? '';
 
-    return rawUsers.whereType<Map>().map((raw) {
-      final map = Map<String, dynamic>.from(raw);
-      return PersonListItem(
-        userId: map['id']?.toString() ?? '',
-        name: map['name']?.toString() ?? '',
-        iconUrl: map['iconUrl']?.toString() ?? '',
-        // TODO(passly): API が個別の encounter 時刻を返すようになったら埋める
-        timeLabel: null,
-        eventLabel: eventName.isEmpty ? null : eventName,
-      );
-    }).where((item) => item.userId.isNotEmpty).toList();
+    return rawUsers
+        .whereType<Map>()
+        .map((raw) {
+          final map = Map<String, dynamic>.from(raw);
+          return PersonListItem(
+            userId: map['id']?.toString() ?? '',
+            name: map['name']?.toString() ?? '',
+            iconUrl: map['iconUrl']?.toString() ?? '',
+            // TODO(passly): API が個別の encounter 時刻を返すようになったら埋める
+            timeLabel: null,
+            eventLabel: eventName.isEmpty ? null : eventName,
+          );
+        })
+        .where((item) => item.userId.isNotEmpty)
+        .toList();
   }
 }

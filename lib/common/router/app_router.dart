@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/domain/auth_notifier.dart';
-import '../../features/auth/presentation/splash_screen.dart';
-import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/presentation/sign_up_screen.dart';
-import '../../features/close_friend/presentation/close_friend_list_screen.dart';
-import '../../features/encounter/presentation/daily_encounter_list_screen.dart';
-import '../../features/encounter/presentation/encounter_result_screen.dart';
-import '../../features/home/presentation/home_screen.dart';
-import '../../features/plaza/presentation/plaza_screen.dart';
-import '../../features/plaza/presentation/profile_screen.dart';
-import '../../features/calendar/presentation/calendar_screen.dart';
-import '../../features/mypage/presentation/mypage_screen.dart';
-import '../../features/mypage/presentation/stamp_card_screen.dart';
-import '../../main_screen.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/auth/presentation/splash_screen.dart';
+import 'package:syshack2026/features/auth/presentation/login_screen.dart';
+import 'package:syshack2026/features/auth/presentation/sign_up_screen.dart';
+import 'package:syshack2026/features/close_friend/presentation/close_friend_list_screen.dart';
+import 'package:syshack2026/features/encounter/presentation/daily_encounter_list_screen.dart';
+import 'package:syshack2026/features/encounter/presentation/encounter_result_screen.dart';
+import 'package:syshack2026/features/home/presentation/home_screen.dart';
+import 'package:syshack2026/features/plaza/presentation/plaza_screen.dart';
+import 'package:syshack2026/features/plaza/presentation/profile_screen.dart';
+import 'package:syshack2026/features/calendar/presentation/calendar_screen.dart';
+import 'package:syshack2026/features/mypage/presentation/mypage_screen.dart';
+import 'package:syshack2026/features/mypage/presentation/stamp_card_screen.dart';
+import 'package:syshack2026/main_screen.dart';
 
 /// GoRouterのリフレッシュ用Notifier
 class RouterNotifier extends ChangeNotifier {
@@ -22,7 +22,7 @@ class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this.ref) {
     ref.listen<AsyncValue<dynamic>>(
       authNotifierProvider,
-	  (previous, next) => notifyListeners(),
+      (previous, next) => notifyListeners(),
     );
   }
 }
@@ -43,7 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnAuthPage =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
-	      state.matchedLocation == '/';
+          state.matchedLocation == '/';
 
       // ログイン済みで認証ページにいる場合 → ホームへ
       if (isLoggedIn && isOnAuthPage) return '/home';

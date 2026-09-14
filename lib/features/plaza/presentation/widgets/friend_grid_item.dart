@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除、コードのネスト解消
 class FriendGridItem extends StatelessWidget {
@@ -44,7 +44,7 @@ class FriendGridItem extends StatelessWidget {
           child: Image.network(
             iconUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildFallbackIcon(),
+            errorBuilder: (_, _, _) => _buildFallbackIcon(),
           ),
         ),
       );

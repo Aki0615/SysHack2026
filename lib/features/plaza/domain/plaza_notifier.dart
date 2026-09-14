@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../user/domain/user_model.dart';
-import '../data/plaza_repository.dart';
-import '../../auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/features/plaza/data/plaza_repository.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 
 /// 広場画面のデータを管理するプロバイダー
 final plazaNotifierProvider =

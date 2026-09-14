@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
 
 final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
   return CalendarRepository(ref.read(dioProvider));
@@ -30,14 +30,12 @@ class CalendarRepository {
     final data = response.data;
     if (data is! List) return const [];
 
-    return data
-        .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
-        .where((event) {
-          final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
-          if (startAt == null) return false;
-          return startAt.year == month.year && startAt.month == month.month;
-        })
-        .toList();
+    return data.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).where(
+      (event) {
+        final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
+        if (startAt == null) return false;
+        return startAt.year == month.year && startAt.month == month.month;
+      },
+    ).toList();
   }
 }

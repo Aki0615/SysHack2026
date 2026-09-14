@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 class EventListItem extends StatelessWidget {
   final String eventName;
@@ -78,15 +78,25 @@ class EventListItem extends StatelessWidget {
           children: [
             Text(
               date,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.location_on, color: AppColors.textSecondary, size: 12),
+            const Icon(
+              Icons.location_on,
+              color: AppColors.textSecondary,
+              size: 12,
+            ),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
                 location,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

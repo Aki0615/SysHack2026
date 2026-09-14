@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'ble_service.dart';
+import 'package:syshack2026/features/ble/ble_service.dart';
 
 /// BLEサービスのプロバイダー（アプリ全体で1つのインスタンスを共有）
 final bleServiceProvider = Provider<BleService>((ref) {

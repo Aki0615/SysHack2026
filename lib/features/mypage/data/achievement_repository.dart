@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
-import '../domain/achievement_model.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/mypage/domain/achievement_model.dart';
 
 final achievementRepositoryProvider = Provider<AchievementRepository>((ref) {
   return AchievementRepository(ref.read(dioProvider));

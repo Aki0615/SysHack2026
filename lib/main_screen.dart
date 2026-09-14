@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'common/widgets/animated_bottom_nav_bar.dart';
-import 'core/constants/app_colors.dart';
-import 'core/network/dio_client.dart';
-import 'features/ble/ble_notifier.dart';
-import 'features/auth/domain/auth_notifier.dart';
-import 'features/encounter/domain/encounter_notifier.dart';
-import 'features/encounter/domain/encounter_model.dart';
-import 'features/user/domain/user_model.dart';
+import 'package:syshack2026/common/widgets/animated_bottom_nav_bar.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/ble/ble_notifier.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
 
 /// メイン画面（4タブのBottomNavigationBar）
 /// ログイン後に表示される画面で、BLEすれ違い機能のライフサイクルを管理する

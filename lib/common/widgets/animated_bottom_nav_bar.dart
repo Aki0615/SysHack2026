@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 class BottomNavItem {
   final IconData icon;
@@ -70,12 +70,13 @@ class _AnimatedBottomNavBarState extends State<AnimatedBottomNavBar>
   void didUpdateWidget(AnimatedBottomNavBar old) {
     super.didUpdateWidget(old);
     if (old.currentIndex != widget.currentIndex) {
-      _posAnim = Tween<double>(
-        begin: _posAnim.value,
-        end: widget.currentIndex.toDouble(),
-      ).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
-      );
+      _posAnim =
+          Tween<double>(
+            begin: _posAnim.value,
+            end: widget.currentIndex.toDouble(),
+          ).animate(
+            CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic),
+          );
       _controller.forward(from: 0);
     }
   }
@@ -238,10 +239,7 @@ class _InactiveSlot extends StatelessWidget {
       children: [
         Icon(item.icon, color: color, size: 22),
         const SizedBox(height: 3),
-        Text(
-          item.label,
-          style: TextStyle(color: color, fontSize: 10),
-        ),
+        Text(item.label, style: TextStyle(color: color, fontSize: 10)),
       ],
     );
   }
@@ -277,20 +275,26 @@ class _NotchedBarPainter extends CustomPainter {
 
     // 左側の曲線（なめらかにノッチへ入る）
     path.quadraticBezierTo(
-      notchX - notchR * 0.55, 0,
-      notchX - notchR * 0.2, depth * 0.6,
+      notchX - notchR * 0.55,
+      0,
+      notchX - notchR * 0.2,
+      depth * 0.6,
     );
 
     // ノッチの底部
     path.quadraticBezierTo(
-      notchX, depth + 4,
-      notchX + notchR * 0.2, depth * 0.6,
+      notchX,
+      depth + 4,
+      notchX + notchR * 0.2,
+      depth * 0.6,
     );
 
     // 右側の曲線（ノッチから出る）
     path.quadraticBezierTo(
-      notchX + notchR * 0.55, 0,
-      math.min(size.width, exitX), 0,
+      notchX + notchR * 0.55,
+      0,
+      math.min(size.width, exitX),
+      0,
     );
 
     // 右端まで

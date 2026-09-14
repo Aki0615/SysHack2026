@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../close_friend/domain/close_friend_list_notifier.dart';
-import '../../user/data/user_repository.dart';
-import '../../user/domain/user_model.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
+import 'package:syshack2026/features/user/data/user_repository.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
 
 final profileProvider = FutureProvider.family<UserModel, String>((ref, userId) {
   return ref.read(userRepositoryProvider).getUser(userId);
@@ -162,11 +162,7 @@ class _CoverAndAvatar extends StatelessWidget {
               child: _buildCover(),
             ),
           ),
-          Positioned(
-            top: topPadding + 12,
-            left: 20,
-            child: _BackButton(),
-          ),
+          Positioned(top: topPadding + 12, left: 20, child: _BackButton()),
           Positioned(
             top: _coverHeight - _avatarSize / 2,
             left: 0,
@@ -202,11 +198,7 @@ class _CoverAndAvatar extends StatelessWidget {
         ),
       ),
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.image_outlined,
-        color: Colors.white,
-        size: 48,
-      ),
+      child: const Icon(Icons.image_outlined, color: Colors.white, size: 48),
     );
   }
 }
@@ -216,9 +208,7 @@ class _BackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.divider,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(100),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       child: InkWell(
         borderRadius: BorderRadius.circular(100),
         onTap: () {
@@ -278,11 +268,7 @@ class _Avatar extends StatelessWidget {
     return Container(
       color: AppColors.backgroundGrey,
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.person,
-        color: AppColors.textLight,
-        size: 48,
-      ),
+      child: const Icon(Icons.person, color: AppColors.textLight, size: 48),
     );
   }
 }
@@ -329,10 +315,7 @@ class _EncounterCard extends StatelessWidget {
   final UserModel profile;
   final bool isCloseFriend;
 
-  const _EncounterCard({
-    required this.profile,
-    required this.isCloseFriend,
-  });
+  const _EncounterCard({required this.profile, required this.isCloseFriend});
 
   @override
   Widget build(BuildContext context) {
@@ -500,7 +483,10 @@ class _TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chip = Container(
-      padding: EdgeInsets.symmetric(horizontal: icon == null ? 12 : 10, vertical: 5),
+      padding: EdgeInsets.symmetric(
+        horizontal: icon == null ? 12 : 10,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(100),
@@ -643,10 +629,7 @@ class _CloseFriendActions extends ConsumerWidget {
       );
     }
 
-    return _AddButton(
-      enabled: !isBusy,
-      onTap: () => _handleAdd(context, ref),
-    );
+    return _AddButton(enabled: !isBusy, onTap: () => _handleAdd(context, ref));
   }
 
   Future<void> _handleAdd(BuildContext context, WidgetRef ref) async {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../ble/ble_notifier.dart';
-import '../domain/encounter_model.dart';
-import '../domain/encounter_notifier.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/ble/ble_notifier.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
+import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 
 /// 今回のすれ違い画面
 /// ループ型スクロールでアイコンを表示し、タップで一言を表示する
@@ -84,10 +84,7 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
         _buildHeader(encounters.length),
         const SizedBox(height: 48),
         // ループ型アイコンスクロール
-        SizedBox(
-          height: 160,
-          child: _buildLoopingAvatarScroll(encounters),
-        ),
+        SizedBox(height: 160, child: _buildLoopingAvatarScroll(encounters)),
         const SizedBox(height: 32),
         // 選択されたユーザーの一言表示エリア
         _buildOneWordDisplay(encounters),
@@ -182,7 +179,8 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
                     });
                     _fadeController.forward(from: 0.0);
                     // タップしたアイテムを中央に移動
-                    final targetPage = _pageController.page!.round() -
+                    final targetPage =
+                        _pageController.page!.round() -
                         (_pageController.page!.round() % itemCount) +
                         realIndex;
                     _pageController.animateToPage(
@@ -208,10 +206,7 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
         child: Center(
           child: Text(
             'アイコンをタップして\n一言を見る',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
             textAlign: TextAlign.center,
           ),
         ),
@@ -252,27 +247,24 @@ class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
             const SizedBox(height: 12),
             if (user.oneWord.isNotEmpty)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade800.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '「${user.oneWord}」',
-                  style: TextStyle(
-                    color: Colors.grey.shade300,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               )
             else
               Text(
                 '一言が設定されていません',
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
               ),
             const SizedBox(height: 8),
             Text(
@@ -367,10 +359,7 @@ class _AvatarItem extends StatelessWidget {
 
   Widget _buildAvatar(String iconUrl) {
     if (iconUrl.isNotEmpty) {
-      return CircleAvatar(
-        radius: 50,
-        backgroundImage: NetworkImage(iconUrl),
-      );
+      return CircleAvatar(radius: 50, backgroundImage: NetworkImage(iconUrl));
     }
     return Container(
       width: 100,
@@ -393,16 +382,10 @@ class _PageAnimatedBuilder extends StatelessWidget {
   final PageController animation;
   final Widget Function(BuildContext context, Widget? child) builder;
 
-  const _PageAnimatedBuilder({
-    required this.animation,
-    required this.builder,
-  });
+  const _PageAnimatedBuilder({required this.animation, required this.builder});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: builder,
-    );
+    return AnimatedBuilder(animation: animation, builder: builder);
   }
 }

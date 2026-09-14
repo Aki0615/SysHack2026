@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 「一言」を表示し、必要に応じてダイアログから編集できるカプセル型Widget
 class CommentEditWidget extends StatelessWidget {

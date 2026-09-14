@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'plaza_count_card.dart';
-import 'today_encounter_card.dart';
+import 'package:syshack2026/features/home/presentation/widgets/plaza_count_card.dart';
+import 'package:syshack2026/features/home/presentation/widgets/today_encounter_card.dart';
 
 // 修正: 不要なコメントを削除、コードを最小化
 class StatsRowWidget extends StatelessWidget {

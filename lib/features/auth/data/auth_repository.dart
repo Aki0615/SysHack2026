@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../core/network/dio_client.dart';
-import '../../user/domain/user_model.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
 
 /// 認証リポジトリのプロバイダー
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -17,7 +17,7 @@ class AuthRepository {
   AuthRepository(this._dio, this._storage);
 
   /// サインアップAPI（POST /signup）
-  /// レスポンス仕様がないため返り値はFuture<void>とし、ボディ処理は行いません
+  /// レスポンス仕様がないため返り値は `Future<void>` とし、ボディ処理は行いません
   Future<void> signUp({
     required String id,
     required String name,

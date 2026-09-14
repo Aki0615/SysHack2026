@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
-import '../domain/achievement_model.dart';
-import '../domain/achievement_notifier.dart';
+import 'package:syshack2026/features/mypage/domain/achievement_model.dart';
+import 'package:syshack2026/features/mypage/domain/achievement_notifier.dart';
 
 /// スタンプカード（実績確認）画面
 class StampCardScreen extends ConsumerWidget {
@@ -19,7 +19,8 @@ class StampCardScreen extends ConsumerWidget {
       body: achievementState.when(
         data: (data) => RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: () => ref.read(achievementNotifierProvider.notifier).refresh(),
+          onRefresh: () =>
+              ref.read(achievementNotifierProvider.notifier).refresh(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -71,28 +72,27 @@ class StampCardScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 56, color: AppColors.textDisabled),
+            const Icon(
+              Icons.error_outline,
+              size: 56,
+              color: AppColors.textDisabled,
+            ),
             const SizedBox(height: 12),
             const Text(
               '実績の取得に失敗しました',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => ref.read(achievementNotifierProvider.notifier).refresh(),
+              onPressed: () =>
+                  ref.read(achievementNotifierProvider.notifier).refresh(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                '再試行',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('再試行', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -225,7 +225,9 @@ class _AchievementCard extends StatelessWidget {
       onTap: () => _showDetailDialog(context),
       child: Container(
         decoration: BoxDecoration(
-          color: isUnlocked ? AppColors.backgroundGrey : const Color(0xFFE8E8E8),
+          color: isUnlocked
+              ? AppColors.backgroundGrey
+              : const Color(0xFFE8E8E8),
           borderRadius: BorderRadius.circular(16),
           border: isUnlocked
               ? Border.all(
@@ -259,7 +261,10 @@ class _AchievementCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               achievement.unlockedDateLabel,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
@@ -307,7 +312,10 @@ class _AchievementDetailDialog extends StatelessWidget {
             Text(
               achievement.description,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+              ),
             ),
             if (achievement.isUnlocked) ...[
               const SizedBox(height: 4),

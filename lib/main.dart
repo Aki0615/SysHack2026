@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'common/router/app_router.dart';
-import 'core/constants/app_colors.dart';
+import 'package:syshack2026/common/router/app_router.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 void main() {
   // Riverpodの状態管理スコープでアプリ全体をラップ
@@ -23,9 +23,7 @@ class PasslyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       // 日本語ロケール設定
       locale: const Locale('ja', 'JP'),
-      supportedLocales: const [
-        Locale('ja', 'JP'),
-      ],
+      supportedLocales: const [Locale('ja', 'JP')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -39,7 +37,11 @@ class PasslyApp extends ConsumerWidget {
         useMaterial3: true,
         // 日本語フォント設定
         fontFamily: 'Hiragino Sans',
-        fontFamilyFallback: const ['Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'sans-serif'],
+        fontFamilyFallback: const [
+          'Hiragino Kaku Gothic ProN',
+          'Noto Sans JP',
+          'sans-serif',
+        ],
       ),
       // GoRouterをMaterialAppに接続する
       routerConfig: router,

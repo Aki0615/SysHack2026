@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 吹き出しの尻尾を描画するカスタムペインター
 class _BubbleTailPainter extends CustomPainter {

@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/network/dio_client.dart';
-import '../../user/domain/user_model.dart';
+import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
 
 final plazaRepositoryProvider = Provider<PlazaRepository>((ref) {
   return PlazaRepository(ref.read(dioProvider));
@@ -57,21 +57,21 @@ class PlazaRepository {
           : '${startAt.year.toString().padLeft(4, '0')}/${startAt.month.toString().padLeft(2, '0')}/${startAt.day.toString().padLeft(2, '0')}';
 
       final countValue = map['count'];
-        final acceptedValue = map['accepted'];
-        final waitingValue = map['waiting'];
-        final limitValue = map['limit'];
+      final acceptedValue = map['accepted'];
+      final waitingValue = map['waiting'];
+      final limitValue = map['limit'];
 
-        final accepted = acceptedValue is int
+      final accepted = acceptedValue is int
           ? acceptedValue
           : int.tryParse(acceptedValue?.toString() ?? '') ?? 0;
-        final waiting = waitingValue is int
+      final waiting = waitingValue is int
           ? waitingValue
           : int.tryParse(waitingValue?.toString() ?? '') ?? 0;
-        final limit = limitValue is int
+      final limit = limitValue is int
           ? limitValue
           : int.tryParse(limitValue?.toString() ?? '') ?? 0;
 
-        final count = countValue is int
+      final count = countValue is int
           ? countValue
           : int.tryParse(countValue?.toString() ?? '') ?? accepted;
 
