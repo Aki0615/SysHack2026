@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../domain/calendar_notifier.dart';
 import 'widgets/encounter_bubble.dart';
@@ -50,360 +49,33 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   void _onDaySelected(DateTime date) {
     final calendarState = ref.read(calendarNotifierProvider);
-    final dayData = calendarState.encounterDays.entries
-        .cast<MapEntry<DateTime, Map<String, dynamic>>?>()
-        .firstWhere(
-          (e) =>
-              e != null &&
-              e.key.year == date.year &&
-              e.key.month == date.month &&
-              e.key.day == date.day,
-          orElse: () => null,
-        );
+    final dayData = _findDayData(calendarState.encounterDays, date);
 
     setState(() {
       // すれ違いの有無に関わらず、タップした日付を選択状態にする
       _selectedDay = date;
     });
 
-    // すれ違いデータがある場合は詳細ボトムシートを表示
+    // すれ違いがある日は詳細一覧画面へ遷移
     if (dayData != null) {
-      _showEventDetailBottomSheet(date, dayData.value);
+      final dateParam =
+          '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      context.push('/encounters/day/$dateParam');
     }
   }
 
-  /// イベント詳細ボトムシートを表示
-  void _showEventDetailBottomSheet(DateTime date, Map<String, dynamic> data) {
-    final count = data['count'] as int;
-    final eventName = data['event'] as String?;
-    final normalizedEventName = eventName?.trim() ?? '';
-    final hasEventName = normalizedEventName.isNotEmpty;
-    final eventLocation = data['event_location'] as String?;
-    final eventUrl = data['event_url'] as String?;
-    final hasEventUrl =
-        hasEventName && eventUrl != null && eventUrl.trim().isNotEmpty;
-    final users =
-        (data['users'] as List?)
-            ?.whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList() ??
-        const <Map<String, dynamic>>[];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return FractionallySizedBox(
-          heightFactor: 0.9,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundWhite,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Center(
-                              child: Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: AppColors.divider,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              '${date.year}年${date.month}月${date.day}日',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              hasEventName ? normalizedEventName : 'イベントなし',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.people,
-                                    color: AppColors.primary,
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'すれ違った人数',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    '$count人',
-                                    style: const TextStyle(
-                                      color: AppColors.primary,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: hasEventUrl
-                                    ? () => _openEventUrl(context, eventUrl)
-                                    : null,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.backgroundGrey,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.event,
-                                        color: AppColors.textSecondary,
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              hasEventUrl
-                                                  ? 'イベント（タップで開く）'
-                                                  : 'イベント',
-                                              style: const TextStyle(
-                                                color: AppColors.textSecondary,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              hasEventName
-                                                  ? normalizedEventName
-                                                  : 'イベントなし',
-                                              style: const TextStyle(
-                                                color: AppColors.textPrimary,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            if (eventLocation != null &&
-                                                eventLocation.isNotEmpty) ...[
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                eventLocation,
-                                                style: const TextStyle(
-                                                  color: AppColors.textSecondary,
-                                                  fontSize: 12,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      if (hasEventUrl)
-                                        const Icon(
-                                          Icons.open_in_new,
-                                          color: AppColors.primary,
-                                          size: 20,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (users.isNotEmpty) ...[
-                              const SizedBox(height: 20),
-                              const Text(
-                                'すれ違った人',
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: users.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(height: 8),
-                                itemBuilder: (context, index) {
-                                  final user = users[index];
-                                  return _buildEncounterUserCard(user);
-                                },
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          '閉じる',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _openEventUrl(BuildContext context, String? rawUrl) async {
-    final url = rawUrl?.trim() ?? '';
-    if (url.isEmpty) return;
-
-    final uri = Uri.tryParse(url);
-    if (uri == null) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('イベントURLが不正です')));
-      return;
+  Map<String, dynamic>? _findDayData(
+    Map<DateTime, Map<String, dynamic>> encounterDays,
+    DateTime date,
+  ) {
+    for (final entry in encounterDays.entries) {
+      if (entry.key.year == date.year &&
+          entry.key.month == date.month &&
+          entry.key.day == date.day) {
+        return entry.value;
+      }
     }
-
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('イベントURLを開けませんでした')));
-    }
-  }
-
-  Widget _buildEncounterUserCard(Map<String, dynamic> user) {
-    final userId = user['id']?.toString() ?? '';
-    final name = user['name']?.toString() ?? '';
-    final comment = user['comment']?.toString() ?? '';
-    final iconUrl = user['iconUrl']?.toString() ?? '';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: userId.isEmpty ? null : () => context.push('/profile/$userId'),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundGrey,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.divider,
-                  shape: BoxShape.circle,
-                ),
-                child: iconUrl.isNotEmpty
-                    ? ClipOval(
-                        child: Image.network(
-                          iconUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => const Icon(
-                            Icons.person,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.person, color: AppColors.textSecondary),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      comment,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-            ],
-          ),
-        ),
-      ),
-    );
+    return null;
   }
 
   @override
