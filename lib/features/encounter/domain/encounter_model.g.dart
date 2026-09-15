@@ -13,6 +13,7 @@ _EncounterModel _$EncounterModelFromJson(Map<String, dynamic> json) =>
         json['encounteredUser'] as Map<String, dynamic>,
       ),
       eventId: (json['event_id'] as num?)?.toInt(),
+      eventName: json['event_name'] as String? ?? '',
       encounteredAt: DateTime.parse(json['encountered_at'] as String),
       isConfirmed: json['is_confirmed'] as bool? ?? false,
     );
@@ -22,6 +23,7 @@ Map<String, dynamic> _$EncounterModelToJson(_EncounterModel instance) =>
       'id': instance.id,
       'encounteredUser': instance.encounteredUser,
       'event_id': instance.eventId,
+      'event_name': instance.eventName,
       'encountered_at': instance.encounteredAt.toIso8601String(),
       'is_confirmed': instance.isConfirmed,
     };
@@ -32,6 +34,7 @@ _EncounteredUserInfo _$EncounteredUserInfoFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String? ?? '???',
       iconUrl: json['icon_url'] as String? ?? '',
       oneWord: json['one_word'] as String? ?? '',
+      techStack: json['tech_stack'] as String? ?? '',
     );
 
 Map<String, dynamic> _$EncounteredUserInfoToJson(
@@ -41,4 +44,5 @@ Map<String, dynamic> _$EncounteredUserInfoToJson(
   'name': instance.name,
   'icon_url': instance.iconUrl,
   'one_word': instance.oneWord,
+  'tech_stack': instance.techStack,
 };

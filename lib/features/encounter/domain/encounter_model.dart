@@ -17,6 +17,10 @@ abstract class EncounterModel with _$EncounterModel {
     /// イベントID（イベント中のすれ違いの場合のみ）
     @JsonKey(name: 'event_id') int? eventId,
 
+    /// イベント名（バックエンド: event_name）。
+    /// 未設定 or サーバーが返さない場合は空文字。
+    @JsonKey(name: 'event_name') @Default('') String eventName,
+
     /// すれ違った日時
     @JsonKey(name: 'encountered_at') required DateTime encounteredAt,
 
@@ -37,6 +41,11 @@ abstract class EncounteredUserInfo with _$EncounteredUserInfo {
     @Default('???') String name,
     @JsonKey(name: 'icon_url') @Default('') String iconUrl,
     @JsonKey(name: 'one_word') @Default('') String oneWord,
+
+    /// 相手の技術スタック（バックエンド: tech_stack）。
+    /// カンマ / スラッシュ / 空白などで区切られた文字列を想定。
+    /// サーバーが返さない場合は空文字で、共通タグ表示側では非表示扱いになる。
+    @JsonKey(name: 'tech_stack') @Default('') String techStack,
   }) = _EncounteredUserInfo;
 
   factory EncounteredUserInfo.fromJson(Map<String, dynamic> json) =>
