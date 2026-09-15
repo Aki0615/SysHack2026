@@ -1,391 +1,464 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
 
-/// 今回のすれ違い画面
-/// ループ型スクロールでアイコンを表示し、タップで一言を表示する
-class EncounterResultScreen extends ConsumerStatefulWidget {
+/// すれ違い結果画面。
+///
+/// Figma node 1100:1602 に準拠。
+/// - 自分と相手のアイコンを重ねて表示
+/// - 相手の表示名
+/// - 「出会った場所」= イベント名（未取得なら非表示）
+/// - 「共通タグ」= 自分と相手の tech_stack の積集合（片方でも空なら非表示）
+///
+/// TODO(passly): 複数件の見せ方は未確定。
+/// 現状は最新（先頭）1 件のみ表示している。
+/// PageView や横スワイプ切替 / まとめ表示など、UX が決まったら書き換える。
+class EncounterResultScreen extends ConsumerWidget {
   const EncounterResultScreen({super.key});
 
   @override
-  ConsumerState<EncounterResultScreen> createState() =>
-      _EncounterResultScreenState();
-}
-
-class _EncounterResultScreenState extends ConsumerState<EncounterResultScreen>
-    with TickerProviderStateMixin {
-  int? _selectedIndex;
-  late PageController _pageController;
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-
-  // ループのための大きな初期値
-  static const int _initialPage = 10000;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(
-      viewportFraction: 0.3,
-      initialPage: _initialPage,
-    );
-
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    _fadeController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final encounterState = ref.watch(encounterNotifierProvider);
+    final me = ref.watch(authNotifierProvider).value;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: AppColors.backgroundGrey,
       body: SafeArea(
         child: encounterState.when(
-          data: (encounters) => _buildContent(encounters),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          data: (encounters) => _buildContent(context, ref, me, encounters),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
           error: (err, _) => Center(
-            child: Text('エラー: $err', style: const TextStyle(color: Colors.red)),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'すれ違い情報の取得に失敗しました\n$err',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContent(List<EncounterModel> encounters) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    UserModel? me,
+    List<EncounterModel> encounters,
+  ) {
     if (encounters.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go('/home');
+        if (context.mounted) context.go('/home');
       });
       return const SizedBox.shrink();
     }
 
-    return Column(
-      children: [
-        const SizedBox(height: 48),
-        // ヘッダー: タイトルと人数
-        _buildHeader(encounters.length),
-        const SizedBox(height: 48),
-        // ループ型アイコンスクロール
-        SizedBox(height: 160, child: _buildLoopingAvatarScroll(encounters)),
-        const SizedBox(height: 32),
-        // 選択されたユーザーの一言表示エリア
-        _buildOneWordDisplay(encounters),
-        const Spacer(),
-        // 確認ボタン
-        _buildConfirmButton(),
-        const SizedBox(height: 48),
-      ],
-    );
-  }
+    // TODO(passly): 複数件の見せ方は未確定。当面は最新 1 件のみ扱う。
+    final encounter = encounters.first;
 
-  Widget _buildHeader(int count) {
-    return Column(
-      children: [
-        const Text(
-          '今回のすれ違い',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.blueAccent.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.5)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.people, color: Colors.blueAccent, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                '$count 人とすれ違いました',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoopingAvatarScroll(List<EncounterModel> encounters) {
-    final itemCount = encounters.length;
-
-    return PageView.builder(
-      controller: _pageController,
-      onPageChanged: (index) {
-        // ループ用のインデックスを実際のインデックスに変換
-        final realIndex = index % itemCount;
-        setState(() {
-          _selectedIndex = realIndex;
-        });
-        _fadeController.forward(from: 0.0);
-      },
-      itemBuilder: (context, index) {
-        final realIndex = index % itemCount;
-        final encounter = encounters[realIndex];
-        final isSelected = _selectedIndex == realIndex;
-
-        return _PageAnimatedBuilder(
-          animation: _pageController,
-          builder: (context, child) {
-            double scale = 1.0;
-            double opacity = 0.6;
-
-            if (_pageController.position.haveDimensions) {
-              final page = _pageController.page ?? _initialPage.toDouble();
-              final diff = (index - page).abs();
-              scale = (1 - (diff * 0.2)).clamp(0.7, 1.0);
-              opacity = (1 - (diff * 0.3)).clamp(0.4, 1.0);
-            }
-
-            return Transform.scale(
-              scale: scale,
-              child: Opacity(
-                opacity: opacity,
-                child: _AvatarItem(
-                  encounter: encounter,
-                  isSelected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = realIndex;
-                    });
-                    _fadeController.forward(from: 0.0);
-                    // タップしたアイテムを中央に移動
-                    final targetPage =
-                        _pageController.page!.round() -
-                        (_pageController.page!.round() % itemCount) +
-                        realIndex;
-                    _pageController.animateToPage(
-                      targetPage,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildOneWordDisplay(List<EncounterModel> encounters) {
-    if (_selectedIndex == null) {
-      return Container(
-        height: 120,
-        margin: const EdgeInsets.symmetric(horizontal: 32),
-        child: Center(
-          child: Text(
-            'アイコンをタップして\n一言を見る',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    }
-
-    final encounter = encounters[_selectedIndex!];
-    final user = encounter.encounteredUser;
-
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 32),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceDark,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blueAccent.withValues(alpha: 0.1),
-              blurRadius: 15,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              user.name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (user.oneWord.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '「${user.oneWord}」',
-                  style: TextStyle(color: Colors.grey.shade300, fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-              )
-            else
-              Text(
-                '一言が設定されていません',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-              ),
-            const SizedBox(height: 8),
-            Text(
-              _formatTime(encounter.encounteredAt),
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildConfirmButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _handleConfirmAll,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.greenAccent.shade700,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 40),
+          const _TitleSection(),
+          const SizedBox(height: 40),
+          _AvatarPair(myIconUrl: me?.iconUrl ?? '', encounter: encounter),
+          const SizedBox(height: 32),
+          _EncounteredName(name: encounter.encounteredUser.name),
+          const SizedBox(height: 32),
+          _InfoCards(myTechStack: me?.techStack ?? '', encounter: encounter),
+          const Spacer(),
+          _ActionButtons(
+            targetUserId: encounter.encounteredUser.id,
+            onClose: () async {
+              await ref.read(encounterNotifierProvider.notifier).confirmAll();
+              ref.read(bleNotifierProvider.notifier).resetEncounterCount();
+              if (context.mounted) context.go('/home');
+            },
           ),
-          child: const Text(
-            '確認してホームへ',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
-  }
-
-  Future<void> _handleConfirmAll() async {
-    await ref.read(encounterNotifierProvider.notifier).confirmAll();
-    ref.read(bleNotifierProvider.notifier).resetEncounterCount();
-    if (mounted) context.go('/home');
-  }
-
-  String _formatTime(DateTime dt) {
-    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} にすれ違い';
   }
 }
 
-/// アバターアイテムウィジェット
-class _AvatarItem extends StatelessWidget {
-  final EncounterModel encounter;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _AvatarItem({
-    required this.encounter,
-    required this.isSelected,
-    required this.onTap,
-  });
+class _TitleSection extends StatelessWidget {
+  const _TitleSection();
 
   @override
   Widget build(BuildContext context) {
-    final user = encounter.encounteredUser;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected ? Colors.blueAccent : Colors.transparent,
-            width: 3,
+    return const Column(
+      children: [
+        Text(
+          'すれ違いました!',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            height: 28.8 / 24,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.blueAccent.withValues(alpha: 0.4),
-                    blurRadius: 15,
-                    spreadRadius: 2,
-                  ),
-                ]
-              : null,
         ),
-        child: _buildAvatar(user.iconUrl),
+        SizedBox(height: 9),
+        Text(
+          'やったね!!',
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            height: 16.8 / 14,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 自分と相手のアイコンを 16px 分だけ重ねて表示するペア。
+class _AvatarPair extends StatelessWidget {
+  final String myIconUrl;
+  final EncounterModel encounter;
+
+  const _AvatarPair({required this.myIconUrl, required this.encounter});
+
+  static const double _avatarSize = 100;
+  static const double _overlap = 16;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _avatarSize * 2 - _overlap,
+      height: _avatarSize,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: 0,
+            child: _Avatar(iconUrl: myIconUrl),
+          ),
+          Positioned(
+            left: _avatarSize - _overlap,
+            top: 0,
+            child: _Avatar(iconUrl: encounter.encounteredUser.iconUrl),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildAvatar(String iconUrl) {
-    if (iconUrl.isNotEmpty) {
-      return CircleAvatar(radius: 50, backgroundImage: NetworkImage(iconUrl));
-    }
+class _Avatar extends StatelessWidget {
+  final String iconUrl;
+
+  const _Avatar({required this.iconUrl});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 100,
       height: 100,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.blueAccent, Colors.blue.shade800],
-        ),
+        color: AppColors.backgroundWhite,
+        border: Border.all(color: AppColors.backgroundWhite, width: 4),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 15,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      child: const Icon(Icons.person, size: 50, color: Colors.white),
+      child: ClipOval(
+        child: iconUrl.isNotEmpty
+            ? Image.network(
+                iconUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _fallback(),
+              )
+            : _fallback(),
+      ),
+    );
+  }
+
+  Widget _fallback() {
+    return Container(
+      color: AppColors.backgroundGrey,
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.person,
+        color: AppColors.textLight,
+        size: 48,
+      ),
     );
   }
 }
 
-/// PageController用のアニメーションビルダー
-class _PageAnimatedBuilder extends StatelessWidget {
-  final PageController animation;
-  final Widget Function(BuildContext context, Widget? child) builder;
+class _EncounteredName extends StatelessWidget {
+  final String name;
 
-  const _PageAnimatedBuilder({required this.animation, required this.builder});
+  const _EncounteredName({required this.name});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(animation: animation, builder: builder);
+    return Text(
+      name.isEmpty ? '名前未設定' : name,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        color: AppColors.textPrimary,
+        fontSize: 20,
+        fontWeight: FontWeight.w900,
+        height: 24 / 20,
+      ),
+    );
+  }
+}
+
+class _InfoCards extends StatelessWidget {
+  final String myTechStack;
+  final EncounterModel encounter;
+
+  const _InfoCards({required this.myTechStack, required this.encounter});
+
+  @override
+  Widget build(BuildContext context) {
+    final commonTags = _commonTags(myTechStack, encounter.encounteredUser.techStack);
+    final eventName = encounter.eventName.trim();
+
+    return Column(
+      children: [
+        if (eventName.isNotEmpty)
+          _InfoCard(
+            icon: Icons.location_on_outlined,
+            label: '出会った場所',
+            value: eventName,
+            valueColor: AppColors.textPrimary,
+          ),
+        if (eventName.isNotEmpty && commonTags.isNotEmpty)
+          const SizedBox(height: 12),
+        if (commonTags.isNotEmpty)
+          _InfoCard(
+            icon: Icons.local_offer_outlined,
+            label: '共通タグ',
+            value: commonTags.join(' '),
+            valueColor: AppColors.primary,
+          ),
+      ],
+    );
+  }
+
+  /// 大文字小文字を無視して積集合を返す。表示順は自分側の順序を維持。
+  List<String> _commonTags(String mine, String other) {
+    final mineTags = _parseTags(mine);
+    final otherTagsLower =
+        _parseTags(other).map((t) => t.toLowerCase()).toSet();
+    return mineTags
+        .where((t) => otherTagsLower.contains(t.toLowerCase()))
+        .toList();
+  }
+
+  /// カンマ / スラッシュ / 中点 / 空白 で区切られた文字列をタグ配列にする。
+  /// profile_screen.dart の tech tag パースと同じロジック。
+  List<String> _parseTags(String raw) {
+    if (raw.trim().isEmpty) return const [];
+    return raw
+        .split(RegExp(r'[,、/／・\s]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color valueColor;
+
+  const _InfoCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: AppColors.backgroundGrey,
+        borderRadius: BorderRadius.circular(23),
+        border: Border.all(color: AppColors.divider, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
+      child: Row(
+        children: [
+          _IconBadge(icon: icon),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    height: 16.8 / 14,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: valueColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    height: 16.8 / 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  final IconData icon;
+
+  const _IconBadge({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppColors.divider, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        color: AppColors.textPrimary,
+        size: 24,
+      ),
+    );
+  }
+}
+
+class _ActionButtons extends StatelessWidget {
+  final String targetUserId;
+  final Future<void> Function() onClose;
+
+  const _ActionButtons({required this.targetUserId, required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _PillButton(
+          backgroundColor: AppColors.primary,
+          textColor: Colors.white,
+          label: 'プロフィールを見る',
+          shadow: BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+          onTap: targetUserId.isEmpty
+              ? null
+              : () => context.push('/profile/$targetUserId'),
+        ),
+        const SizedBox(height: 9),
+        _PillButton(
+          backgroundColor: AppColors.backgroundWhite,
+          textColor: AppColors.textSecondary,
+          label: '閉じる',
+          border: Border.all(color: AppColors.divider, width: 1),
+          onTap: () async {
+            await onClose();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _PillButton extends StatelessWidget {
+  final Color backgroundColor;
+  final Color textColor;
+  final String label;
+  final VoidCallback? onTap;
+  final BoxBorder? border;
+  final BoxShadow? shadow;
+
+  const _PillButton({
+    required this.backgroundColor,
+    required this.textColor,
+    required this.label,
+    required this.onTap,
+    this.border,
+    this.shadow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(100),
+        onTap: onTap,
+        child: Container(
+          height: 50,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(100),
+            border: border,
+            boxShadow: shadow == null ? null : [shadow!],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              height: 16.8 / 18,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
