@@ -10,7 +10,7 @@ import 'package:syshack2026/features/user/domain/user_model.dart';
 import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/avatar_group_section.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/day_event_card.dart';
-import 'package:syshack2026/features/calendar/presentation/widgets/week_day_pill.dart';
+import 'package:syshack2026/common/widgets/week_day_pill.dart';
 
 /// 週表示のカレンダー画面（新規デフォルト）。
 ///

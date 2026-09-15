@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/passly_tokens.dart';
 
-/// Figma node 1075:690 の「ナビゲーションバー」に準拠したシンプルなピル型
-/// ボトムナビ。
+/// Figma node 1300:1627 の「ナビゲーションバー」ComponentSet 4 バリアント
+/// (ホーム / 広場 / カレンダー / マイページ) 準拠のピル型ボトムナビ。
 ///
-/// - 白背景 / 角丸 100 / 大きめのソフトシャドウ
-/// - 4 タブ横並び（アイコン + ラベル）
-/// - アクティブは AppColors.primary の緑、非アクティブは textSecondary グレー
+/// - 白背景 / 角丸 118 / ソフトシャドウ / 高さ 64
+/// - 4 タブ横並び（アイコン 28 SVG + ラベル 7px SemiBold）
+/// - アクティブ: `PasslyBrand.primaryLight (#6BD168)` に色替え
+/// - 非アクティブ: `PasslyText.secondary (#6B7280)` に色替え
 ///
-/// 既存の [AnimatedBottomNavBar]（`animated_bottom_nav_bar.dart`）は
-/// アニメーション付きの独自デザインで一時的に温存する。移行の際に
-/// `main_screen.dart` で本ウィジェットへ差し替える想定。
+/// アイコンは `assets/images/nav/*.svg` を `ColorFilter.srcIn` で動的に着色する。
+/// 既存の [PasslyNavItems.defaults] で Passly 標準 4 タブを取得できる。
 class PasslyBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -21,22 +22,24 @@ class PasslyBottomNav extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
-    required this.items,
+    this.items = PasslyNavItems.defaults,
   });
+
+  static const double _height = 64;
+  static const double _radius = 118;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      height: _height,
       decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(100),
+        color: PasslyBg.surface,
+        borderRadius: BorderRadius.circular(_radius),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF858E85).withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 1),
+            blurRadius: 23.6,
+            offset: const Offset(0, 1.18),
           ),
         ],
       ),
@@ -56,15 +59,36 @@ class PasslyBottomNav extends StatelessWidget {
 }
 
 class PasslyNavItem {
-  final IconData icon;
-  final IconData? activeIcon;
+  /// SVG アセットパス (例: `assets/images/nav/home.svg`)。
+  ///
+  /// アクティブ / 非アクティブの色替えは `ColorFilter.srcIn` で行うため、
+  /// SVG 側の元色は任意でよい（1 色の単色アイコン推奨）。
+  final String iconAsset;
   final String label;
 
-  const PasslyNavItem({
-    required this.icon,
-    this.activeIcon,
-    required this.label,
-  });
+  const PasslyNavItem({required this.iconAsset, required this.label});
+}
+
+/// Passly 標準 4 タブ (Figma 1300:1627 準拠)。
+abstract final class PasslyNavItems {
+  static const home = PasslyNavItem(
+    iconAsset: 'assets/images/nav/home.svg',
+    label: 'ホーム',
+  );
+  static const plaza = PasslyNavItem(
+    iconAsset: 'assets/images/nav/plaza.svg',
+    label: '広場',
+  );
+  static const calendar = PasslyNavItem(
+    iconAsset: 'assets/images/nav/calendar.svg',
+    label: 'カレンダー',
+  );
+  static const myPage = PasslyNavItem(
+    iconAsset: 'assets/images/nav/my_page.svg',
+    label: 'マイページ',
+  );
+
+  static const List<PasslyNavItem> defaults = [home, plaza, calendar, myPage];
 }
 
 class _NavItem extends StatelessWidget {
@@ -80,23 +104,31 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.primary : AppColors.textSecondary;
+    final color = active ? PasslyBrand.primaryLight : PasslyText.secondary;
+    // Ink / スプラッシュ / ハイライトなどの視覚的モーションは付けない。
+    // タップ時は currentIndex 変化に伴う色替えのみ発生する。
     return Expanded(
-      child: InkResponse(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        radius: 32,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(active ? (item.activeIcon ?? item.icon) : item.icon,
-                color: color, size: 28),
+            SvgPicture.asset(
+              item.iconAsset,
+              width: 28,
+              height: 28,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            ),
             const SizedBox(height: 2),
             Text(
               item.label,
               style: TextStyle(
+                fontFamily: PasslyFont.family,
                 color: color,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+                fontSize: 7,
+                height: 6 / 7,
+                fontWeight: PasslyFont.semibold,
               ),
             ),
           ],
