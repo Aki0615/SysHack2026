@@ -72,12 +72,11 @@ class EncounterResultScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 40),
-          const _TitleSection(),
-          const SizedBox(height: 40),
-          _AvatarPair(myIconUrl: me?.iconUrl ?? '', encounter: encounter),
-          const SizedBox(height: 32),
-          _EncounteredName(name: encounter.encounteredUser.name),
+          const SizedBox(height: 20),
+          _HeroSection(
+            myIconUrl: me?.iconUrl ?? '',
+            encounter: encounter,
+          ),
           const SizedBox(height: 32),
           _InfoCards(myTechStack: me?.techStack ?? '', encounter: encounter),
           const Spacer(),
@@ -91,6 +90,122 @@ class EncounterResultScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+}
+
+/// タイトル / 重ねアバター / 相手名を中央揃えで配置しつつ、
+/// 周囲に Figma 準拠の装飾（4 つの丸 + 4 つの回転 pill）を Positioned で配置する。
+class _HeroSection extends StatelessWidget {
+  final String myIconUrl;
+  final EncounterModel encounter;
+
+  const _HeroSection({required this.myIconUrl, required this.encounter});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 320,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // メインコンテンツを中央に
+          Positioned.fill(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const _TitleSection(),
+                const SizedBox(height: 40),
+                _AvatarPair(myIconUrl: myIconUrl, encounter: encounter),
+                const SizedBox(height: 32),
+                _EncounteredName(name: encounter.encounteredUser.name),
+              ],
+            ),
+          ),
+          // 装飾: 4 つの小さな丸（各コーナー付近）
+          const Positioned(
+            right: 28,
+            top: 20,
+            child: _DecoDot(color: Color(0xFFF59E0B)),
+          ),
+          const Positioned(
+            left: 45,
+            top: 55,
+            child: _DecoDot(color: Color(0xFF3AAA3A)),
+          ),
+          const Positioned(
+            right: 40,
+            top: 110,
+            child: _DecoDot(color: Color(0xFFEF4444)),
+          ),
+          const Positioned(
+            left: 30,
+            top: 140,
+            child: _DecoDot(color: Color(0xFF3B82F6)),
+          ),
+          // 装飾: 4 つの回転した pill（Figma tokens 準拠の色）
+          const Positioned(
+            right: 20,
+            top: 50,
+            child: _DecoPill(color: Color(0xFFB7E5B4), rotationDeg: -65),
+          ),
+          const Positioned(
+            left: 10,
+            top: 85,
+            child: _DecoPill(color: Color(0xFF9CA3AF), rotationDeg: -30),
+          ),
+          const Positioned(
+            right: 5,
+            top: 170,
+            child: _DecoPill(color: Color(0xFFC9A6FF), rotationDeg: 30),
+          ),
+          const Positioned(
+            left: 15,
+            top: 210,
+            child: _DecoPill(color: Color(0xFF7CC4FF), rotationDeg: -70),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 装飾の小さな丸（10px）。Figma の Frame461-464 に相当。
+class _DecoDot extends StatelessWidget {
+  final Color color;
+
+  const _DecoDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+/// 装飾の回転した pill（20x10）。Figma の rotated rounded rectangle に相当。
+class _DecoPill extends StatelessWidget {
+  final Color color;
+  final double rotationDeg;
+
+  const _DecoPill({required this.color, required this.rotationDeg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: rotationDeg * 3.1415926535 / 180.0,
+      child: Container(
+        width: 20,
+        height: 10,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(100),
+        ),
       ),
     );
   }
