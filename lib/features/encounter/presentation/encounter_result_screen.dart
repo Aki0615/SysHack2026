@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:syshack2026/common/widgets/info_badge_card.dart';
+import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
@@ -356,20 +359,19 @@ class _InfoCards extends StatelessWidget {
     return Column(
       children: [
         if (eventName.isNotEmpty)
-          _InfoCard(
-            icon: Icons.location_on_outlined,
+          InfoBadgeCard(
+            iconAsset: PasslyIcons.location,
             label: '出会った場所',
             value: eventName,
-            valueColor: AppColors.textPrimary,
           ),
         if (eventName.isNotEmpty && commonTags.isNotEmpty)
           const SizedBox(height: 12),
         if (commonTags.isNotEmpty)
-          _InfoCard(
-            icon: Icons.local_offer_outlined,
+          InfoBadgeCard(
+            iconAsset: PasslyIcons.tag,
             label: '共通タグ',
             value: commonTags.join(' '),
-            valueColor: AppColors.primary,
+            valueColor: PasslyBrand.primaryDark,
           ),
       ],
     );
@@ -397,100 +399,6 @@ class _InfoCards extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  const _InfoCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      decoration: BoxDecoration(
-        color: AppColors.backgroundGrey,
-        borderRadius: BorderRadius.circular(23),
-        border: Border.all(color: AppColors.divider, width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
-      child: Row(
-        children: [
-          _IconBadge(icon: icon),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    height: 16.8 / 14,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: valueColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 16.8 / 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IconBadge extends StatelessWidget {
-  final IconData icon;
-
-  const _IconBadge({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.divider, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 3,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: Icon(
-        icon,
-        color: AppColors.textPrimary,
-        size: 24,
-      ),
-    );
-  }
-}
-
 class _ActionButtons extends StatelessWidget {
   final String targetUserId;
   final Future<void> Function() onClose;
@@ -499,11 +407,13 @@ class _ActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Figma 1155:765/1155:768 準拠: primary は #6BD168 (primary-light)、
+    // ラベル 20px w700、閉じるは surface 白 + secondary テキスト。
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _PillButton(
-          backgroundColor: AppColors.primary,
+          backgroundColor: PasslyBrand.primaryLight,
           textColor: Colors.white,
           label: 'プロフィールを見る',
           shadow: BoxShadow(
@@ -517,10 +427,9 @@ class _ActionButtons extends StatelessWidget {
         ),
         const SizedBox(height: 9),
         _PillButton(
-          backgroundColor: AppColors.backgroundWhite,
-          textColor: AppColors.textSecondary,
+          backgroundColor: PasslyBg.surface,
+          textColor: PasslyText.secondary,
           label: '閉じる',
-          border: Border.all(color: AppColors.divider, width: 1),
           onTap: () async {
             await onClose();
           },
@@ -535,7 +444,6 @@ class _PillButton extends StatelessWidget {
   final Color textColor;
   final String label;
   final VoidCallback? onTap;
-  final BoxBorder? border;
   final BoxShadow? shadow;
 
   const _PillButton({
@@ -543,7 +451,6 @@ class _PillButton extends StatelessWidget {
     required this.textColor,
     required this.label,
     required this.onTap,
-    this.border,
     this.shadow,
   });
 
@@ -560,16 +467,16 @@ class _PillButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(100),
-            border: border,
             boxShadow: shadow == null ? null : [shadow!],
           ),
           child: Text(
             label,
             style: TextStyle(
+              fontFamily: PasslyFont.family,
               color: textColor,
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
-              height: 16.8 / 18,
+              height: 16.8 / 20,
             ),
           ),
         ),
