@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syshack2026/common/widgets/animated_bottom_nav_bar.dart';
+import 'package:syshack2026/common/widgets/passly_bottom_nav.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
@@ -275,31 +275,16 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    return AnimatedBottomNavBar(
-      currentIndex: widget.navigationShell.currentIndex,
-      onTap: (index) => _onTap(context, index),
-      items: const [
-        BottomNavItem(
-          icon: Icons.home_outlined,
-          activeIcon: Icons.home,
-          label: 'ホーム',
+    // Figma node 1110:2434 準拠: 15px 側方インセット + 下方 15px でピル型ナビを浮かせる。
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+        child: PasslyBottomNav(
+          currentIndex: widget.navigationShell.currentIndex,
+          onTap: (index) => _onTap(context, index),
         ),
-        BottomNavItem(
-          icon: Icons.people_outline,
-          activeIcon: Icons.people,
-          label: '広場',
-        ),
-        BottomNavItem(
-          icon: Icons.calendar_today_outlined,
-          activeIcon: Icons.calendar_month,
-          label: 'カレンダー',
-        ),
-        BottomNavItem(
-          icon: Icons.person_outline,
-          activeIcon: Icons.person,
-          label: 'マイページ',
-        ),
-      ],
+      ),
     );
   }
 
