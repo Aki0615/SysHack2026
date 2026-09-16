@@ -85,9 +85,12 @@ class _AvatarRow extends StatelessWidget {
 
   const _AvatarRow({required this.items, required this.overflow});
 
+  // 6 avatars + overflow chip を w=382 に space-between で並べたときのアイテム間
+  // ギャップ (382 - 7*45) / 6 ≒ 11px。左詰め時もこの値に揃える。
+  static const double _gap = 11;
+
   @override
   Widget build(BuildContext context) {
-    // 6 スロット + overflow スロットの最大 7 スロットを均等配置。
     final slots = <Widget>[
       for (final item in items) _Avatar(iconUrl: item.iconUrl),
       if (overflow > 0) _OverflowBadge(count: overflow),
@@ -97,9 +100,22 @@ class _AvatarRow extends StatelessWidget {
       return const SizedBox(height: 45);
     }
 
+    // オーバーフローあり = 7 スロット詰まる → Figma 準拠で space-between。
+    // オーバーフローなし (6 人以下) = 左詰めで固定ギャップ。
+    if (overflow > 0) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: slots,
+      );
+    }
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: slots,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        for (int i = 0; i < slots.length; i++) ...[
+          if (i > 0) const SizedBox(width: _gap),
+          slots[i],
+        ],
+      ],
     );
   }
 }
