@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 
+import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/passly_tokens.dart';
 
-/// Figma node 1076:695 の Component5「出会った場所」「共通タグ」で
+/// Figma node 1155:703 の Component「出会った場所」「共通タグ」で
 /// 定義されている情報カード。
 ///
-/// - 高さ 72px / 角丸 23 / bg backgroundGrey + border divider
+/// - 高さ 72px / 角丸 23.15 / bg #f6f7f9 (defaultBg) + border divider
 /// - 左端に白い正方形アイコンバッジ（48x48、角丸 15、薄いドロップシャドウ）
 /// - 右側に ラベル（Bold 14 secondary）+ 値（SemiBold 14）を縦積み
 ///
+/// [iconAsset] には [PasslyIcons] のアイコンアセットパス
+/// (例: `PasslyIcons.location`, `PasslyIcons.tag`) を渡す。
+///
 /// すれ違い結果画面 / プロフィール画面などで再利用する。
 class InfoBadgeCard extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String value;
 
@@ -21,7 +26,7 @@ class InfoBadgeCard extends StatelessWidget {
 
   const InfoBadgeCard({
     super.key,
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.value,
     this.valueColor = AppColors.textPrimary,
@@ -32,15 +37,15 @@ class InfoBadgeCard extends StatelessWidget {
     return Container(
       height: 72,
       decoration: BoxDecoration(
-        color: AppColors.backgroundGrey,
-        borderRadius: BorderRadius.circular(23),
-        border: Border.all(color: AppColors.divider, width: 1),
+        color: PasslyBg.defaultBg,
+        borderRadius: BorderRadius.circular(23.15),
+        border: Border.all(color: PasslyBorder.divider, width: 1),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
       child: Row(
         children: [
-          _IconBadge(icon: icon),
-          const SizedBox(width: 20),
+          _IconBadge(iconAsset: iconAsset),
+          const SizedBox(width: 24),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -51,7 +56,7 @@ class InfoBadgeCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: AppColors.textSecondary,
+                    color: PasslyText.secondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     height: 16.8 / 14,
@@ -79,9 +84,9 @@ class InfoBadgeCard extends StatelessWidget {
 }
 
 class _IconBadge extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
 
-  const _IconBadge({required this.icon});
+  const _IconBadge({required this.iconAsset});
 
   @override
   Widget build(BuildContext context) {
@@ -89,9 +94,9 @@ class _IconBadge extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
+        color: PasslyBg.surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppColors.divider, width: 1),
+        border: Border.all(color: PasslyBorder.divider, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -101,7 +106,11 @@ class _IconBadge extends StatelessWidget {
         ],
       ),
       alignment: Alignment.center,
-      child: Icon(icon, color: AppColors.textPrimary, size: 24),
+      child: PasslyIcon(
+        asset: iconAsset,
+        size: 24,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 }
