@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:syshack2026/common/widgets/level_display_card.dart';
-import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
@@ -34,10 +32,12 @@ class MyPageScreen extends ConsumerStatefulWidget {
 class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   bool _isEditing = false;
   bool _isSaving = false;
-  bool _isUploading = false;
+  bool _isUploadingAvatar = false;
+  bool _isUploadingCover = false;
 
   /// アップロード直後のローカル一時パス (再取得までのプレビュー用)。
   String? _localAvatarPath;
+  String? _localCoverPath;
 
   late final TextEditingController _nameCtrl;
   late final TextEditingController _oneWordCtrl;
@@ -144,7 +144,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
 
     setState(() {
       _localAvatarPath = picked.path;
-      _isUploading = true;
+      _isUploadingAvatar = true;
     });
     try {
       final repo = ref.read(userRepositoryProvider);
@@ -153,19 +153,57 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       if (!mounted) return;
       setState(() {
         _localAvatarPath = null;
-        _isUploading = false;
+        _isUploadingAvatar = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _localAvatarPath = null;
-        _isUploading = false;
+        _isUploadingAvatar = false;
       });
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Text('画像のアップロードに失敗しました: $e'),
+            backgroundColor: PasslyState.error,
+          ),
+        );
+    }
+  }
+
+  Future<void> _pickAndUploadCover() async {
+    final user = ref.read(authNotifierProvider).value;
+    if (user == null) return;
+
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    setState(() {
+      _localCoverPath = picked.path;
+      _isUploadingCover = true;
+    });
+    try {
+      final repo = ref.read(userRepositoryProvider);
+      await repo.uploadCover(user.id, picked.path);
+      await ref.read(authNotifierProvider.notifier).refresh();
+      if (!mounted) return;
+      setState(() {
+        _localCoverPath = null;
+        _isUploadingCover = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _localCoverPath = null;
+        _isUploadingCover = false;
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('カバー画像のアップロードに失敗しました: $e'),
             backgroundColor: PasslyState.error,
           ),
         );
@@ -208,8 +246,11 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   coverUrl: user.coverUrl,
                   iconUrl: user.iconUrl,
                   localAvatarPath: _localAvatarPath,
-                  isUploading: _isUploading,
+                  localCoverPath: _localCoverPath,
+                  isUploadingAvatar: _isUploadingAvatar,
+                  isUploadingCover: _isUploadingCover,
                   onEditAvatar: _isEditing ? _pickAndUploadAvatar : null,
+                  onEditCover: _isEditing ? _pickAndUploadCover : null,
                 ),
                 const SizedBox(height: 16),
                 _NameSection(
@@ -219,16 +260,19 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   nameCtrl: _nameCtrl,
                   oneWordCtrl: _oneWordCtrl,
                 ),
-                const SizedBox(height: PasslySpace.s20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: LevelDisplayCard(
-                    count: totalEncounters,
-                    remaining: levelInfo.remaining,
-                    currentLevel: levelInfo.level,
-                    progress: levelInfo.progress,
+                // LevelDisplayCard は編集対象ではないので、編集モード時は非表示。
+                if (!_isEditing) ...[
+                  const SizedBox(height: PasslySpace.s20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: LevelDisplayCard(
+                      count: totalEncounters,
+                      remaining: levelInfo.remaining,
+                      currentLevel: levelInfo.level,
+                      progress: levelInfo.progress,
+                    ),
                   ),
-                ),
+                ],
                 const SizedBox(height: PasslySpace.s24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 21),
@@ -274,13 +318,10 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ],
             ),
           ),
-          // 半透明のヘッダー: 戻る + 編集ペン。カバー写真の上に配置する。
+          // 半透明のヘッダー: 編集ペンのみ。カバー写真の上に配置する。
           SafeArea(
             child: _FloatingHeader(
               isEditing: _isEditing,
-              onBack: () {
-                if (context.canPop()) context.pop();
-              },
               onEdit: () => _enterEditMode(user),
             ),
           ),
@@ -302,15 +343,21 @@ class _CoverAndAvatar extends StatelessWidget {
   final String coverUrl;
   final String iconUrl;
   final String? localAvatarPath;
-  final bool isUploading;
+  final String? localCoverPath;
+  final bool isUploadingAvatar;
+  final bool isUploadingCover;
   final VoidCallback? onEditAvatar;
+  final VoidCallback? onEditCover;
 
   const _CoverAndAvatar({
     required this.coverUrl,
     required this.iconUrl,
     required this.localAvatarPath,
-    required this.isUploading,
+    required this.localCoverPath,
+    required this.isUploadingAvatar,
+    required this.isUploadingCover,
     required this.onEditAvatar,
+    required this.onEditCover,
   });
 
   // カバー写真の高さ (Figma: -85 → 190 = 275)。
@@ -336,7 +383,56 @@ class _CoverAndAvatar extends StatelessWidget {
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
                 ),
-                child: _CoverImage(url: coverUrl),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: _CoverImage(
+                        url: coverUrl,
+                        localPath: localCoverPath,
+                      ),
+                    ),
+                    if (isUploadingCover)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black26,
+                          alignment: Alignment.center,
+                          child: const SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (onEditCover != null)
+                      Positioned(
+                        right: 12,
+                        bottom: 12,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onEditCover,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withValues(alpha: 0.55),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -354,7 +450,7 @@ class _CoverAndAvatar extends StatelessWidget {
                       url: iconUrl,
                       localPath: localAvatarPath,
                     ),
-                    if (isUploading)
+                    if (isUploadingAvatar)
                       Container(
                         width: _avatarSize,
                         height: _avatarSize,
@@ -409,10 +505,18 @@ class _CoverAndAvatar extends StatelessWidget {
 
 class _CoverImage extends StatelessWidget {
   final String url;
-  const _CoverImage({required this.url});
+  final String? localPath;
+  const _CoverImage({required this.url, required this.localPath});
 
   @override
   Widget build(BuildContext context) {
+    if (localPath != null && localPath!.isNotEmpty) {
+      return Image.file(
+        File(localPath!),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const _CoverFallback(),
+      );
+    }
     if (url.isEmpty) return const _CoverFallback();
     return Image.network(
       url,
@@ -503,23 +607,23 @@ class _AvatarFallback extends StatelessWidget {
 /// 戻る (30x30 角丸円) + 編集ペン (30x30 角丸15) を左右に並べる透明ヘッダー。
 class _FloatingHeader extends StatelessWidget {
   final bool isEditing;
-  final VoidCallback onBack;
   final VoidCallback onEdit;
 
   const _FloatingHeader({
     required this.isEditing,
-    required this.onBack,
     required this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
+    // マイページはボトムナビタブから開くため戻る先が無く、
+    // 戻るボタンは常に無効になる。Figma の左上戻るボタンは廃止して
+    // 編集ペンだけを右端に表示する。
     return Padding(
       padding: const EdgeInsets.fromLTRB(19, 12, 19, 0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          PasslyBackButton(onTap: onBack),
           _EditButton(active: isEditing, onTap: onEdit),
         ],
       ),
