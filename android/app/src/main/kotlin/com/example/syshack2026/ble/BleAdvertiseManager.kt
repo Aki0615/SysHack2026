@@ -11,11 +11,8 @@ import android.util.Log
 
 /**
  * BluetoothLeAdvertiser のラッパー。
- * Androidには広告単位のローカル名を設定するAPIが無いため、端末のBluetoothアダプタ名自体を
- * 一時的に "SP_{token}" へ書き換え、停止時に元へ戻す方式を採る（旧 flutter_ble_peripheral と
- * プロトコル互換を保つための設計）。
- * 将来的には AdvertiseData の ServiceData フィールドにトークンを載せる方式へ改善すると、
- * アダプタ名を書き換える必要が無くなる。
+ * Plan C: 16-bit UUID + Service Data (Android)
+ * アダプタ名を書き換えず、Service Dataのペイロードとしてトークンを送信します。
  */
 class BleAdvertiseManager(
     private val context: Context,
@@ -23,20 +20,16 @@ class BleAdvertiseManager(
 ) {
     companion object {
         private const val TAG = "BleAdvertiseManager"
-        private const val MAX_LOCAL_NAME_LENGTH = 20
     }
 
     private var advertiser: BluetoothLeAdvertiser? = null
     private var advertiseCallback: AdvertiseCallback? = null
-    private var originalAdapterName: String? = null
     private var isAdvertising = false
 
     fun isCurrentlyAdvertising(): Boolean = isAdvertising
 
     fun start(token: String, serviceUuid: String, onResult: (Boolean, String?) -> Unit) {
         if (isAdvertising) {
-            // トークン更新時は一度止めて元の名前に戻してから出し直す。
-            // こうしておかないと、書き換え後の名前を「元の名前」として誤って保存してしまう。
             stop()
         }
 
@@ -52,21 +45,6 @@ class BleAdvertiseManager(
         }
         advertiser = leAdvertiser
 
-        if (originalAdapterName == null) {
-            originalAdapterName = bluetoothAdapter.name
-        }
-
-        val localName = buildLocalName(token)
-        try {
-            // setName はローカルキャッシュを同期的に更新するため、直後の
-            // AdvertiseData.setIncludeDeviceName(true) はこの新しい名前を読む。
-            // ACTION_LOCAL_NAME_CHANGED ブロードキャストの到達を待つ必要はない。
-            bluetoothAdapter.setName(localName)
-        } catch (e: SecurityException) {
-            onResult(false, "PERMISSION_DENIED")
-            return
-        }
-
         val settings = AdvertiseSettings.Builder()
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
@@ -74,16 +52,18 @@ class BleAdvertiseManager(
             .setTimeout(0)
             .build()
 
+        val pUuid = ParcelUuid.fromString(serviceUuid)
         val advertiseData = AdvertiseData.Builder()
-            .setIncludeDeviceName(true)
+            .setIncludeDeviceName(false) // ローカルネームは使用しない
             .setIncludeTxPowerLevel(false)
-            .addServiceUuid(ParcelUuid.fromString(serviceUuid))
+            .addServiceUuid(pUuid)
+            .addServiceData(pUuid, token.toByteArray(Charsets.UTF_8))
             .build()
 
         val callback = object : AdvertiseCallback() {
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
                 isAdvertising = true
-                Log.d(TAG, "アドバタイズ開始成功: $localName")
+                Log.d(TAG, "アドバタイズ開始成功(ServiceData): $token")
                 onResult(true, null)
             }
 
@@ -109,32 +89,13 @@ class BleAdvertiseManager(
                 try {
                     currentAdvertiser.stopAdvertising(currentCallback)
                 } catch (e: SecurityException) {
-                    Log.w(TAG, "アドバタイズ停止時に権限エラー（無視して継続）: ${e.message}")
+                    Log.w(TAG, "アドバタイズ停止時に権限エラー: ${e.message}")
                 }
             }
         } finally {
-            // 停止処理の成否に関わらず、必ず元のアダプタ名を復元する。
-            val nameToRestore = originalAdapterName
-            if (nameToRestore != null) {
-                try {
-                    bluetoothAdapter.setName(nameToRestore)
-                } catch (e: SecurityException) {
-                    Log.w(TAG, "アダプタ名復元時に権限エラー: ${e.message}")
-                }
-            }
-            originalAdapterName = null
             isAdvertising = false
             advertiseCallback = null
         }
         onResult?.invoke(true)
-    }
-
-    private fun buildLocalName(token: String): String {
-        val localName = "SP_$token"
-        return if (localName.length > MAX_LOCAL_NAME_LENGTH) {
-            localName.substring(0, MAX_LOCAL_NAME_LENGTH)
-        } else {
-            localName
-        }
     }
 }

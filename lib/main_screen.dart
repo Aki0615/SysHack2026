@@ -79,6 +79,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
         // フォアグラウンドに復帰 → BLEが停止していたら再開
         debugPrint('アプリがフォアグラウンドに復帰しました');
         _startBleIfLoggedIn();
+        if (Platform.isIOS && _bleStarted) {
+          ref.read(bleNotifierProvider.notifier).resumeAdvertising();
+        }
         _checkBatteryOptimizationOnce();
         _navigateToEncounterIfPending(reason: 'app_resumed');
         break;
@@ -87,8 +90,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
       case AppLifecycleState.hidden:
         // バックグラウンド移行時点の未確認データを保存して次回起動比較に使う
         ref.read(encounterNotifierProvider.notifier).saveShutdownSnapshot();
-        // バックグラウンドに移行 → BLEは停止しない（継続）
-        debugPrint('アプリがバックグラウンドに移行しました（BLE継続中）');
+        // バックグラウンドに移行 → iOSの場合はアドバタイズのみ停止（31バイト制限回避のため）
+        debugPrint('アプリがバックグラウンドに移行しました（iOSはアドバタイズ停止）');
+        if (Platform.isIOS && _bleStarted) {
+          ref.read(bleNotifierProvider.notifier).pauseAdvertising();
+        }
         break;
       case AppLifecycleState.detached:
         // アプリが完全に終了 → BLEを停止

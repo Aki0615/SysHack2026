@@ -153,15 +153,24 @@ class BleService {
 
   /// iOS専用: ScanResultからエフェメラルIDを抽出
   String? _extractEphemeralId(ScanResult result) {
+    // 1. Service Data から抽出 (Androidからの発信)
+    final serviceDataBytes = result.advertisementData.serviceData[Guid(streetPassServiceUuid)];
+    if (serviceDataBytes != null && serviceDataBytes.isNotEmpty) {
+      final token = String.fromCharCodes(serviceDataBytes).trim();
+      if (token.length == 8 || token.length == 16) {
+        return token;
+      }
+    }
+
+    // 2. Local Name から抽出 (iOSからの発信)
     final advertisedName = result.advertisementData.advName;
     final platformName = result.device.platformName;
 
-    // ネイティブAndroid実装と互換を持たせるため、"SP_" プレフィックスをチェック
-    if (advertisedName.startsWith('SP_')) {
-      return advertisedName.substring(3);
+    if (advertisedName.length == 8 || advertisedName.length == 16) {
+      return advertisedName;
     }
-    if (platformName.startsWith('SP_')) {
-      return platformName.substring(3);
+    if (platformName.length == 8 || platformName.length == 16) {
+      return platformName;
     }
     return null;
   }
@@ -260,8 +269,8 @@ class BleService {
         'serviceUuid': streetPassServiceUuid,
       });
     } else {
-      // iOS用実装 (Androidに合わせて "SP_" を付与して発信する)
-      final localName = 'SP_$ephemeralId';
+      // iOS用実装 (Plan C: トークンをそのままLocal Nameに乗せる)
+      final localName = ephemeralId;
       
       final advertiseData = AdvertiseData(
         serviceUuids: [streetPassServiceUuid],
