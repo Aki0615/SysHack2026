@@ -140,6 +140,10 @@ class BleNotifier extends Notifier<BleState> {
 
   /// すれ違い確定時の処理
   Future<void> _handleEncounterConfirmed(String ephemeralId) async {
+    // TODO(Future Work): オフライン完全対応のための改修
+    // 現状はすれ違った瞬間に即時バックエンドAPIを叩いて解決しているが、
+    // 今後はここで PendingEncounterRepository に「ephemeralId(TOTP)」と「現在のUTCタイムスタンプ」を
+    // ローカル保存（バッファリング）し、通信回復時にバックグラウンドで同期する仕組みに変更する。
     try {
       final myId = ref.read(authNotifierProvider).value?.id;
       if (myId == null) {
