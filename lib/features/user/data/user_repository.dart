@@ -100,4 +100,37 @@ class UserRepository {
       throw Exception('アバター画像のアップロードに失敗しました: ${e.message}');
     }
   }
+
+  /// カバー画像をアップロード（POST /users/:id/cover）
+  /// マイページの背景画像。アバターと同じ multipart 形式で送信し、
+  /// レスポンスの `cover_url` を返す。
+  ///
+  /// TODO(passly): バックエンド側にこのエンドポイントは未実装。
+  /// matsuki-yuki さんに /users/:id/cover を追加してもらう必要がある
+  /// (avatar と同じ Firebase Storage フローで OK)。
+  Future<String> uploadCover(String id, String imagePath) async {
+    try {
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        throw Exception('ファイルが見つかりません: $imagePath');
+      }
+
+      final formData = FormData.fromMap({
+        'cover': await MultipartFile.fromFile(
+          imagePath,
+          filename: imagePath.split('/').last,
+        ),
+      });
+
+      final response = await _dio.post('/users/$id/cover', data: formData);
+
+      if (response.statusCode == 200) {
+        return response.data['cover_url'] as String;
+      } else {
+        throw Exception('アップロードに失敗しました');
+      }
+    } on DioException catch (e) {
+      throw Exception('カバー画像のアップロードに失敗しました: ${e.message}');
+    }
+  }
 }

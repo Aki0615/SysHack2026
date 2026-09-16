@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/level_display_card.dart';
 import 'package:syshack2026/common/widgets/passly_header.dart';
@@ -28,24 +29,25 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: PasslyBg.defaultBg,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            PasslyHeader.home(
-              avatarUrl: user?.iconUrl.isNotEmpty == true ? user!.iconUrl : null,
-            ),
-            Expanded(
-              child: homeState.when(
-                data: (data) => _buildContent(context, ref, data),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: PasslyBrand.primary),
-                ),
-                error: (_, _) => _buildErrorState(ref),
+      // PasslyHeader 自身が SafeArea を処理するため、ここでは wrap しない。
+      // これでヘッダーの白背景がステータスバー / Dynamic Island 領域まで届く。
+      body: Column(
+        children: [
+          PasslyHeader.home(
+            avatarUrl: user?.iconUrl.isNotEmpty == true ? user!.iconUrl : null,
+            // アバタータップでマイページタブに遷移。
+            onAvatarTap: () => context.go('/mypage'),
+          ),
+          Expanded(
+            child: homeState.when(
+              data: (data) => _buildContent(context, ref, data),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: PasslyBrand.primary),
               ),
+              error: (_, _) => _buildErrorState(ref),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

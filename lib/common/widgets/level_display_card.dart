@@ -27,8 +27,9 @@ class LevelDisplayCard extends StatelessWidget {
        assert(progress >= 0 && progress <= 1);
 
   // Figma 原寸 (px)。内部座標はこの値を基準にスケールする。
+  // 高さ 133.7 は AspectRatio 固定をやめたため参照しなくなったが、
+  // Figma 原寸の記録として定義だけ残しておく (docstring 参照)。
   static const double _designW = 382;
-  static const double _designH = 133.7;
   static const double _borderRadius = 23.152;
 
   // 現在レベルに応じたカード背景色。バッジ (level_$level.svg) の色と揃える。
@@ -43,14 +44,15 @@ class LevelDisplayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: _designW / _designH,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final scale = constraints.maxWidth / _designW;
-          return _buildCard(scale);
-        },
-      ),
+    // AspectRatio で高さを 133.7 に固定すると、Noto Sans JP の Text.rich
+    // ライン高がわずかに膨らむ端末 (iPhone 17 の実描画で 8.7px 程度) では
+    // 底辺がオーバーフローする。内部 spacing は `* scale` のまま Figma 比率を
+    // 保ちつつ、Container の高さはコンテンツの intrinsic に任せる。
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = constraints.maxWidth / _designW;
+        return _buildCard(scale);
+      },
     );
   }
 

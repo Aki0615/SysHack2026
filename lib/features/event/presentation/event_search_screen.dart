@@ -50,38 +50,36 @@ class _EventSearchScreenState extends ConsumerState<EventSearchScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PasslyHeader.search(
-              onBack: () {
-                if (context.canPop()) context.pop();
-              },
-              controller: _controller,
-              hintText: 'イベント名を入力',
-            ),
-            Expanded(
-              child: eventsAsync.when(
-                data: (events) => _buildResults(_filter(events)),
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-                error: (error, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'イベントの取得に失敗しました\n$error',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
+      // PasslyHeader 自身が SafeArea を処理するため wrap しない (背景を上端まで延ばす)。
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PasslyHeader.search(
+            onBack: () {
+              if (context.canPop()) context.pop();
+            },
+            controller: _controller,
+            hintText: 'イベント名を入力',
+          ),
+          Expanded(
+            child: eventsAsync.when(
+              data: (events) => _buildResults(_filter(events)),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+              error: (error, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'イベントの取得に失敗しました\n$error',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

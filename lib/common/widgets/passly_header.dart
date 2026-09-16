@@ -145,9 +145,11 @@ class PasslyHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 110,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+    // 白背景 + divider は SafeArea の外側 (DecoratedBox) に置く。
+    // これで背景がステータスバー / Dynamic Island 領域まで完全に延びる。
+    // SafeArea はコンテンツ (Row) の位置を top padding 分だけ押し下げる用途のみ。
+    // 呼び出し側が SafeArea 内に置いていた場合は top padding が 0 になるだけ。
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         border: showBottomDivider
@@ -156,14 +158,23 @@ class PasslyHeader extends StatelessWidget {
               )
             : null,
       ),
-      alignment: Alignment.center,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 12)],
-          Expanded(child: _buildCenter()),
-          for (final w in trailing) ...[const SizedBox(width: 8), w],
-        ],
+      child: SafeArea(
+        bottom: false,
+        left: false,
+        right: false,
+        child: Container(
+          height: 110,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          alignment: Alignment.center,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 12)],
+              Expanded(child: _buildCenter()),
+              for (final w in trailing) ...[const SizedBox(width: 8), w],
+            ],
+          ),
+        ),
       ),
     );
   }
