@@ -101,11 +101,9 @@ class BleNotifier extends Notifier<BleState> {
         },
       );
 
-      // 3. アドバタイズを開始（トークン自動更新あり）
+      // 3. アドバタイズを開始（オフラインTOTP自動更新）
       await _bleService.startAdvertising(
-        ephemeralId: _currentToken!.token,
-        refreshCallback: _refreshTokenForCurrentUser,
-        refreshInterval: const Duration(minutes: 5),
+        seed: _currentToken!.token,
       );
 
       state = state.copyWith(
@@ -139,23 +137,6 @@ class BleNotifier extends Notifier<BleState> {
     debugPrint('BLEすれ違い機能を停止しました');
   }
 
-  /// エフェメラルトークンを更新
-  Future<String> _refreshToken(String userId) async {
-    final encounterRepo = ref.read(encounterRepositoryProvider);
-    _currentToken = await encounterRepo.getEphemeralToken(userId);
-
-    state = state.copyWith(currentEphemeralId: _currentToken!.token);
-
-    return _currentToken!.token;
-  }
-
-  Future<String> _refreshTokenForCurrentUser() async {
-    final userId = ref.read(authNotifierProvider).value?.id;
-    if (userId == null) {
-      throw Exception('ログインユーザーが見つかりません');
-    }
-    return _refreshToken(userId);
-  }
 
   /// すれ違い確定時の処理
   Future<void> _handleEncounterConfirmed(String ephemeralId) async {

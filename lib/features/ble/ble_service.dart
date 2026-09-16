@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
+import 'package:syshack2026/features/ble/totp_generator.dart';
 
 /// Passlyアプリ専用のBLEサービスUUID
 const String streetPassServiceUuid = '12345678-1234-1234-1234-123456789abc';
@@ -154,18 +155,25 @@ class BleService {
     }
   }
 
-  /// ScanResultからエフェメラルIDを抽出
+  /// ScanResultからTOTPを抽出
   String? _extractEphemeralId(ScanResult result) {
-    // アドバタイズ名 / プラットフォーム名 の順で確認する
-    // フォーマット: "SP_{ephemeralId}"
     final advertisedName = result.advertisementData.advName;
-    if (advertisedName.startsWith('SP_')) {
-      return advertisedName.substring(3);
+    final platformName = result.device.platformName;
+
+    // --- 診断用デバッグログ追加 ---
+    // もし名前が空でなければターミナルに出力して、iOSがAndroidの電波をどう認識しているか確認する
+    if (advertisedName.isNotEmpty || platformName.isNotEmpty) {
+      debugPrint('[SCAN DEBUG] advName: "$advertisedName" (len: ${advertisedName.length}), platName: "$platformName" (len: ${platformName.length})');
+    }
+    // -----------------------------
+
+    // プレフィックスなしの8文字TOTPを抽出
+    if (advertisedName.length == 8) {
+      return advertisedName;
     }
 
-    final platformName = result.device.platformName;
-    if (platformName.startsWith('SP_')) {
-      return platformName.substring(3);
+    if (platformName.length == 8) {
+      return platformName;
     }
 
     return null;
@@ -203,12 +211,9 @@ class BleService {
   // ═══════════════════════════════════════════════════════
 
   /// BLEアドバタイズを開始する（エフェメラルIDを発信）
-  /// [ephemeralId] サーバーから取得した短期トークン
-  /// [refreshCallback] トークン更新時に新しいトークンを取得するコールバック
+  /// [seed] TOTP生成のためのシード
   Future<void> startAdvertising({
-    required String ephemeralId,
-    Future<String> Function()? refreshCallback,
-    Duration refreshInterval = const Duration(minutes: 5),
+    required String seed,
   }) async {
     if (_isAdvertising) {
       debugPrint('既にアドバタイズ中です');
@@ -223,24 +228,25 @@ class BleService {
         return;
       }
 
-      _currentEphemeralId = ephemeralId;
-      await _startAdvertisingWithId(ephemeralId);
+      final initialTotp = TotpGenerator.generate(seed);
+      _currentEphemeralId = initialTotp;
+      await _startAdvertisingWithId(initialTotp);
       _isAdvertising = true;
 
-      // トークン更新タイマーを設定
-      if (refreshCallback != null) {
-        _tokenRefreshTimer?.cancel();
-        _tokenRefreshTimer = Timer.periodic(refreshInterval, (_) async {
-          try {
-            final newToken = await refreshCallback();
-            await _updateAdvertisingId(newToken);
-          } catch (e) {
-            debugPrint('トークン更新エラー: $e');
+      // 10秒ごとにTOTP更新境界（5分）を越えたかチェックする
+      _tokenRefreshTimer?.cancel();
+      _tokenRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+        try {
+          final newTotp = TotpGenerator.generate(seed);
+          if (newTotp != _currentEphemeralId) {
+            await _updateAdvertisingId(newTotp);
           }
-        });
-      }
+        } catch (e) {
+          debugPrint('TOTP更新エラー: $e');
+        }
+      });
 
-      debugPrint('BLEアドバタイズを開始しました: ephemeralId=$ephemeralId');
+      debugPrint('BLEアドバタイズを開始しました: TOTP=$initialTotp');
     } catch (e) {
       debugPrint('BLEアドバタイズ開始エラー: $e');
       _isAdvertising = false;
@@ -248,17 +254,14 @@ class BleService {
   }
 
   /// 指定されたIDでアドバタイズを開始
-  Future<void> _startAdvertisingWithId(String ephemeralId) async {
-    // エフェメラルIDをデバイス名に埋め込む（SP_プレフィックス付き）
-    // BLEの制限: ローカル名は最大20バイト程度
-    final localName = 'SP_$ephemeralId';
-    final truncatedName = localName.length > 20
-        ? localName.substring(0, 20)
-        : localName;
+  Future<void> _startAdvertisingWithId(String totp) async {
+    // プレフィックスなし、純粋な8文字のTOTPをそのままローカル名に設定
+    // iOS 31バイト制限の最適化
+    final localName = totp;
 
     final advertiseData = AdvertiseData(
       serviceUuid: streetPassServiceUuid,
-      localName: truncatedName,
+      localName: localName,
       includePowerLevel: false,
     );
 
