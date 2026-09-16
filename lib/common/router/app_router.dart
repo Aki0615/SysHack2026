@@ -17,6 +17,7 @@ import 'package:syshack2026/features/calendar/presentation/calendar_screen.dart'
 import 'package:syshack2026/features/calendar/presentation/week_calendar_screen.dart';
 import 'package:syshack2026/features/mypage/presentation/mypage_screen.dart';
 import 'package:syshack2026/features/mypage/presentation/stamp_card_screen.dart';
+import 'package:syshack2026/features/settings/presentation/settings_screen.dart';
 import 'package:syshack2026/main_screen.dart';
 
 /// GoRouterのリフレッシュ用Notifier
@@ -88,6 +89,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/stamp-card',
         builder: (context, state) => const StampCardScreen(),
+      ),
+
+      // 設定画面 (マイページ右上の歯車ボタンから遷移)
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
 
       // 指定日のすれ違い相手一覧画面

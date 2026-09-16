@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -318,11 +319,12 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ],
             ),
           ),
-          // 半透明のヘッダー: 編集ペンのみ。カバー写真の上に配置する。
+          // 半透明のヘッダー: 歯車 + 編集ペン。カバー写真の上に配置する。
           SafeArea(
             child: _FloatingHeader(
               isEditing: _isEditing,
               onEdit: () => _enterEditMode(user),
+              onOpenSettings: () => context.push('/settings'),
             ),
           ),
           if (_isSaving)
@@ -604,28 +606,61 @@ class _AvatarFallback extends StatelessWidget {
 }
 
 /// Figma のヘッダー (node 1300:1904) 準拠: 上端にせり出したカバー写真の上に、
-/// 戻る (30x30 角丸円) + 編集ペン (30x30 角丸15) を左右に並べる透明ヘッダー。
+/// 歯車 + 編集ペン (それぞれ 30x30 角丸15) を右端に並べる透明ヘッダー。
+///
+/// マイページはボトムナビタブから開くため戻る先が無く Figma の左上戻る
+/// ボタンは撤去済み。代わりに歯車ボタンから設定画面へ遷移する。
 class _FloatingHeader extends StatelessWidget {
   final bool isEditing;
   final VoidCallback onEdit;
+  final VoidCallback onOpenSettings;
 
   const _FloatingHeader({
     required this.isEditing,
     required this.onEdit,
+    required this.onOpenSettings,
   });
 
   @override
   Widget build(BuildContext context) {
-    // マイページはボトムナビタブから開くため戻る先が無く、
-    // 戻るボタンは常に無効になる。Figma の左上戻るボタンは廃止して
-    // 編集ペンだけを右端に表示する。
+    // 編集ペンを左端、歯車を右端に配置。
     return Padding(
       padding: const EdgeInsets.fromLTRB(19, 12, 19, 0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _EditButton(active: isEditing, onTap: onEdit),
+          _CircleIconButton(
+            icon: Icons.settings_outlined,
+            onTap: onOpenSettings,
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// 歯車ボタンなど、divider 背景 + 角丸 15 の 30x30 円形ボタン。
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CircleIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: PasslyBorder.divider,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: AppColors.textPrimary, size: 18),
       ),
     );
   }
