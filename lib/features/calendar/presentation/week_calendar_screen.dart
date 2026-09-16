@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
@@ -9,7 +10,7 @@ import 'package:syshack2026/features/user/domain/user_model.dart';
 import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/avatar_group_section.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/day_event_card.dart';
-import 'package:syshack2026/features/calendar/presentation/widgets/week_day_pill.dart';
+import 'package:syshack2026/common/widgets/week_day_pill.dart';
 
 /// 週表示のカレンダー画面（新規デフォルト）。
 ///
@@ -93,7 +94,27 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
         bottom: false,
         child: Column(
           children: [
-            _Header(user: authUser, onSearchTap: _openEventSearch),
+            PasslyHeader(
+              title: 'カレンダー',
+              subtitle: 'その日の記録',
+              trailing: [
+                // Figma 1305:2147 準拠: 検索アイコンは 35px サイズ
+                IconButton(
+                  onPressed: _openEventSearch,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 35,
+                    minHeight: 35,
+                  ),
+                  icon: const Icon(
+                    Icons.search,
+                    color: AppColors.textPrimary,
+                    size: 32,
+                  ),
+                ),
+                _HeaderAvatar(user: authUser),
+              ],
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(15, 24, 15, 120),
@@ -147,67 +168,6 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
   }
 }
 
-class _Header extends StatelessWidget {
-  final UserModel? user;
-  final VoidCallback onSearchTap;
-
-  const _Header({this.user, required this.onSearchTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundWhite,
-        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
-      ),
-      alignment: Alignment.center,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'カレンダー',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    height: 28.8 / 24,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'その日の記録',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    height: 16.8 / 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onSearchTap,
-            icon: const Icon(
-              Icons.search,
-              color: AppColors.textPrimary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 4),
-          _HeaderAvatar(user: user),
-        ],
-      ),
-    );
-  }
-}
-
 class _HeaderAvatar extends StatelessWidget {
   final UserModel? user;
 
@@ -255,18 +215,11 @@ class _MonthNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Figma 1305:2149 準拠: 左 chevron + 月テキスト + 右 chevron + 「月表示はこちら」
+    // すべて左寄せ + gap 4px でインライン配置。
     return Row(
       children: [
-        IconButton(
-          onPressed: onPrev,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-          icon: const Icon(
-            Icons.chevron_left,
-            color: AppColors.textPrimary,
-            size: 24,
-          ),
-        ),
+        _NavChevronButton(icon: Icons.chevron_left, onTap: onPrev),
         const SizedBox(width: 4),
         Text(
           '${month.year}年${month.month}月',
@@ -278,17 +231,8 @@ class _MonthNavigation extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        IconButton(
-          onPressed: onNext,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-          icon: const Icon(
-            Icons.chevron_right,
-            color: AppColors.textPrimary,
-            size: 24,
-          ),
-        ),
-        const Spacer(),
+        _NavChevronButton(icon: Icons.chevron_right, onTap: onNext),
+        const SizedBox(width: 4),
         InkWell(
           onTap: onOpenMonthView,
           borderRadius: BorderRadius.circular(4),
@@ -306,6 +250,28 @@ class _MonthNavigation extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Figma の月ナビ chevron に相当する小さめのタップ領域付きアイコン。
+/// 22.843x22.843 の透明タップ領域に 18px のアイコンを配置。
+class _NavChevronButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _NavChevronButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(11),
+      child: SizedBox(
+        width: 23,
+        height: 23,
+        child: Icon(icon, color: AppColors.textPrimary, size: 18),
+      ),
     );
   }
 }

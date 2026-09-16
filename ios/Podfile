@@ -1,4 +1,5 @@
 # Uncomment this line to define a global platform for your project
+# Xcode 26 requires deployment target 15.0 以上
 platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
@@ -39,5 +40,9 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    # Xcode 26 対応: 全 Pod の deployment target を 15.0 に強制
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
   end
 end
