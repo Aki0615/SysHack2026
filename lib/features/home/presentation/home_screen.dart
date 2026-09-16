@@ -1,111 +1,148 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:syshack2026/core/constants/app_colors.dart';
-import 'package:syshack2026/features/home/domain/home_notifier.dart';
-import 'package:syshack2026/features/mypage/data/achievement_repository.dart';
-import 'package:syshack2026/features/mypage/domain/achievement_notifier.dart';
-import 'package:syshack2026/features/home/presentation/widgets/stats_row_widget.dart';
-import 'package:syshack2026/features/home/presentation/widgets/quest_progress_card.dart';
-import 'package:syshack2026/features/home/presentation/widgets/comment_card_widget.dart';
 
+import 'package:syshack2026/common/widgets/level_display_card.dart';
+import 'package:syshack2026/common/widgets/passly_header.dart';
+import 'package:syshack2026/common/widgets/recent_encounter_card.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/passly_tokens.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/home/domain/home_notifier.dart';
+import 'package:syshack2026/features/home/domain/recent_encounter.dart';
+import 'package:syshack2026/features/home/presentation/widgets/today_encounter_hero_card.dart';
+import 'package:syshack2026/features/user/domain/level_info.dart';
+
+/// ホーム画面 (Figma node 1110:2434 準拠)。
+///
+/// 上から順に: PasslyHeader.home / TodayEncounterHeroCard /
+/// LevelDisplayCard / 「最近の出会い」タイトル + RecentEncounterCard 一覧。
+///
+/// ボトムナビは [MainScreen] 側で `PasslyBottomNav` として全タブ共通で描画する。
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeNotifierProvider);
-    final achievementState = ref.watch(achievementNotifierProvider);
+    final user = ref.watch(authNotifierProvider).value;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
-      appBar: _buildAppBar(),
+      backgroundColor: PasslyBg.defaultBg,
       body: SafeArea(
         bottom: false,
-        child: homeState.when(
-          data: (data) =>
-              _buildContent(context, ref, data, achievementState.asData?.value),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-          error: (error, _) => _buildErrorState(ref),
+        child: Column(
+          children: [
+            PasslyHeader.home(
+              avatarUrl: user?.iconUrl.isNotEmpty == true ? user!.iconUrl : null,
+            ),
+            Expanded(
+              child: homeState.when(
+                data: (data) => _buildContent(context, ref, data),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: PasslyBrand.primary),
+                ),
+                error: (_, _) => _buildErrorState(ref),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    HomeState data,
-    AchievementResponse? achievementData,
-  ) {
-    // randomThreeが空ならunconfirmedをフォールバックとして使用
-    final commentSource = data.randomThree.isNotEmpty
-        ? data.randomThree
-        : data.unconfirmed;
-
-    final comments = commentSource
-        .map(
-          (user) => {
-            'name': user['name']?.toString() ?? '',
-            'comment': user['one_word']?.toString() ?? '',
-            'iconUrl': user['icon_url']?.toString() ?? '',
-          },
-        )
-        .toList();
-
-    // クエスト進捗: 実績APIの解除率を優先し、未取得時のみ従来の今日の進捗で表示。
-    final achievementProgress =
-        (achievementData != null && achievementData.totalCount > 0)
-        ? (achievementData.unlockedCount / achievementData.totalCount).clamp(
-            0.0,
-            1.0,
-          )
-        : null;
-
-    const dailyLimit = 5;
-    final fallbackProgress = (data.todayEncounters / dailyLimit).clamp(
-      0.0,
-      1.0,
-    );
-    final progress = achievementProgress ?? fallbackProgress;
+  Widget _buildContent(BuildContext context, WidgetRef ref, HomeState data) {
+    final levelInfo = LevelInfo.compute(data.totalEncounters);
+    final avatarUrls = _pickTodayAvatarUrls(data);
 
     return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: () async {
-        await Future.wait([
-          ref.read(homeNotifierProvider.notifier).refresh(),
-          ref.read(achievementNotifierProvider.notifier).refresh(),
-        ]);
-      },
-      child: SingleChildScrollView(
+      color: PasslyBrand.primary,
+      onRefresh: () => ref.read(homeNotifierProvider.notifier).refresh(),
+      child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 24,
+          left: PasslySpace.s16,
+          right: PasslySpace.s16,
+          top: PasslySpace.s24,
           bottom: 120,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            StatsRowWidget(
-              plazaCount: data.totalEncounters,
-              todayCount: data.todayEncounters,
+        children: [
+          TodayEncounterHeroCard(
+            todayCount: data.todayEncounters,
+            avatarUrls: avatarUrls,
+          ),
+          const SizedBox(height: PasslySpace.s20),
+          LevelDisplayCard(
+            count: data.totalEncounters,
+            remaining: levelInfo.remaining,
+            currentLevel: levelInfo.level,
+            progress: levelInfo.progress,
+          ),
+          const SizedBox(height: PasslySpace.s20),
+          const Text(
+            '最近の出会い',
+            style: TextStyle(
+              fontFamily: PasslyFont.family,
+              color: AppColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              height: 24 / 20,
             ),
-            const SizedBox(height: 24),
-            QuestProgressCard(
-              questName: '人とすれ違う',
-              progress: progress,
-              onViewAllTap: () => context.push('/stamp-card'),
-            ),
-            const SizedBox(height: 24),
-            CommentCardWidget(comments: comments),
-          ],
-        ),
+          ),
+          const SizedBox(height: 13),
+          ..._buildRecentEncounters(data.recentEncounters),
+        ],
       ),
     );
+  }
+
+  List<Widget> _buildRecentEncounters(List<RecentEncounter> items) {
+    if (items.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: PasslySpace.s16),
+          child: Text(
+            'まだ出会いがありません',
+            style: TextStyle(
+              fontFamily: PasslyFont.family,
+              color: PasslyText.secondary,
+              fontSize: 14,
+              fontWeight: PasslyFont.medium,
+            ),
+          ),
+        ),
+      ];
+    }
+    return [
+      for (final e in items)
+        Padding(
+          padding: const EdgeInsets.only(bottom: PasslySpace.s4),
+          child: RecentEncounterCard(
+            avatarUrl: e.iconUrl.isNotEmpty ? e.iconUrl : null,
+            name: e.name,
+            time: _formatTime(e.metAt),
+            location: e.eventName,
+          ),
+        ),
+    ];
+  }
+
+  /// `unconfirmed` / `randomThree` から今日のすれ違いカード用の 3 件を採る。
+  /// サーバー側で `random_three` が空のときは `unconfirmed` にフォールバック。
+  List<String> _pickTodayAvatarUrls(HomeState data) {
+    final source = data.randomThree.isNotEmpty
+        ? data.randomThree
+        : data.unconfirmed;
+    return source
+        .map((e) => e['icon_url']?.toString() ?? '')
+        .where((url) => url.isNotEmpty)
+        .take(3)
+        .toList();
+  }
+
+  static String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   Widget _buildErrorState(WidgetRef ref) {
@@ -116,38 +153,24 @@ class HomeScreen extends ConsumerWidget {
           const Icon(
             Icons.error_outline,
             size: 48,
-            color: AppColors.textSecondary,
+            color: PasslyText.secondary,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: PasslySpace.s16),
           const Text(
             'データの取得に失敗しました',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+            style: TextStyle(color: PasslyText.secondary, fontSize: 16),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: PasslySpace.s16),
           ElevatedButton(
             onPressed: () => ref.read(homeNotifierProvider.notifier).refresh(),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PasslyBrand.primary,
+            ),
             child: const Text('再試行', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: AppColors.backgroundWhite,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      centerTitle: false,
-      title: const Text(
-        'ホーム',
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 }
+

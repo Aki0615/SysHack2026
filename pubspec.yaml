@@ -48,6 +48,7 @@ dependencies:
   http: ^1.6.0
   image_picker: ^1.2.1
   url_launcher: ^6.3.1
+  flutter_svg: ^2.2.1
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +79,10 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/level_badges/
+    - assets/images/home/
+    - assets/images/nav/
+    - assets/images/icons/
 
 flutter_launcher_icons:
   image_path: "assets/images/app_icon.png"

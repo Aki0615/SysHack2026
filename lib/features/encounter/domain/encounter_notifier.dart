@@ -48,7 +48,10 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
             name: data['name']?.toString() ?? '???',
             iconUrl: data['icon_url']?.toString() ?? '',
             oneWord: data['one_word']?.toString() ?? '',
+            // 相手の tech_stack はサーバーが返せば埋める。未対応時は空文字。
+            techStack: data['tech_stack']?.toString() ?? '',
           ),
+          eventName: data['event_name']?.toString() ?? '',
           encounteredAt:
               DateTime.tryParse(data['created_at']?.toString() ?? '') ??
               DateTime.now(),
