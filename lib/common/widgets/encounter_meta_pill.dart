@@ -56,6 +56,7 @@ class EncounterMetaPill extends StatelessWidget {
         vertical: _verticalPadding,
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const PasslyIcon(
