@@ -1,49 +1,16 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_ble_peripheral (2.0.1):
-    - Flutter
-    - FlutterMacOS
-  - flutter_blue_plus_darwin (0.0.2):
-    - Flutter
-    - FlutterMacOS
-  - flutter_secure_storage_darwin (10.0.0):
-    - Flutter
-    - FlutterMacOS
-  - image_picker_ios (0.0.1):
-    - Flutter
-  - url_launcher_ios (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_ble_peripheral (from `.symlinks/plugins/flutter_ble_peripheral/darwin`)
-  - flutter_blue_plus_darwin (from `.symlinks/plugins/flutter_blue_plus_darwin/darwin`)
-  - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
-  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
-  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_ble_peripheral:
-    :path: ".symlinks/plugins/flutter_ble_peripheral/darwin"
-  flutter_blue_plus_darwin:
-    :path: ".symlinks/plugins/flutter_blue_plus_darwin/darwin"
-  flutter_secure_storage_darwin:
-    :path: ".symlinks/plugins/flutter_secure_storage_darwin/darwin"
-  image_picker_ios:
-    :path: ".symlinks/plugins/image_picker_ios/ios"
-  url_launcher_ios:
-    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_ble_peripheral: b141df08802a7f8be87a3fcdd1e04b933a5c5a40
-  flutter_blue_plus_darwin: 20a08bfeaa0f7804d524858d3d8744bcc1b6dbc3
-  flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
-  image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
-  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
 
-PODFILE CHECKSUM: 251cb053df7158f337c0712f2ab29f4e0fa474ce
+PODFILE CHECKSUM: 53a6aebc29ccee84c41f92f409fc20cd4ca011f1
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0
