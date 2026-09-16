@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:syshack2026/common/widgets/encounter_meta_pill.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
@@ -311,6 +312,7 @@ class _NameSection extends StatelessWidget {
 }
 
 /// 出会いカード：親しい友達判定で 2 パターンに切り替わる横長ピル。
+/// Figma node 1240:1405 の [EncounterMetaPill] にテキストを流し込むだけの薄いラッパ。
 class _EncounterCard extends StatelessWidget {
   final UserModel profile;
   final bool isCloseFriend;
@@ -319,45 +321,7 @@ class _EncounterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: AppColors.divider),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x3D707C70),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.local_fire_department,
-            color: AppColors.primary,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _buildLabel(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                height: 16.8 / 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return EncounterMetaPill(text: _buildLabel());
   }
 
   String _buildLabel() {
