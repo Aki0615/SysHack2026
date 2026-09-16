@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
-import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
 import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
@@ -83,7 +82,6 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final calendarState = ref.watch(calendarNotifierProvider);
-    final authUser = ref.watch(authNotifierProvider).value;
     final closeFriendsAsync = ref.watch(closeFriendListProvider);
 
     final dayData = _findDayData(calendarState.encounterDays, _selectedDate);
@@ -94,27 +92,7 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
         bottom: false,
         child: Column(
           children: [
-            PasslyHeader(
-              title: 'カレンダー',
-              subtitle: 'その日の記録',
-              trailing: [
-                // Figma 1305:2147 準拠: 検索アイコンは 35px サイズ
-                IconButton(
-                  onPressed: _openEventSearch,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 35,
-                    minHeight: 35,
-                  ),
-                  icon: const Icon(
-                    Icons.search,
-                    color: AppColors.textPrimary,
-                    size: 32,
-                  ),
-                ),
-                _HeaderAvatar(user: authUser),
-              ],
-            ),
+            PasslyHeader.calendar(onSearchTap: _openEventSearch),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(15, 24, 15, 120),
@@ -165,38 +143,6 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
       }
     }
     return null;
-  }
-}
-
-class _HeaderAvatar extends StatelessWidget {
-  final UserModel? user;
-
-  const _HeaderAvatar({this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    final iconUrl = user?.iconUrl ?? '';
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.backgroundGrey,
-      ),
-      child: ClipOval(
-        child: iconUrl.isNotEmpty
-            ? Image.network(
-                iconUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _fallback(),
-              )
-            : _fallback(),
-      ),
-    );
-  }
-
-  Widget _fallback() {
-    return const Icon(Icons.person, color: AppColors.textLight, size: 24);
   }
 }
 

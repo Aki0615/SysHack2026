@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 「その日に出会った人一覧」「親しい友達一覧」など、
@@ -38,7 +39,17 @@ class PersonListView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(title: headerTitle, subtitle: headerSubtitle),
+            PasslyHeader(
+              leading: PasslyBackButton(
+                onTap: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+              title: headerTitle,
+              subtitle: headerSubtitle,
+            ),
             Expanded(
               child: itemsAsync.when(
                 data: (items) => _buildList(items),
@@ -134,88 +145,6 @@ class PersonListItem {
     this.timeLabel,
     this.eventLabel,
   });
-}
-
-/// ヘッダー領域（画面上部の白いバー）
-class _Header extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _Header({required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundWhite,
-        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _BackButton(),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    height: 28.8 / 24,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Padding(
-            padding: const EdgeInsets.only(left: 44),
-            child: Text(
-              subtitle,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                height: 16.8 / 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BackButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.divider,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(100),
-        onTap: () {
-          if (Navigator.of(context).canPop()) {
-            Navigator.of(context).pop();
-          }
-        },
-        child: const SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(
-            Icons.arrow_back_ios_new,
-            color: AppColors.textPrimary,
-            size: 18,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// セクション見出し（「3月11日の出会い / 3人と出会いました」）

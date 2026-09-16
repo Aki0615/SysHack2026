@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/day_event_card.dart';
 import 'package:syshack2026/features/plaza/domain/plaza_notifier.dart';
@@ -54,7 +55,13 @@ class _EventSearchScreenState extends ConsumerState<EventSearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(controller: _controller),
+            PasslyHeader.search(
+              onBack: () {
+                if (context.canPop()) context.pop();
+              },
+              controller: _controller,
+              hintText: 'イベント名を入力',
+            ),
             Expanded(
               child: eventsAsync.when(
                 data: (events) => _buildResults(_filter(events)),
@@ -113,102 +120,6 @@ class _EventSearchScreenState extends ConsumerState<EventSearchScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _Header({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 20, 12),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundWhite,
-        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              }
-            },
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
-              color: AppColors.textPrimary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Expanded(child: _SearchField(controller: controller)),
-        ],
-      ),
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _SearchField({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: AppColors.divider,
-        borderRadius: BorderRadius.circular(90),
-        border: Border.all(color: AppColors.divider, width: 1),
-      ),
-      alignment: Alignment.center,
-      child: TextField(
-        controller: controller,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w400,
-        ),
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: 'イベント名を入力',
-          hintStyle: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-          ),
-          prefixIcon: const Icon(
-            Icons.search,
-            color: AppColors.textSecondary,
-            size: 18,
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            minWidth: 40,
-            minHeight: 40,
-          ),
-          suffixIcon: controller.text.isEmpty
-              ? null
-              : IconButton(
-                  onPressed: controller.clear,
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.close,
-                    color: AppColors.textSecondary,
-                    size: 18,
-                  ),
-                ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-        ),
       ),
     );
   }
