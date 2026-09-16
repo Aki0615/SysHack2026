@@ -1,15 +1,29 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:syshack2026/core/constants/app_colors.dart';
-import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
-import 'package:syshack2026/features/user/data/user_repository.dart';
-import 'package:syshack2026/features/mypage/presentation/widgets/profile_icon_widget.dart';
-import 'package:syshack2026/features/mypage/presentation/widgets/stamp_card_item.dart';
 
-/// マイページ本体
-/// 閲覧モードと編集モードを切り替え、編集モードでは全項目を一括で編集・保存する
+import 'package:syshack2026/common/widgets/level_display_card.dart';
+import 'package:syshack2026/common/widgets/passly_header.dart';
+import 'package:syshack2026/common/widgets/passly_icon.dart';
+import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/passly_tokens.dart';
+import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/home/domain/home_notifier.dart';
+import 'package:syshack2026/features/user/data/user_repository.dart';
+import 'package:syshack2026/features/user/domain/level_info.dart';
+import 'package:syshack2026/features/user/domain/user_model.dart';
+
+/// 自分のプロフィール画面 (Figma node 1300:1805 準拠)。
+///
+/// 上から: カバー写真 (背景) + 半透明ヘッダー (戻る / 編集ペン) + アバター +
+/// 名前 / 一言 + LevelDisplayCard + ABOUT / TECH TAG / LINK。
+///
+/// 編集ペンをタップすると同じ画面で編集モードに切り替わる (テキストは TextField 化)。
+/// 保存すると PATCH /users/:id を呼んで再取得する。
 class MyPageScreen extends ConsumerStatefulWidget {
   const MyPageScreen({super.key});
 
@@ -18,151 +32,64 @@ class MyPageScreen extends ConsumerStatefulWidget {
 }
 
 class _MyPageScreenState extends ConsumerState<MyPageScreen> {
-  // --- 表示用（現在の確定値）---
-  String? _imagePath; // ローカルファイルパス（表示用）
-  String? _imageUrl; // Firebase URL
-  String _name = '';
-  String _comment = '';
-  String _techStack = '';
-  String _affiliation = '';
-  String _twitter = '';
-  String _github = '';
-  String _connpass = '';
-
-  // --- 編集用（一時バッファ）---
-  late TextEditingController _nameCtrl;
-  late TextEditingController _commentCtrl;
-  late TextEditingController _techStackCtrl;
-  late TextEditingController _affiliationCtrl;
-  late TextEditingController _twitterCtrl;
-  late TextEditingController _githubCtrl;
-  late TextEditingController _connpassCtrl;
-
-  // --- 状態フラグ ---
-  bool _isLoading = true;
+  bool _isEditing = false;
   bool _isSaving = false;
   bool _isUploading = false;
-  bool _isEditing = false; // true: 編集モード, false: 閲覧モード
+
+  /// アップロード直後のローカル一時パス (再取得までのプレビュー用)。
+  String? _localAvatarPath;
+
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _oneWordCtrl;
+  late final TextEditingController _aboutCtrl;
+  late final TextEditingController _techStackCtrl;
+  late final TextEditingController _twitterCtrl;
+  late final TextEditingController _githubCtrl;
+  late final TextEditingController _portfolioCtrl;
+  late final TextEditingController _connpassCtrl;
 
   @override
   void initState() {
     super.initState();
-    // テキストコントローラーの初期化
     _nameCtrl = TextEditingController();
-    _commentCtrl = TextEditingController();
+    _oneWordCtrl = TextEditingController();
+    _aboutCtrl = TextEditingController();
     _techStackCtrl = TextEditingController();
-    _affiliationCtrl = TextEditingController();
     _twitterCtrl = TextEditingController();
     _githubCtrl = TextEditingController();
+    _portfolioCtrl = TextEditingController();
     _connpassCtrl = TextEditingController();
-    _loadUserData();
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _commentCtrl.dispose();
+    _oneWordCtrl.dispose();
+    _aboutCtrl.dispose();
     _techStackCtrl.dispose();
-    _affiliationCtrl.dispose();
     _twitterCtrl.dispose();
     _githubCtrl.dispose();
+    _portfolioCtrl.dispose();
     _connpassCtrl.dispose();
     super.dispose();
   }
 
-  /// ログイン中のユーザー情報を読み込む
-  Future<void> _loadUserData() async {
-    final user = ref.read(authNotifierProvider).value;
-    if (user != null) {
-      setState(() {
-        // データがない場合はデフォルト値を設定（?? '' でフォールバック）
-        _name = user.name.isNotEmpty ? user.name : '';
-        _comment = user.oneWord.isNotEmpty ? user.oneWord : '';
-        _techStack = user.techStack.isNotEmpty ? user.techStack : '';
-        _affiliation = user.affiliation.isNotEmpty ? user.affiliation : '';
-        _twitter = user.twitterUrl.isNotEmpty ? user.twitterUrl : '';
-        _github = user.githubUrl.isNotEmpty ? user.githubUrl : '';
-        _connpass = user.connpassUrl.isNotEmpty ? user.connpassUrl : '';
-        _imageUrl = user.iconUrl.isNotEmpty ? user.iconUrl : null;
-        _imagePath = null;
-        _isLoading = false;
-      });
-    } else {
-      setState(() => _isLoading = false);
-    }
+  void _enterEditMode(UserModel user) {
+    _nameCtrl.text = user.name;
+    _oneWordCtrl.text = user.oneWord;
+    _aboutCtrl.text = user.about;
+    _techStackCtrl.text = user.techStack;
+    _twitterCtrl.text = user.twitterUrl;
+    _githubCtrl.text = user.githubUrl;
+    _portfolioCtrl.text = user.portfolioUrl;
+    _connpassCtrl.text = user.connpassUrl;
+    setState(() => _isEditing = true);
   }
 
-  /// 画像が選択されたときの処理（アップロード実行）
-  Future<void> _handleImageSelected(String localPath) async {
-    final user = ref.read(authNotifierProvider).value;
-    if (user == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('ユーザー情報が見つかりません')));
-      }
-      return;
-    }
-
-    setState(() {
-      _imagePath = localPath; // 一時的にローカルパスを表示用に設定
-      _isUploading = true;
-    });
-
-    try {
-      final repo = ref.read(userRepositoryProvider);
-      final uploadedUrl = await repo.uploadAvatar(user.id, localPath);
-
-      setState(() {
-        _imageUrl = uploadedUrl;
-        _isUploading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('画像をアップロードしました'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _imagePath = null;
-        _isUploading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('画像のアップロードに失敗しました: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  /// 編集モードに切り替える（コントローラーに現在の値をセット）
-  void _enterEditMode() {
-    setState(() {
-      _isEditing = true;
-      _nameCtrl.text = _name;
-      _commentCtrl.text = _comment;
-      _techStackCtrl.text = _techStack;
-      _affiliationCtrl.text = _affiliation;
-      _twitterCtrl.text = _twitter;
-      _githubCtrl.text = _github;
-      _connpassCtrl.text = _connpass;
-    });
-  }
-
-  /// 編集をキャンセルして閲覧モードに戻る
   void _cancelEdit() {
     setState(() => _isEditing = false);
   }
 
-  /// 全項目を一括でサーバーに保存する
   Future<void> _saveAll() async {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) return;
@@ -170,884 +97,942 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     setState(() => _isSaving = true);
     try {
       final repo = ref.read(userRepositoryProvider);
-
-      // すべてのフィールドを送信（空のフィールドも含む）
-      // これにより「削除」の意思が正しく伝わる
-      final updateData = <String, dynamic>{
+      await repo.updateUser(user.id, {
         'name': _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text,
-        'one_word': _commentCtrl.text, // 空でも送信（削除の意思を表現）
-        'tech_stack': _techStackCtrl.text, // 空でも送信
-        'affiliation': _affiliationCtrl.text,
-        'twitter_url': _twitterCtrl.text, // 空でも送信
-        'github_url': _githubCtrl.text, // 空でも送信
-        'connpass_username': _connpassCtrl.text, // 空でも送信
-      };
-
-      // デバッグ: 送信データを表示
-      debugPrint('Sending update data: $updateData');
-
-      // フィールドを送信
-      await repo.updateUser(user.id, updateData);
-
-      // 保存成功後、表示を更新して閲覧モードへ
-      setState(() {
-        _name = _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text;
-        _comment = _commentCtrl.text;
-        _techStack = _techStackCtrl.text;
-        _affiliation = _affiliationCtrl.text;
-        _twitter = _twitterCtrl.text;
-        _github = _githubCtrl.text;
-        _connpass = _connpassCtrl.text;
-        _isEditing = false;
+        'one_word': _oneWordCtrl.text,
+        'about': _aboutCtrl.text,
+        'tech_stack': _techStackCtrl.text,
+        'twitter_url': _twitterCtrl.text,
+        'github_url': _githubCtrl.text,
+        'portfolio_url': _portfolioCtrl.text,
+        'connpass_username': _connpassCtrl.text,
       });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      // 再取得
+      await ref.read(authNotifierProvider.notifier).refresh();
+      if (!mounted) return;
+      setState(() => _isEditing = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
           const SnackBar(
             content: Text('プロフィールを保存しました'),
             duration: Duration(seconds: 1),
           ),
         );
-      }
     } catch (e) {
-      if (mounted) {
-        // エラー詳細を表示
-        debugPrint('Save error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
           SnackBar(
             content: Text('保存に失敗しました: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            backgroundColor: PasslyState.error,
           ),
         );
-      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  /// URLを外部ブラウザで開く
-  Future<void> _launchUrl(String url) async {
-    if (url.isEmpty) return;
-    final uri = Uri.tryParse(url);
-    if (uri == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('URL形式が不正です')));
-      }
-      return;
-    }
-
-    try {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!launched && mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('URLを開けませんでした')));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('URLを開けませんでした')));
-      }
-    }
-  }
-
-  String _normalizeTwitterUrl(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return '';
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      return value;
-    }
-    final handle = value.startsWith('@') ? value.substring(1) : value;
-    return 'https://x.com/$handle';
-  }
-
-  String _normalizeGitHubUrl(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return '';
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      return value;
-    }
-    if (value.startsWith('github.com/')) {
-      return 'https://$value';
-    }
-    return 'https://github.com/$value';
-  }
-
-  String _normalizeConnpassUrl(String raw) {
-    final value = raw.trim();
-    if (value.isEmpty) return '';
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      return value;
-    }
-    final username = value.startsWith('@') ? value.substring(1) : value;
-    return 'https://connpass.com/user/$username/';
-  }
-
-  /// 確認用ダイアログ（ログアウト・削除用）
-  void _showConfirmDialog(
-    String title,
-    String confirmLabel,
-    Color confirmColor,
-    VoidCallback onConfirm,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title, style: const TextStyle(fontSize: 16)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'キャンセル',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                onConfirm();
-              },
-              child: Text(
-                confirmLabel,
-                style: TextStyle(
-                  color: confirmColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// アカウント削除処理
-  Future<void> _handleDeleteAccount() async {
+  Future<void> _pickAndUploadAvatar() async {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) return;
 
-    setState(() => _isSaving = true);
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+
+    setState(() {
+      _localAvatarPath = picked.path;
+      _isUploading = true;
+    });
     try {
       final repo = ref.read(userRepositoryProvider);
-      await repo.deleteUser(user.id);
-
-      // 削除成功後、ログアウトしてログイン画面へ
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('アカウントを削除しました'),
-            backgroundColor: AppColors.primary,
+      await repo.uploadAvatar(user.id, picked.path);
+      await ref.read(authNotifierProvider.notifier).refresh();
+      if (!mounted) return;
+      setState(() {
+        _localAvatarPath = null;
+        _isUploading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _localAvatarPath = null;
+        _isUploading = false;
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('画像のアップロードに失敗しました: $e'),
+            backgroundColor: PasslyState.error,
           ),
         );
-      }
-      ref.read(authNotifierProvider.notifier).logout();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('削除に失敗しました: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  ビルド
-  // ═══════════════════════════════════════════════════════
+  Future<void> _launchExternalUrl(String url) async {
+    if (url.isEmpty) return;
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    final user = ref.watch(authNotifierProvider).value;
+    final homeState = ref.watch(homeNotifierProvider);
+
+    if (user == null) {
       return const Scaffold(
-        backgroundColor: AppColors.backgroundWhite,
+        backgroundColor: PasslyBg.defaultBg,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    final totalEncounters =
+        homeState.asData?.value.totalEncounters ?? 0;
+    final levelInfo = LevelInfo.compute(totalEncounters);
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 24,
-                bottom: 120,
-              ),
-              child: Column(
-                children: [
-                  _buildProfileHeader(),
-                  const SizedBox(height: 16),
-                  _buildEditButton(),
-                  const SizedBox(height: 24),
-                  _buildInformationSection(),
-                  const SizedBox(height: 32),
-                  _buildSettingsSection(),
-                  const SizedBox(height: 48),
-                ],
-              ),
-            ),
-            // 保存中のオーバーレイ
-            if (_isSaving)
-              Container(
-                color: Colors.black26,
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────
-  //  プロフィールヘッダー（アイコン・名前・一言）
-  // ─────────────────────────────────────────────────────
-
-  Widget _buildProfileHeader() {
-    return Column(
-      children: [
-        // アイコン（編集モードでもタップ可能）
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            ProfileIconWidget(
-              imagePath: _imagePath,
-              imageUrl: _imageUrl,
-              onImageSelected: _handleImageSelected,
-            ),
-            // アップロード中のオーバーレイ
-            if (_isUploading)
-              Container(
-                width: 96,
-                height: 96,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black26,
+      backgroundColor: PasslyBg.defaultBg,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 140),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _CoverAndAvatar(
+                  coverUrl: user.coverUrl,
+                  iconUrl: user.iconUrl,
+                  localAvatarPath: _localAvatarPath,
+                  isUploading: _isUploading,
+                  onEditAvatar: _isEditing ? _pickAndUploadAvatar : null,
                 ),
-                child: const Center(
-                  child: SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                const SizedBox(height: 16),
+                _NameSection(
+                  isEditing: _isEditing,
+                  fallbackName: user.name,
+                  fallbackOneWord: user.oneWord,
+                  nameCtrl: _nameCtrl,
+                  oneWordCtrl: _oneWordCtrl,
+                ),
+                const SizedBox(height: PasslySpace.s20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: LevelDisplayCard(
+                    count: totalEncounters,
+                    remaining: levelInfo.remaining,
+                    currentLevel: levelInfo.level,
+                    progress: levelInfo.progress,
                   ),
                 ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // 名前
-        _isEditing ? _buildNameField() : _buildNameLabel(),
-        const SizedBox(height: 12),
-        // 一言コメント
-        _isEditing ? _buildCommentField() : _buildCommentLabel(),
-      ],
-    );
-  }
-
-  /// 閲覧モード: 名前テキスト
-  Widget _buildNameLabel() {
-    return Text(
-      _name.isEmpty ? '名前を入力' : _name,
-      style: TextStyle(
-        color: _name.isEmpty ? AppColors.textDisabled : AppColors.textPrimary,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
+                const SizedBox(height: PasslySpace.s24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 21),
+                  child: _AboutSection(
+                    isEditing: _isEditing,
+                    fallbackAbout: user.about,
+                    controller: _aboutCtrl,
+                  ),
+                ),
+                const SizedBox(height: PasslySpace.s24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 21),
+                  child: _TechTagSection(
+                    isEditing: _isEditing,
+                    fallbackTechStack: user.techStack,
+                    controller: _techStackCtrl,
+                  ),
+                ),
+                const SizedBox(height: PasslySpace.s24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 21),
+                  child: _LinkSection(
+                    isEditing: _isEditing,
+                    profile: user,
+                    twitterCtrl: _twitterCtrl,
+                    githubCtrl: _githubCtrl,
+                    portfolioCtrl: _portfolioCtrl,
+                    connpassCtrl: _connpassCtrl,
+                    onOpen: _launchExternalUrl,
+                  ),
+                ),
+                if (_isEditing) ...[
+                  const SizedBox(height: PasslySpace.s24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 21),
+                    child: _EditActionButtons(
+                      isSaving: _isSaving,
+                      onCancel: _cancelEdit,
+                      onSave: _saveAll,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // 半透明のヘッダー: 戻る + 編集ペン。カバー写真の上に配置する。
+          SafeArea(
+            child: _FloatingHeader(
+              isEditing: _isEditing,
+              onBack: () {
+                if (context.canPop()) context.pop();
+              },
+              onEdit: () => _enterEditMode(user),
+            ),
+          ),
+          if (_isSaving)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
+}
 
-  /// 編集モード: 名前入力フィールド
-  Widget _buildNameField() {
-    return TextField(
-      controller: _nameCtrl,
-      textAlign: TextAlign.center,
-      style: const TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-      ),
-      decoration: InputDecoration(
-        hintText: '名前を入力',
-        hintStyle: const TextStyle(color: AppColors.textDisabled),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        filled: true,
-        fillColor: AppColors.backgroundGrey,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-      ),
-    );
-  }
+/// カバー写真 + 中央に半分乗ったアバターの複合ビュー。
+///
+/// Figma spec: カバー 275x412 (top -85 で上端にせり出す) + アバター 100x100 中央下寄せ。
+class _CoverAndAvatar extends StatelessWidget {
+  final String coverUrl;
+  final String iconUrl;
+  final String? localAvatarPath;
+  final bool isUploading;
+  final VoidCallback? onEditAvatar;
 
-  /// 閲覧モード: 一言テキスト（カプセル型背景）
-  Widget _buildCommentLabel() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundGrey,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Text(
-        _comment.isEmpty ? '一言を入力' : _comment,
-        style: TextStyle(
-          color: _comment.isEmpty
-              ? AppColors.textDisabled
-              : AppColors.textPrimary,
-          fontSize: 14,
-        ),
-      ),
-    );
-  }
+  const _CoverAndAvatar({
+    required this.coverUrl,
+    required this.iconUrl,
+    required this.localAvatarPath,
+    required this.isUploading,
+    required this.onEditAvatar,
+  });
 
-  /// 編集モード: 一言入力フィールド
-  Widget _buildCommentField() {
-    return TextField(
-      controller: _commentCtrl,
-      textAlign: TextAlign.center,
-      maxLines: 2,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-      decoration: InputDecoration(
-        hintText: '一言を入力',
-        hintStyle: const TextStyle(color: AppColors.textDisabled),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-        filled: true,
-        fillColor: AppColors.backgroundGrey,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.primary),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(24),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-      ),
-    );
-  }
+  // カバー写真の高さ (Figma: -85 → 190 = 275)。
+  static const double _coverHeight = 190;
+  static const double _avatarSize = 100;
 
-  // ─────────────────────────────────────────────────────
-  //  編集する / すべて保存 / キャンセル ボタン
-  // ─────────────────────────────────────────────────────
-
-  Widget _buildEditButton() {
-    if (_isEditing) {
-      // 編集モード: 「すべて保存」と「キャンセル」ボタン
-      return Row(
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      // アバターが半分下にせり出す分だけ余白を確保。
+      height: _coverHeight + _avatarSize / 2,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // キャンセルボタン
-          Expanded(
-            child: OutlinedButton(
-              onPressed: _cancelEdit,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: AppColors.textSecondary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: SizedBox(
+              height: _coverHeight,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
                 ),
-              ),
-              child: const Text(
-                'キャンセル',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+                child: _CoverImage(url: coverUrl),
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          // すべて保存ボタン
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isSaving ? null : _saveAll,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Positioned(
+            top: _coverHeight - _avatarSize / 2,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                width: _avatarSize,
+                height: _avatarSize,
+                child: Stack(
+                  children: [
+                    _AvatarCircle(
+                      url: iconUrl,
+                      localPath: localAvatarPath,
+                    ),
+                    if (isUploading)
+                      Container(
+                        width: _avatarSize,
+                        height: _avatarSize,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black26,
+                        ),
+                        alignment: Alignment.center,
+                        child: const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                      ),
+                    if (onEditAvatar != null)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onEditAvatar,
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: PasslyBrand.primary,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-              child: const Text(
-                'すべて保存',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CoverImage extends StatelessWidget {
+  final String url;
+  const _CoverImage({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    if (url.isEmpty) return const _CoverFallback();
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => const _CoverFallback(),
+    );
+  }
+}
+
+class _CoverFallback extends StatelessWidget {
+  const _CoverFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            PasslyBrand.primary.withValues(alpha: 0.6),
+            PasslyBrand.primary.withValues(alpha: 0.9),
+          ],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: const Icon(Icons.image_outlined, color: Colors.white, size: 48),
+    );
+  }
+}
+
+class _AvatarCircle extends StatelessWidget {
+  final String url;
+  final String? localPath;
+  const _AvatarCircle({required this.url, required this.localPath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: PasslyBg.surface,
+        border: Border.all(color: PasslyBg.surface, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipOval(child: _buildImage()),
+    );
+  }
+
+  Widget _buildImage() {
+    if (localPath != null && localPath!.isNotEmpty) {
+      return Image.file(
+        File(localPath!),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const _AvatarFallback(),
       );
     }
-
-    // 閲覧モード: 「編集する」ボタン
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _enterEditMode,
-        icon: const Icon(Icons.edit, size: 18),
-        label: const Text(
-          '編集する',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          side: const BorderSide(color: AppColors.primary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
+    if (url.isNotEmpty) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const _AvatarFallback(),
+      );
+    }
+    return const _AvatarFallback();
   }
+}
 
-  // ─────────────────────────────────────────────────────
-  //  MY INFORMATION セクション
-  // ─────────────────────────────────────────────────────
-
-  Widget _buildInformationSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'MY INFORMATION',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.backgroundGrey,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              // スタンプカード（モードに関係なく常に表示）
-              StampCardItem(onTap: () => context.push('/stamp-card')),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              // 技術スタック
-              _isEditing
-                  ? _buildEditField(
-                      icon: Icons.code,
-                      iconColor: AppColors.iconBlue,
-                      label: '技術スタック',
-                      controller: _techStackCtrl,
-                    )
-                  : _buildViewItem(
-                      icon: Icons.code,
-                      iconColor: AppColors.iconBlue,
-                      label: '技術スタック',
-                      value: _techStack,
-                    ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              // 所属団体
-              _isEditing
-                  ? _buildEditField(
-                      icon: Icons.business,
-                      iconColor: AppColors.iconOrange,
-                      label: '所属団体',
-                      controller: _affiliationCtrl,
-                    )
-                  : _buildViewItem(
-                      icon: Icons.business,
-                      iconColor: AppColors.iconOrange,
-                      label: '所属団体',
-                      value: _affiliation,
-                    ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              // Twitter
-              _isEditing
-                  ? _buildEditField(
-                      icon: Icons.alternate_email,
-                      iconColor: AppColors.iconTwitter,
-                      label: 'Twitter',
-                      controller: _twitterCtrl,
-                    )
-                  : _buildLinkItem(
-                      icon: Icons.alternate_email,
-                      iconColor: AppColors.iconTwitter,
-                      label: 'Twitter',
-                      value: _twitter,
-                      onLaunch: () =>
-                          _launchUrl(_normalizeTwitterUrl(_twitter)),
-                    ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              // GitHub
-              _isEditing
-                  ? _buildEditField(
-                      icon: Icons.link,
-                      iconColor: AppColors.iconGitHub,
-                      label: 'GitHub',
-                      controller: _githubCtrl,
-                    )
-                  : _buildLinkItem(
-                      icon: Icons.link,
-                      iconColor: AppColors.iconGitHub,
-                      label: 'GitHub',
-                      value: _github,
-                      onLaunch: () => _launchUrl(_normalizeGitHubUrl(_github)),
-                    ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              // Connpass
-              _isEditing
-                  ? _buildEditField(
-                      icon: Icons.event,
-                      iconColor: AppColors.error,
-                      label: 'Connpass',
-                      controller: _connpassCtrl,
-                    )
-                  : _buildLinkItem(
-                      icon: Icons.event,
-                      iconColor: AppColors.error,
-                      label: 'Connpass',
-                      value: _connpass,
-                      onLaunch: () =>
-                          _launchUrl(_normalizeConnpassUrl(_connpass)),
-                    ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 閲覧モード: 通常の表示アイテム
-  Widget _buildViewItem({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          _buildIconCircle(icon, iconColor),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value.isEmpty ? '未設定' : value,
-                  style: TextStyle(
-                    color: value.isEmpty
-                        ? AppColors.textDisabled
-                        : AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 閲覧モード: リンク付きアイテム（Twitter/GitHub）
-  Widget _buildLinkItem({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-    required VoidCallback onLaunch,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          _buildIconCircle(icon, iconColor),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                GestureDetector(
-                  onTap: value.isNotEmpty ? onLaunch : null,
-                  child: Text(
-                    value.isEmpty ? '未設定' : value,
-                    style: TextStyle(
-                      color: value.isEmpty
-                          ? AppColors.textDisabled
-                          : AppColors.iconBlue,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      decoration: value.isNotEmpty
-                          ? TextDecoration.underline
-                          : TextDecoration.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (value.isNotEmpty)
-            IconButton(
-              onPressed: onLaunch,
-              icon: const Icon(
-                Icons.open_in_new,
-                color: AppColors.iconBlue,
-                size: 20,
-              ),
-              tooltip: '開く',
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// 編集モード: テキスト入力フィールド付きアイテム
-  Widget _buildEditField({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required TextEditingController controller,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          _buildIconCircle(icon, iconColor),
-          const SizedBox(width: 16),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-              decoration: InputDecoration(
-                labelText: label,
-                labelStyle: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
-                hintText: '$labelを入力',
-                hintStyle: const TextStyle(color: AppColors.textDisabled),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                isDense: true,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.divider),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 共通のアイコン丸（左側のカラーアイコン）
-  Widget _buildIconCircle(IconData icon, Color color) {
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback();
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      child: Icon(icon, color: Colors.white, size: 18),
+      color: PasslyBg.elevated,
+      alignment: Alignment.center,
+      child: const Icon(Icons.person, color: PasslyText.tertiary, size: 48),
     );
   }
+}
 
-  // ─────────────────────────────────────────────────────
-  //  SETTINGS セクション（変更なし）
-  // ─────────────────────────────────────────────────────
+/// Figma のヘッダー (node 1300:1904) 準拠: 上端にせり出したカバー写真の上に、
+/// 戻る (30x30 角丸円) + 編集ペン (30x30 角丸15) を左右に並べる透明ヘッダー。
+class _FloatingHeader extends StatelessWidget {
+  final bool isEditing;
+  final VoidCallback onBack;
+  final VoidCallback onEdit;
 
-  Widget _buildSettingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'SETTINGS',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.backgroundGrey,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              _buildSettingsRow(
-                Icons.open_in_new,
-                '利用規約',
-                AppColors.textSecondary,
-                AppColors.textPrimary,
-                trailing: Icons.chevron_right,
-                onTap: () => _launchUrl('https://example.com/terms'),
-              ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              _buildSettingsRow(
-                Icons.open_in_new,
-                'プライバシーポリシー',
-                AppColors.textSecondary,
-                AppColors.textPrimary,
-                trailing: Icons.chevron_right,
-                onTap: () => _launchUrl('https://example.com/privacy'),
-              ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              _buildSettingsRow(
-                Icons.logout,
-                'ログアウト',
-                AppColors.textSecondary,
-                AppColors.textPrimary,
-                onTap: () {
-                  _showConfirmDialog(
-                    'ログアウトしますか？',
-                    'ログアウト',
-                    AppColors.error,
-                    () {
-                      ref.read(authNotifierProvider.notifier).logout();
-                    },
-                  );
-                },
-              ),
-              const Divider(
-                color: AppColors.divider,
-                height: 1,
-                thickness: 0.5,
-              ),
-              _buildSettingsRow(
-                Icons.delete,
-                'アカウント削除',
-                AppColors.error,
-                AppColors.error,
-                onTap: () {
-                  _showConfirmDialog(
-                    '本当に削除しますか？\n（この操作は取り消せません）',
-                    '削除する',
-                    AppColors.error,
-                    _handleDeleteAccount,
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ],
+  const _FloatingHeader({
+    required this.isEditing,
+    required this.onBack,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(19, 12, 19, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          PasslyBackButton(onTap: onBack),
+          _EditButton(active: isEditing, onTap: onEdit),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildSettingsRow(
-    IconData icon,
-    String text,
-    Color iconColor,
-    Color textColor, {
-    IconData? trailing,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
+class _EditButton extends StatelessWidget {
+  final bool active;
+  final VoidCallback onTap;
+
+  const _EditButton({required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Row(
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: active ? PasslyBrand.primarySurface : PasslyBorder.divider,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        alignment: Alignment.center,
+        child: PasslyIcon(
+          asset: PasslyIcons.edit,
+          size: 20,
+          color: active ? PasslyBrand.primary : AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+class _NameSection extends StatelessWidget {
+  final bool isEditing;
+  final String fallbackName;
+  final String fallbackOneWord;
+  final TextEditingController nameCtrl;
+  final TextEditingController oneWordCtrl;
+
+  const _NameSection({
+    required this.isEditing,
+    required this.fallbackName,
+    required this.fallbackOneWord,
+    required this.nameCtrl,
+    required this.oneWordCtrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isEditing) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
           children: [
-            Icon(icon, color: iconColor, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(color: textColor, fontSize: 14),
-              ),
-            ),
-            if (trailing != null) Icon(trailing, color: AppColors.textDisabled),
+            _EditField(controller: nameCtrl, hint: '名前'),
+            const SizedBox(height: PasslySpace.s8),
+            _EditField(controller: oneWordCtrl, hint: '一言'),
           ],
         ),
+      );
+    }
+    return Column(
+      children: [
+        Text(
+          fallbackName.isEmpty ? '未設定' : fallbackName,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: PasslyFont.family,
+            color: AppColors.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            height: 24 / 20,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          fallbackOneWord.isEmpty ? '一言未設定' : fallbackOneWord,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: PasslyFont.family,
+            color: fallbackOneWord.isEmpty
+                ? AppColors.textDisabled
+                : PasslyText.secondary,
+            fontSize: 14,
+            fontWeight: PasslyFont.regular,
+            height: 16.8 / 14,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AboutSection extends StatelessWidget {
+  final bool isEditing;
+  final String fallbackAbout;
+  final TextEditingController controller;
+
+  const _AboutSection({
+    required this.isEditing,
+    required this.fallbackAbout,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeading('ABOUT'),
+        const SizedBox(height: PasslySpace.s8),
+        if (isEditing)
+          _EditField(controller: controller, hint: '自己紹介', maxLines: 4)
+        else
+          Text(
+            fallbackAbout.isEmpty ? '自己紹介は未設定です' : fallbackAbout,
+            style: TextStyle(
+              fontFamily: PasslyFont.family,
+              color: fallbackAbout.isEmpty
+                  ? AppColors.textDisabled
+                  : AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: PasslyFont.medium,
+              height: 16.8 / 14,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _TechTagSection extends StatelessWidget {
+  final bool isEditing;
+  final String fallbackTechStack;
+  final TextEditingController controller;
+
+  const _TechTagSection({
+    required this.isEditing,
+    required this.fallbackTechStack,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeading('TECH TAG'),
+        const SizedBox(height: PasslySpace.s8),
+        if (isEditing)
+          _EditField(
+            controller: controller,
+            hint: 'カンマ / スラッシュ / 空白区切りで入力 (例: Go, Flutter)',
+          )
+        else
+          _TagWrap(tags: _parseTags(fallbackTechStack)),
+      ],
+    );
+  }
+
+  static List<String> _parseTags(String raw) {
+    if (raw.trim().isEmpty) return const [];
+    return raw
+        .split(RegExp(r'[,、/／・\s]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+}
+
+class _TagWrap extends StatelessWidget {
+  final List<String> tags;
+  const _TagWrap({required this.tags});
+
+  @override
+  Widget build(BuildContext context) {
+    if (tags.isEmpty) {
+      return const Text(
+        '未設定',
+        style: TextStyle(
+          fontFamily: PasslyFont.family,
+          color: AppColors.textDisabled,
+          fontSize: 12,
+          fontWeight: PasslyFont.medium,
+        ),
+      );
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [for (final tag in tags) _TagChip(label: tag)],
+    );
+  }
+}
+
+/// Figma node 1242:1429 準拠のタグチップ (Go / Figma / Flutter 等)。
+class _TagChip extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onTap;
+
+  const _TagChip({required this.label, this.icon, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final chip = Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: icon == null ? 12 : 10,
+        vertical: 5,
       ),
+      decoration: BoxDecoration(
+        color: PasslyBg.surface,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: PasslyBorder.strong, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: PasslyText.secondary, size: 14),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: PasslyFont.family,
+              color: AppColors.textPrimary,
+              fontSize: 12,
+              fontWeight: PasslyFont.medium,
+              height: 14.4 / 12,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (onTap == null) return chip;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(100),
+      child: chip,
+    );
+  }
+}
+
+class _LinkSection extends StatelessWidget {
+  final bool isEditing;
+  final UserModel profile;
+  final TextEditingController twitterCtrl;
+  final TextEditingController githubCtrl;
+  final TextEditingController portfolioCtrl;
+  final TextEditingController connpassCtrl;
+  final Future<void> Function(String url) onOpen;
+
+  const _LinkSection({
+    required this.isEditing,
+    required this.profile,
+    required this.twitterCtrl,
+    required this.githubCtrl,
+    required this.portfolioCtrl,
+    required this.connpassCtrl,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeading('LINK'),
+        const SizedBox(height: PasslySpace.s8),
+        if (isEditing)
+          Column(
+            children: [
+              _EditField(controller: twitterCtrl, hint: 'X (Twitter) ハンドルまたは URL'),
+              const SizedBox(height: PasslySpace.s8),
+              _EditField(controller: githubCtrl, hint: 'GitHub ハンドルまたは URL'),
+              const SizedBox(height: PasslySpace.s8),
+              _EditField(controller: portfolioCtrl, hint: 'Portfolio URL'),
+              const SizedBox(height: PasslySpace.s8),
+              _EditField(controller: connpassCtrl, hint: 'Connpass ハンドル'),
+            ],
+          )
+        else
+          _buildChips(),
+      ],
+    );
+  }
+
+  Widget _buildChips() {
+    final links = <_LinkEntry>[
+      if (profile.twitterUrl.isNotEmpty)
+        _LinkEntry(
+          label: 'X',
+          icon: Icons.alternate_email,
+          url: _normalizeTwitterUrl(profile.twitterUrl),
+        ),
+      if (profile.githubUrl.isNotEmpty)
+        _LinkEntry(
+          label: 'GitHub',
+          icon: Icons.code,
+          url: _normalizeGitHubUrl(profile.githubUrl),
+        ),
+      if (profile.portfolioUrl.isNotEmpty)
+        _LinkEntry(
+          label: 'Portfolio',
+          icon: Icons.link,
+          url: profile.portfolioUrl,
+        ),
+      if (profile.connpassUrl.isNotEmpty)
+        _LinkEntry(
+          label: 'Connpass',
+          icon: Icons.event,
+          url: _normalizeConnpassUrl(profile.connpassUrl),
+        ),
+    ];
+    if (links.isEmpty) {
+      return const Text(
+        '未設定',
+        style: TextStyle(
+          fontFamily: PasslyFont.family,
+          color: AppColors.textDisabled,
+          fontSize: 12,
+          fontWeight: PasslyFont.medium,
+        ),
+      );
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final link in links)
+          _TagChip(
+            label: link.label,
+            icon: link.icon,
+            onTap: () => onOpen(link.url),
+          ),
+      ],
+    );
+  }
+
+  static String _normalizeTwitterUrl(String raw) {
+    final v = raw.trim();
+    if (v.isEmpty) return '';
+    if (v.startsWith('http://') || v.startsWith('https://')) return v;
+    final handle = v.startsWith('@') ? v.substring(1) : v;
+    return 'https://x.com/$handle';
+  }
+
+  static String _normalizeGitHubUrl(String raw) {
+    final v = raw.trim();
+    if (v.isEmpty) return '';
+    if (v.startsWith('http://') || v.startsWith('https://')) return v;
+    if (v.startsWith('github.com/')) return 'https://$v';
+    return 'https://github.com/$v';
+  }
+
+  static String _normalizeConnpassUrl(String raw) {
+    final v = raw.trim();
+    if (v.isEmpty) return '';
+    if (v.startsWith('http://') || v.startsWith('https://')) return v;
+    final username = v.startsWith('@') ? v.substring(1) : v;
+    return 'https://connpass.com/user/$username/';
+  }
+}
+
+class _LinkEntry {
+  final String label;
+  final IconData icon;
+  final String url;
+
+  const _LinkEntry({
+    required this.label,
+    required this.icon,
+    required this.url,
+  });
+}
+
+class _SectionHeading extends StatelessWidget {
+  final String label;
+  const _SectionHeading(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontFamily: PasslyFont.family,
+        color: AppColors.textPrimary,
+        fontSize: 16,
+        fontWeight: FontWeight.w900,
+        height: 19.2 / 16,
+      ),
+    );
+  }
+}
+
+class _EditField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final int maxLines;
+
+  const _EditField({
+    required this.controller,
+    required this.hint,
+    this.maxLines = 1,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      textAlign: maxLines == 1 ? TextAlign.center : TextAlign.start,
+      style: const TextStyle(
+        fontFamily: PasslyFont.family,
+        color: AppColors.textPrimary,
+        fontSize: 14,
+        fontWeight: PasslyFont.medium,
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          fontFamily: PasslyFont.family,
+          color: PasslyText.tertiary,
+          fontSize: 14,
+          fontWeight: PasslyFont.regular,
+        ),
+        isDense: true,
+        filled: true,
+        fillColor: PasslyBg.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: PasslyBorder.strong, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: PasslyBorder.strong, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: PasslyBrand.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+      ),
+    );
+  }
+}
+
+class _EditActionButtons extends StatelessWidget {
+  final bool isSaving;
+  final VoidCallback onCancel;
+  final Future<void> Function() onSave;
+
+  const _EditActionButtons({
+    required this.isSaving,
+    required this.onCancel,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: isSaving ? null : onCancel,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              side: const BorderSide(color: PasslyBorder.strong, width: 1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100),
+              ),
+              foregroundColor: AppColors.textPrimary,
+            ),
+            child: const Text(
+              'キャンセル',
+              style: TextStyle(
+                fontFamily: PasslyFont.family,
+                fontSize: 14,
+                fontWeight: PasslyFont.medium,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: PasslySpace.s12),
+        Expanded(
+          child: FilledButton(
+            onPressed: isSaving ? null : onSave,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              backgroundColor: PasslyBrand.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ),
+            child: Text(
+              isSaving ? '保存中…' : '保存',
+              style: const TextStyle(
+                fontFamily: PasslyFont.family,
+                fontSize: 14,
+                fontWeight: PasslyFont.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

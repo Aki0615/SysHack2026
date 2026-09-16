@@ -67,6 +67,14 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     });
   }
 
+  /// 保存済み userId から最新のユーザー情報を取り直す (プロフィール編集後などに使用)。
+  Future<void> refresh() async {
+    final repo = ref.read(authRepositoryProvider);
+    final userId = await repo.getSavedUserId();
+    if (userId == null) return;
+    state = await AsyncValue.guard(() => repo.restoreSession(userId));
+  }
+
   /// ログアウト処理
   Future<void> logout() async {
     final repo = ref.read(authRepositoryProvider);

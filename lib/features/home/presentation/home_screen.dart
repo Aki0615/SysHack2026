@@ -10,6 +10,7 @@ import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/home/domain/home_notifier.dart';
 import 'package:syshack2026/features/home/domain/recent_encounter.dart';
 import 'package:syshack2026/features/home/presentation/widgets/today_encounter_hero_card.dart';
+import 'package:syshack2026/features/user/domain/level_info.dart';
 
 /// ホーム画面 (Figma node 1110:2434 準拠)。
 ///
@@ -50,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, HomeState data) {
-    final levelInfo = _LevelInfo.compute(data.totalEncounters);
+    final levelInfo = LevelInfo.compute(data.totalEncounters);
     final avatarUrls = _pickTodayAvatarUrls(data);
 
     return RefreshIndicator(
@@ -173,44 +174,3 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// すれ違い回数からレベル / 次レベルまでの残り / 進捗を算出する簡易ロジック。
-///
-/// 現状はクライアント計算のモック。バックエンドが `level` / `next_level_at`
-/// 相当のフィールドを返すようになったら、そちらの値に置き換える。
-class _LevelInfo {
-  final int level;
-  final int remaining;
-  final double progress;
-
-  const _LevelInfo({
-    required this.level,
-    required this.remaining,
-    required this.progress,
-  });
-
-  /// 各レベルの開始点: L1=0, L2=5, L3=10, L4=15。
-  /// Figma のサンプル値 (count=12 → L3 / 残り3 / レベル4 に到達) と整合する。
-  static const List<int> _thresholds = [0, 5, 10, 15];
-
-  static _LevelInfo compute(int count) {
-    int level = 1;
-    for (int i = _thresholds.length - 1; i >= 0; i--) {
-      if (count >= _thresholds[i]) {
-        level = i + 1;
-        break;
-      }
-    }
-    if (level >= 4) {
-      return const _LevelInfo(level: 4, remaining: 0, progress: 1);
-    }
-    final start = _thresholds[level - 1];
-    final next = _thresholds[level];
-    final remaining = next - count;
-    final progress = (count - start) / (next - start);
-    return _LevelInfo(
-      level: level,
-      remaining: remaining,
-      progress: progress.clamp(0.0, 1.0),
-    );
-  }
-}
