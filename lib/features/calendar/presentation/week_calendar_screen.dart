@@ -88,11 +88,10 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            PasslyHeader.calendar(onSearchTap: _openEventSearch),
+      // PasslyHeader 自身が SafeArea を処理するため wrap しない (背景を上端まで延ばす)。
+      body: Column(
+        children: [
+          PasslyHeader.calendar(onSearchTap: _openEventSearch),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(15, 24, 15, 120),
@@ -125,8 +124,7 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
