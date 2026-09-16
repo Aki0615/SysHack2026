@@ -101,9 +101,9 @@ class BleNotifier extends Notifier<BleState> {
         },
       );
 
-      // 3. アドバタイズを開始（オフラインTOTP自動更新）
+      // 3. アドバタイズを開始
       await _bleService.startAdvertising(
-        seed: _currentToken!.token,
+        ephemeralId: _currentToken!.token,
       );
 
       state = state.copyWith(

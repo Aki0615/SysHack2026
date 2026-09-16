@@ -1,91 +1,67 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 
-/// Passlyアプリ専用のBLEサービスUUID
-const String streetPassServiceUuid = '12345678-1234-1234-1234-123456789abc';
+/// Passlyアプリ専用のBLEサービスUUID（16-bit圧縮対応のBase UUID）
+const String streetPassServiceUuid = '0000fff0-0000-1000-8000-00805f9b34fb';
 
 /// すれ違い確定の条件
 const int _requiredDetectionCount = 1; // 1回検知で確定（端末差による取りこぼし対策）
-const Duration _detectionWindow = Duration(seconds: 5); // 検知ウィンドウ
-const Duration _cleanupInterval = Duration(seconds: 10); // バッファクリーンアップ間隔
 
-/// 検知デバイスの情報を保持するクラス
 class DetectedDevice {
   final String ephemeralId;
   final List<DateTime> detectionTimes;
-  DateTime firstDetection;
-
   bool isConfirmed;
 
-  DetectedDevice({required this.ephemeralId, required this.firstDetection})
-    : detectionTimes = [firstDetection],
-      isConfirmed = false;
+  DetectedDevice({
+    required this.ephemeralId,
+    required DateTime firstDetection,
+  })  : detectionTimes = [firstDetection],
+        isConfirmed = false;
 
-  /// 新しい検知を記録
   void addDetection(DateTime time) {
     detectionTimes.add(time);
-    // 5秒より古い検知は削除
-    detectionTimes.removeWhere((t) => time.difference(t) > _detectionWindow);
   }
 
-  /// すれ違い確定条件を満たしているか
-  /// 条件: 5秒以内に3回以上検知
   bool meetsEncounterCriteria(DateTime now) {
-    if (isConfirmed) return false; // 既に確定済み
-
-    // 5秒以内の検知回数をカウント
-    final recentCount = detectionTimes
-        .where((t) => now.difference(t) <= _detectionWindow)
-        .length;
-
-    return recentCount >= _requiredDetectionCount;
+    if (isConfirmed) return false;
+    return detectionTimes.length >= _requiredDetectionCount;
   }
 }
 
-/// BLEのスキャンとアドバタイズを担当するサービスクラス
-///
-/// 2026-09-15: すれ違いが一切検知されない不具合の調査の結果、
-/// 従来使用していた flutter_blue_plus / flutter_ble_peripheral パッケージ経由の実装は
-/// 廃止し、ネイティブ実装(BleScanManager.kt / BleAdvertiseManager.kt)を
-/// MethodChannel("syshack/ble") / EventChannel("syshack/ble/scan_results") 経由で
-/// 呼び出す方式に切り替えた。外部クラス(BleNotifier等)から見える公開APIは変更していない。
 class BleService {
+  static final BleService _instance = BleService._internal();
+  factory BleService() => _instance;
+  BleService._internal();
+
   static const MethodChannel _channel = MethodChannel('syshack/ble');
-  static const EventChannel _eventChannel = EventChannel(
-    'syshack/ble/scan_results',
-  );
+  static const EventChannel _eventChannel = EventChannel('syshack/ble/scan_events');
 
-  // --- スキャン関連 ---
-  StreamSubscription<dynamic>? _scanSubscription;
+  final FlutterBlePeripheral _blePeripheral = FlutterBlePeripheral();
+
   bool _isScanning = false;
-
-  // --- アドバタイズ関連 ---
   bool _isAdvertising = false;
   String? _currentEphemeralId;
-  Timer? _tokenRefreshTimer;
+  StreamSubscription<dynamic>? _scanSubscription;
 
-  // --- 検知バッファ ---
   final Map<String, DetectedDevice> _detectionBuffer = {};
   Timer? _cleanupTimer;
+  Timer? _tokenRefreshTimer;
+  static const Duration _cleanupInterval = Duration(seconds: 15);
 
-  // --- コールバック ---
-  void Function(String ephemeralId)? _onEncounterConfirmed;
+  void Function(String)? _onEncounterConfirmed;
 
-  /// 現在スキャン中かどうか
   bool get isScanning => _isScanning;
-
-  /// 現在アドバタイズ中かどうか
   bool get isAdvertising => _isAdvertising;
-
-  /// 現在のエフェメラルID
   String? get currentEphemeralId => _currentEphemeralId;
 
   // ═══════════════════════════════════════════════════════
   //  スキャン（受信）処理
   // ═══════════════════════════════════════════════════════
 
-  /// BLEスキャンを開始し、すれ違い確定時にコールバックを呼ぶ
   void startScanning({
     required void Function(String ephemeralId) onEncounterConfirmed,
     required void Function(Object error) onError,
@@ -94,54 +70,72 @@ class BleService {
     _isScanning = true;
     _onEncounterConfirmed = onEncounterConfirmed;
 
-    // バッファクリーンアップタイマーを開始
+    if (Platform.isIOS && FlutterBluePlus.isScanningNow) {
+      FlutterBluePlus.stopScan();
+    }
+
     _startCleanupTimer();
 
-    // ネイティブ側(BleScanManager)にスキャン開始を依頼
-    // PasslyのサービスUUIDでフィルタしたスキャンを行う
-    _channel
-        .invokeMethod('startScanning', {'serviceUuid': streetPassServiceUuid})
-        .catchError((Object error) {
-          debugPrint('BLEスキャン開始エラー: $error');
-          onError(error);
-        });
+    if (Platform.isAndroid) {
+      _channel
+          .invokeMethod('startScanning', {'serviceUuid': streetPassServiceUuid})
+          .catchError((Object error) {
+            debugPrint('BLEスキャン開始エラー(Android): $error');
+            onError(error);
+          });
 
-    // ネイティブ側からの検知イベントをリッスン
-    // EventChannelのペイロード: {ephemeralId, rssi, timestampMs}
-    _scanSubscription = _eventChannel.receiveBroadcastStream().listen(
-      (dynamic event) {
-        if (event is! Map) return;
-        final ephemeralId = event['ephemeralId'] as String?;
-        if (ephemeralId == null) return;
-        _processDetection(ephemeralId, DateTime.now());
-      },
-      onError: (Object error) {
-        debugPrint('BLEスキャンエラー: $error');
-        onError(error);
-      },
-    );
+      _scanSubscription = _eventChannel.receiveBroadcastStream().listen(
+        (dynamic event) {
+          if (event is! Map) return;
+          final ephemeralId = event['ephemeralId'] as String?;
+          if (ephemeralId == null) return;
+          _processDetection(ephemeralId, DateTime.now());
+        },
+        onError: (Object error) {
+          debugPrint('BLEスキャンエラー(Android): $error');
+          onError(error);
+        },
+      );
+    } else {
+      // iOS用実装
+      FlutterBluePlus.startScan(
+        withServices: [], // iOSのバグ回避のため全スキャン
+        timeout: const Duration(hours: 24),
+      );
+
+      _scanSubscription = FlutterBluePlus.scanResults.listen(
+        (results) {
+          final now = DateTime.now();
+          for (final result in results) {
+            final ephemeralId = _extractEphemeralId(result);
+            if (ephemeralId != null) {
+              _processDetection(ephemeralId, now);
+            }
+          }
+        },
+        onError: (error) {
+          debugPrint('BLEスキャンエラー(iOS): $error');
+          onError(error);
+        },
+      );
+    }
 
     debugPrint('BLEスキャンを開始しました');
   }
 
-  /// 検知結果を処理
   void _processDetection(String ephemeralId, DateTime now) {
-    // 自分自身のIDは無視
     if (ephemeralId == _currentEphemeralId) return;
 
-    // バッファに追加または更新
     if (_detectionBuffer.containsKey(ephemeralId)) {
       final device = _detectionBuffer[ephemeralId]!;
       device.addDetection(now);
 
-      // すれ違い確定条件をチェック
       if (device.meetsEncounterCriteria(now)) {
         device.isConfirmed = true;
         debugPrint('すれ違い確定: $ephemeralId');
         _onEncounterConfirmed?.call(ephemeralId);
       }
     } else {
-      // 新規検知
       final device = DetectedDevice(
         ephemeralId: ephemeralId,
         firstDetection: now,
@@ -149,7 +143,6 @@ class BleService {
       _detectionBuffer[ephemeralId] = device;
       debugPrint('新規デバイス検知: $ephemeralId');
 
-      // required countが1の場合、新規検知時点で確定させる
       if (device.meetsEncounterCriteria(now)) {
         device.isConfirmed = true;
         debugPrint('すれ違い確定: $ephemeralId');
@@ -158,13 +151,26 @@ class BleService {
     }
   }
 
-  /// 古い検知データをクリーンアップするタイマーを開始
+  /// iOS専用: ScanResultからエフェメラルIDを抽出
+  String? _extractEphemeralId(ScanResult result) {
+    final advertisedName = result.advertisementData.advName;
+    final platformName = result.device.platformName;
+
+    // ネイティブAndroid実装と互換を持たせるため、"SP_" プレフィックスをチェック
+    if (advertisedName.startsWith('SP_')) {
+      return advertisedName.substring(3);
+    }
+    if (platformName.startsWith('SP_')) {
+      return platformName.substring(3);
+    }
+    return null;
+  }
+
   void _startCleanupTimer() {
     _cleanupTimer?.cancel();
     _cleanupTimer = Timer.periodic(_cleanupInterval, (_) {
       final now = DateTime.now();
       _detectionBuffer.removeWhere((id, device) {
-        // 確定済み、または最後の検知から30秒以上経過したデバイスを削除
         if (device.isConfirmed) return true;
         if (device.detectionTimes.isEmpty) return true;
         final lastDetection = device.detectionTimes.last;
@@ -173,18 +179,23 @@ class BleService {
     });
   }
 
-  /// スキャンを停止する
   Future<void> stopScanning() async {
     _isScanning = false;
     _cleanupTimer?.cancel();
     _cleanupTimer = null;
     await _scanSubscription?.cancel();
     _scanSubscription = null;
-    try {
-      await _channel.invokeMethod('stopScanning');
-    } catch (e) {
-      debugPrint('BLEスキャン停止エラー: $e');
+    
+    if (Platform.isAndroid) {
+      try {
+        await _channel.invokeMethod('stopScanning');
+      } catch (e) {
+        debugPrint('BLEスキャン停止エラー(Android): $e');
+      }
+    } else {
+      await FlutterBluePlus.stopScan();
     }
+    
     _detectionBuffer.clear();
     debugPrint('BLEスキャンを停止しました');
   }
@@ -193,10 +204,10 @@ class BleService {
   //  アドバタイズ（発信）処理
   // ═══════════════════════════════════════════════════════
 
-  /// BLEアドバタイズを開始する（エフェメラルIDを発信）
-  /// [seed] TOTP生成のためのシード
   Future<void> startAdvertising({
-    required String seed,
+    required String ephemeralId,
+    Future<String> Function()? refreshCallback,
+    Duration refreshInterval = const Duration(minutes: 5),
   }) async {
     if (_isAdvertising) {
       debugPrint('既にアドバタイズ中です');
@@ -204,67 +215,99 @@ class BleService {
     }
 
     try {
-      // Bluetoothが有効か確認
-      final isEnabled =
-          await _channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
-      if (!isEnabled) {
-        debugPrint('Bluetoothが無効なため、アドバタイズを開始できません');
-        return;
+      if (Platform.isAndroid) {
+        final isEnabled = await _channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
+        if (!isEnabled) {
+          debugPrint('Bluetoothが無効なため、アドバタイズを開始できません');
+          return;
+        }
+      } else {
+        final isSupported = await _blePeripheral.isSupported;
+        if (!isSupported) {
+          debugPrint('このデバイスはBLEアドバタイズをサポートしていません');
+          return;
+        }
       }
 
-      final initialTotp = TotpGenerator.generate(seed);
-      _currentEphemeralId = initialTotp;
-      await _startAdvertisingWithId(initialTotp);
+      _currentEphemeralId = ephemeralId;
+      await _startAdvertisingWithId(ephemeralId);
       _isAdvertising = true;
 
-      // 10秒ごとにTOTP更新境界（5分）を越えたかチェックする
-      _tokenRefreshTimer?.cancel();
-      _tokenRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
-        try {
-          final newTotp = TotpGenerator.generate(seed);
-          if (newTotp != _currentEphemeralId) {
-            await _updateAdvertisingId(newTotp);
+      if (refreshCallback != null) {
+        _tokenRefreshTimer?.cancel();
+        _tokenRefreshTimer = Timer.periodic(refreshInterval, (_) async {
+          try {
+            final newToken = await refreshCallback();
+            await _updateAdvertisingId(newToken);
+          } catch (e) {
+            debugPrint('トークン更新エラー: $e');
           }
-        } catch (e) {
-          debugPrint('TOTP更新エラー: $e');
-        }
-      });
+        });
+      }
 
-      debugPrint('BLEアドバタイズを開始しました: TOTP=$initialTotp');
+      debugPrint('BLEアドバタイズを開始しました: ephemeralId=$ephemeralId');
     } catch (e) {
       debugPrint('BLEアドバタイズ開始エラー: $e');
       _isAdvertising = false;
     }
   }
 
-  /// 指定されたIDでアドバタイズを開始
   Future<void> _startAdvertisingWithId(String ephemeralId) async {
-    // ネイティブ側(BleAdvertiseManager)がローカル名への
-    // "SP_" プレフィックス付与・20文字への切り詰めを担当する
-    await _channel.invokeMethod('startAdvertising', {
-      'token': ephemeralId,
-      'serviceUuid': streetPassServiceUuid,
-    });
+    if (Platform.isAndroid) {
+      // Android用ネイティブ実装 (ネイティブ内で "SP_" を付与する)
+      await _channel.invokeMethod('startAdvertising', {
+        'token': ephemeralId,
+        'serviceUuid': streetPassServiceUuid,
+      });
+    } else {
+      // iOS用実装 (Androidに合わせて "SP_" を付与して発信する)
+      final localName = 'SP_$ephemeralId';
+      
+      final advertiseData = AdvertiseData(
+        serviceUuids: [streetPassServiceUuid],
+        localName: localName,
+        includePowerLevel: false,
+      );
+      final advertiseSettings = AdvertiseSettings(
+        advertiseMode: AdvertiseMode.advertiseModeBalanced,
+        txPowerLevel: AdvertiseTxPower.advertiseTxPowerMedium,
+        connectable: false,
+        timeout: 0,
+      );
+      await _blePeripheral.start(
+        advertiseData: advertiseData,
+        advertiseSettings: advertiseSettings,
+      );
+    }
   }
 
-  /// アドバタイズ中のIDを更新
   Future<void> _updateAdvertisingId(String newEphemeralId) async {
     if (!_isAdvertising) return;
 
-    await _channel.invokeMethod('stopAdvertising');
+    if (Platform.isAndroid) {
+      await _channel.invokeMethod('stopAdvertising');
+    } else {
+      await _blePeripheral.stop();
+    }
+    
     _currentEphemeralId = newEphemeralId;
     await _startAdvertisingWithId(newEphemeralId);
     debugPrint('アドバタイズIDを更新しました: $newEphemeralId');
   }
 
-  /// アドバタイズを停止する
   Future<void> stopAdvertising() async {
     if (!_isAdvertising) return;
 
     try {
       _tokenRefreshTimer?.cancel();
       _tokenRefreshTimer = null;
-      await _channel.invokeMethod('stopAdvertising');
+      
+      if (Platform.isAndroid) {
+        await _channel.invokeMethod('stopAdvertising');
+      } else {
+        await _blePeripheral.stop();
+      }
+      
       _isAdvertising = false;
       _currentEphemeralId = null;
       debugPrint('BLEアドバタイズを停止しました');
@@ -273,11 +316,6 @@ class BleService {
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  リソース解放
-  // ═══════════════════════════════════════════════════════
-
-  /// リソースを解放する
   Future<void> dispose() async {
     await stopScanning();
     await stopAdvertising();

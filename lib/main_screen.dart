@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +38,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
   bool _batteryCheckRunning = false;
   String? _lastBleUserId;
 
+  bool _isNear = false;
+  StreamSubscription<int>? _proximitySubscription;
+
   @override
   void initState() {
     super.initState();
@@ -43,12 +49,24 @@ class _MainScreenState extends ConsumerState<MainScreen>
     // ログイン済みならBLEを自動開始
     _startBleIfLoggedIn();
     _checkBatteryOptimizationOnce();
+    _initProximitySensor();
+  }
+
+  void _initProximitySensor() {
+    _proximitySubscription = ProximitySensor.events.listen((int event) {
+      if (!mounted) return;
+      setState(() {
+        _isNear = (event > 0);
+      });
+    });
   }
 
   @override
   void dispose() {
     // アプリ完全終了時にBLEを停止
     WidgetsBinding.instance.removeObserver(this);
+    _proximitySubscription?.cancel();
+    WakelockPlus.disable();
     _stopBle();
     super.dispose();
   }
@@ -96,6 +114,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
       await ref.read(bleNotifierProvider.notifier).start();
       _bleStarted = true;
       _lastBleUserId = user.id;
+      WakelockPlus.enable(); // 常に画面をオン（擬似バックグラウンド用）
       debugPrint('BLEすれ違い機能を自動開始しました（ユーザー: ${user.id}）');
     } catch (e) {
       debugPrint('BLE自動開始エラー: $e');
@@ -172,6 +191,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
       await ref.read(bleNotifierProvider.notifier).stop();
       _bleStarted = false;
       _lastBleUserId = null;
+      WakelockPlus.disable();
       debugPrint('BLEすれ違い機能を停止しました');
     } catch (e) {
       debugPrint('BLE停止エラー: $e');
@@ -266,11 +286,24 @@ class _MainScreenState extends ConsumerState<MainScreen>
       });
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
-      extendBody: true, // タブバーの背後まで画面を広げる
-      body: widget.navigationShell,
-      bottomNavigationBar: _buildBottomNav(context),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: AppColors.backgroundWhite,
+          extendBody: true, // タブバーの背後まで画面を広げる
+          body: widget.navigationShell,
+          bottomNavigationBar: _buildBottomNav(context),
+        ),
+        if (_isNear)
+          Positioned.fill(
+            child: AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                color: Colors.black, // ポケットの中などで真っ暗にする（OLED省電力化）
+              ),
+            ),
+          ),
+      ],
     );
   }
 
