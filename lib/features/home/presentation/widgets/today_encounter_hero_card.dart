@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
 /// Figma node 1079:865 「今日のすれ違いカード」。
 ///
-/// 破線の緑ボーダー + 公園の背景画像 + 左上にタイトル/カウント +
-/// 右下にすれ違ったユーザーのアバター3個。
+/// 破線の緑ボーダーは Figma エクスポートの SVG (手描き風の波形ダッシュ) を、
+/// 内側の公園イラストは PNG を、それぞれレイヤーして再現する。
+///
+/// - `today_encounter_border.svg` : 波形の破線ボーダーのみ (透明背景)
+/// - `today_encounter_bg.png` : 公園のイラスト
+///
+/// flutter_svg が SVG 内の `<image>` (base64) を描画できないため、SVG からは
+/// 白の内側塗りと埋め込み画像を取り除き、PNG を別レイヤーとして重ねる方式に
+/// した。ドロップシャドウは Container 側で担当する。
 ///
 /// アバターは NetworkImage (icon_url) を想定。空リストの場合はアバターを描画しない。
-/// カードは親幅にフィットし、Figma 原寸 382x208.364 のアスペクト比 (約 1.834) を保つ。
 class TodayEncounterHeroCard extends StatelessWidget {
   final int todayCount;
   final List<String> avatarUrls;
@@ -18,11 +26,20 @@ class TodayEncounterHeroCard extends StatelessWidget {
     this.avatarUrls = const [],
   });
 
-  // Figma 原寸 (px)。全ての内部座標はこれを基準にスケールする。
+  // 見た目上のカード領域 (Figma 原寸)。
   static const double _designW = 382;
   static const double _designH = 208.364;
   static const double _borderRadius = 23.152;
-  static const double _borderWidth = 4;
+
+  // 境界 SVG の viewBox は 0 0 459 286 で、ドロップシャドウ用のパディングを含む。
+  // 見た目のカード始点はその中の (38.0767, 35.9934)。
+  static const String _borderAsset =
+      'assets/images/home/today_encounter_border.svg';
+  static const String _bgAsset = 'assets/images/home/today_encounter_bg.png';
+  static const double _svgW = 459;
+  static const double _svgH = 286;
+  static const double _svgCardLeft = 38.0767;
+  static const double _svgCardTop = 35.9934;
 
   @override
   Widget build(BuildContext context) {
@@ -38,53 +55,49 @@ class TodayEncounterHeroCard extends StatelessWidget {
   }
 
   Widget _buildCard(double scale) {
-    return CustomPaint(
-      // 破線の緑ボーダーを CustomPainter で描画 (Flutter 標準の Border は破線非対応)。
-      foregroundPainter: _DashedBorderPainter(
-        color: PasslyBrand.primary,
-        strokeWidth: _borderWidth,
-        radius: _borderRadius,
-        dashLength: 8,
-        gapLength: 6,
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: PasslyBg.surface,
-          borderRadius: BorderRadius.circular(_borderRadius),
-          boxShadow: const [
-            BoxShadow(
-              offset: Offset(0, 2.315),
-              blurRadius: 34.727,
-              color: Color(0x407E857E),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // 背景の公園イラスト。Figma 上では -2,-7 オフセットで少しはみ出して配置される。
-            Positioned(
-              left: -2 * scale,
-              top: -7 * scale,
-              width: _designW * scale,
-              height: 217.432 * scale,
-              child: Image.asset(
-                'assets/images/home/today_encounter_bg.png',
-                fit: BoxFit.cover,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // 白ベース + 影 + 角丸 + PNG 公園イラストをまとめて敷く。
+        Container(
+          width: _designW * scale,
+          height: _designH * scale,
+          decoration: BoxDecoration(
+            color: PasslyBg.surface,
+            borderRadius: BorderRadius.circular(_borderRadius * scale),
+            boxShadow: const [
+              BoxShadow(
+                offset: Offset(0, 2.315),
+                blurRadius: 34.727,
+                color: Color(0x407E857E),
               ),
+            ],
+            image: const DecorationImage(
+              image: AssetImage(_bgAsset),
+              fit: BoxFit.cover,
             ),
-            // タイトル + カウント
-            Positioned(
-              left: 21.15 * scale,
-              top: 16.52 * scale,
-              width: 129.648 * scale,
-              child: _TitleAndCount(scale: scale, count: todayCount),
-            ),
-            // アバター3個 (右下)
-            ..._buildAvatars(scale),
-          ],
+          ),
         ),
-      ),
+        // 手描き風の波形ダッシュボーダー (SVG)。透明背景で境界だけを重ねる。
+        Positioned(
+          left: -_svgCardLeft * scale,
+          top: -_svgCardTop * scale,
+          width: _svgW * scale,
+          height: _svgH * scale,
+          child: SvgPicture.asset(_borderAsset, fit: BoxFit.fill),
+        ),
+        // タイトル + カウント (左上)。Figma spec は w=129.648 だが Chrome の
+        // Noto Sans JP Black メトリクスがわずかに広く「今日のすれ違い」が改行する
+        // ため、右のアバター開始位置 (left=220) まで許容して no-wrap で表示する。
+        Positioned(
+          left: 21.15 * scale,
+          top: 16.52 * scale,
+          width: (220 - 21.15) * scale,
+          child: _TitleAndCount(scale: scale, count: todayCount),
+        ),
+        // アバター 3 個 (右下)
+        ..._buildAvatars(scale),
+      ],
     );
   }
 
@@ -93,15 +106,19 @@ class TodayEncounterHeroCard extends StatelessWidget {
     const size = 57.88;
     const top = 137.0;
     const lefts = [220.0, 257.0, 295.0];
+    // 表示するアバター数は「今日出会った人数」を最大 3 でクランプ。URL が
+    // 与えられていない枠はプレースホルダアイコンで表示する。
+    final slots = todayCount.clamp(0, 3);
     final avatars = <Widget>[];
-    for (int i = 0; i < avatarUrls.length && i < 3; i++) {
+    for (int i = 0; i < slots; i++) {
+      final url = i < avatarUrls.length ? avatarUrls[i] : '';
       avatars.add(
         Positioned(
           left: lefts[i] * scale,
           top: top * scale,
           width: size * scale,
           height: size * scale,
-          child: _AvatarCircle(url: avatarUrls[i]),
+          child: _AvatarCircle(url: url),
         ),
       );
     }
@@ -123,6 +140,9 @@ class _TitleAndCount extends StatelessWidget {
       children: [
         Text(
           '今日のすれ違い',
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.visible,
           style: TextStyle(
             fontFamily: PasslyFont.family,
             fontWeight: FontWeight.w900,
@@ -164,68 +184,28 @@ class _AvatarCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (url.isEmpty) return const _AvatarFallback();
     return ClipOval(
       child: Image.network(
         url,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Container(
-          color: PasslyBg.elevated,
-          alignment: Alignment.center,
-          child: const Icon(Icons.person, color: PasslyText.tertiary),
-        ),
+        errorBuilder: (_, _, _) => const _AvatarFallback(),
       ),
     );
   }
 }
 
-/// 角丸長方形の外周に破線を描画するペインター。
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double radius;
-  final double dashLength;
-  final double gapLength;
-
-  _DashedBorderPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.radius,
-    required this.dashLength,
-    required this.gapLength,
-  });
-
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback();
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final rect = Rect.fromLTWH(
-      strokeWidth / 2,
-      strokeWidth / 2,
-      size.width - strokeWidth,
-      size.height - strokeWidth,
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: PasslyBg.elevated,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: const Icon(Icons.person, color: PasslyText.tertiary),
     );
-    final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
-
-    // PathMetric を dashLength ごとに切り出して破線を作る。
-    for (final metric in path.computeMetrics()) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final dashEnd = (distance + dashLength).clamp(0.0, metric.length);
-        canvas.drawPath(metric.extractPath(distance, dashEnd), paint);
-        distance = dashEnd + gapLength;
-      }
-    }
   }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter old) =>
-      old.color != color ||
-      old.strokeWidth != strokeWidth ||
-      old.radius != radius ||
-      old.dashLength != dashLength ||
-      old.gapLength != gapLength;
 }
