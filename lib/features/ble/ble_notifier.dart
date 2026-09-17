@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
@@ -101,11 +102,9 @@ class BleNotifier extends Notifier<BleState> {
         },
       );
 
-      // 3. アドバタイズを開始（トークン自動更新あり）
+      // 3. アドバタイズを開始
       await _bleService.startAdvertising(
         ephemeralId: _currentToken!.token,
-        refreshCallback: _refreshTokenForCurrentUser,
-        refreshInterval: const Duration(minutes: 5),
       );
 
       state = state.copyWith(
@@ -139,26 +138,40 @@ class BleNotifier extends Notifier<BleState> {
     debugPrint('BLEすれ違い機能を停止しました');
   }
 
-  /// エフェメラルトークンを更新
-  Future<String> _refreshToken(String userId) async {
-    final encounterRepo = ref.read(encounterRepositoryProvider);
-    _currentToken = await encounterRepo.getEphemeralToken(userId);
 
-    state = state.copyWith(currentEphemeralId: _currentToken!.token);
-
-    return _currentToken!.token;
+  /// iOSバックグラウンド移行時のアドバタイズ一時停止
+  Future<void> pauseAdvertising() async {
+    if (!state.isAdvertising) return;
+    await _bleService.stopAdvertising();
+    state = state.copyWith(isAdvertising: false);
+    debugPrint('BLEアドバタイズを一時停止しました（iOSバックグラウンド）');
   }
 
-  Future<String> _refreshTokenForCurrentUser() async {
-    final userId = ref.read(authNotifierProvider).value?.id;
-    if (userId == null) {
-      throw Exception('ログインユーザーが見つかりません');
+  /// iOSフォアグラウンド復帰時のアドバタイズ再開
+  Future<void> resumeAdvertising() async {
+    if (state.isAdvertising || _activeUserId == null) return;
+    try {
+      final encounterRepo = ref.read(encounterRepositoryProvider);
+      _currentToken = await encounterRepo.getEphemeralToken(_activeUserId!);
+      await _bleService.startAdvertising(
+        ephemeralId: _currentToken!.token,
+      );
+      state = state.copyWith(
+        isAdvertising: true,
+        currentEphemeralId: _currentToken!.token,
+      );
+      debugPrint('BLEアドバタイズを再開しました（iOSフォアグラウンド復帰）');
+    } catch (e) {
+      debugPrint('BLEアドバタイズ再開エラー: $e');
     }
-    return _refreshToken(userId);
   }
 
   /// すれ違い確定時の処理
   Future<void> _handleEncounterConfirmed(String ephemeralId) async {
+    // TODO(Future Work): オフライン完全対応のための改修
+    // 現状はすれ違った瞬間に即時バックエンドAPIを叩いて解決しているが、
+    // 今後はここで PendingEncounterRepository に「ephemeralId(TOTP)」と「現在のUTCタイムスタンプ」を
+    // ローカル保存（バッファリング）し、通信回復時にバックグラウンドで同期する仕組みに変更する。
     try {
       final myId = ref.read(authNotifierProvider).value?.id;
       if (myId == null) {
@@ -190,8 +203,14 @@ class BleNotifier extends Notifier<BleState> {
 
       await _detectNewlyUnlockedAchievements(myId, encounterRepo);
 
-      // 起動中に新規すれ違いが発生したら、未確認データを更新して結果画面遷移を発火させる
       await ref.read(encounterNotifierProvider.notifier).refresh();
+
+      // [Phase 4] バックグラウンド動作時のローカル通知（モック）
+      // TODO: flutter_local_notifications を導入して実際の通知を鳴らす
+      final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
+      if (isBackground) {
+        debugPrint('🔔 [Local Notification] 新しいすれ違いが発生しました！ (バックグラウンド検知)');
+      }
 
       debugPrint('すれ違いを記録しました: token=$ephemeralId');
     } catch (e) {
