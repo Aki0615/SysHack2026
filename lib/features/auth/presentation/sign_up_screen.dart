@@ -20,17 +20,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _connpassController = TextEditingController();
   bool _isPasswordVisible = false;
-  int _currentStep = 0; // 0: 基本情報, 1: ロール選択
-  String _selectedRole = 'other';
   String? _errorMessage;
 
-  /// 選択可能なロール一覧
-  final _roles = [
-    {'value': 'frontend', 'label': 'フロントエンド', 'icon': '🎨'},
-    {'value': 'backend', 'label': 'バックエンド', 'icon': '⚙️'},
-    {'value': 'fullstack', 'label': 'フルスタック', 'icon': '🚀'},
-    {'value': 'other', 'label': 'その他', 'icon': '💡'},
-  ];
+  /// UserModel.role は API 互換のため送信し続ける必要があるが、フロントの
+  /// ステップからは撤去 (フロントエンド / バックエンド分類は tech_stack に統合予定)。
+  static const String _defaultRole = 'other';
 
   @override
   void dispose() {
@@ -145,32 +139,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () {
-            if (_currentStep > 0) {
-              setState(() => _currentStep--);
-            } else {
-              context.pop();
-            }
-          },
+          onPressed: () => context.pop(),
         ),
-        title: Text(
-          _currentStep == 0 ? '新規登録' : 'ロール選択',
-          style: const TextStyle(
+        title: const Text(
+          '新規登録',
+          style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
-      body: SafeArea(
-        child: _currentStep == 0
-            ? _buildBasicInfoStep()
-            : _buildRoleSelectionStep(),
-      ),
+      body: SafeArea(child: _buildBasicInfoStep()),
     );
   }
 
-  /// ステップ1: 基本情報入力
+  /// 基本情報入力 → そのままアカウント作成 (旧ステップ 2 のロール選択は削除)
   Widget _buildBasicInfoStep() {
+    final authState = ref.watch(authNotifierProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: Form(
@@ -178,6 +164,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (_errorMessage != null) ...[
+              _buildErrorBanner(),
+              const SizedBox(height: 16),
+            ],
             _buildTextField(
               controller: _idController,
               label: 'ユーザーID（半角英数字）',
@@ -277,92 +267,42 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  setState(() => _currentStep = 1);
-                }
-              },
+              onPressed: authState.isLoading
+                  ? null
+                  : () {
+                      if (_formKey.currentState!.validate()) {
+                        _handleSignUp();
+                      }
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
+                disabledBackgroundColor:
+                    AppColors.primary.withValues(alpha: 0.5),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                '次へ →',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              child: authState.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'アカウントを作成',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// ステップ2: ロール選択
-  Widget _buildRoleSelectionStep() {
-    final authState = ref.watch(authNotifierProvider);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (_errorMessage != null) ...[
-            _buildErrorBanner(),
-            const SizedBox(height: 16),
-          ],
-          const Text(
-            'あなたの専門分野を選んでください',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          const SizedBox(height: 24),
-          ...List.generate(_roles.length, (index) {
-            final role = _roles[index];
-            final isSelected = _selectedRole == role['value'];
-            return _RoleOption(
-              label: role['label']!,
-              icon: role['icon']!,
-              isSelected: isSelected,
-              onTap: () => setState(() => _selectedRole = role['value']!),
-            );
-          }),
-          const Spacer(),
-          ElevatedButton(
-            onPressed: authState.isLoading ? null : _handleSignUp,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: authState.isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text(
-                    'アカウントを作成',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 32),
-        ],
       ),
     );
   }
@@ -376,7 +316,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
-          role: _selectedRole,
+          role: _defaultRole,
           connpassUrl: _connpassController.text.trim(),
         );
   }
@@ -422,61 +362,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
       ),
       validator: validator,
-    );
-  }
-}
-
-/// ロール選択オプションWidget
-class _RoleOption extends StatelessWidget {
-  final String label;
-  final String icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RoleOption({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.1)
-                : AppColors.backgroundGrey,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.divider,
-            ),
-          ),
-          child: Row(
-            children: [
-              Text(icon, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              const Spacer(),
-              if (isSelected)
-                const Icon(Icons.check_circle, color: AppColors.primary),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
