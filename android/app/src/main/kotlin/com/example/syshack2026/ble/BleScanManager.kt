@@ -17,7 +17,6 @@ class BleScanManager(private val context: Context) {
 
     companion object {
         private const val TAG = "BleScanManager"
-        private const val NAME_PREFIX = "SP_"
     }
 
     private val bluetoothManager =
@@ -26,6 +25,7 @@ class BleScanManager(private val context: Context) {
     private var scanner: BluetoothLeScanner? = null
     private var eventSink: EventChannel.EventSink? = null
     private var scanning = false
+    private var targetServiceUuid: String? = null
 
     fun setEventSink(sink: EventChannel.EventSink?) {
         eventSink = sink
@@ -48,6 +48,8 @@ class BleScanManager(private val context: Context) {
             Log.w(TAG, "BluetoothLeScanner unavailable")
             return
         }
+
+        targetServiceUuid = serviceUuid
 
         val filter = ScanFilter.Builder()
             .setServiceUuid(ParcelUuid(UUID.fromString(serviceUuid)))
@@ -79,17 +81,37 @@ class BleScanManager(private val context: Context) {
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val deviceName = result.scanRecord?.deviceName ?: return
-            if (!deviceName.startsWith(NAME_PREFIX)) return
-            val token = deviceName.removePrefix(NAME_PREFIX)
+            val record = result.scanRecord ?: return
+            var token: String? = null
 
-            eventSink?.success(
-                mapOf(
-                    "ephemeralId" to token,
-                    "rssi" to result.rssi,
-                    "timestampMs" to System.currentTimeMillis()
+            // 1. Service Data から抽出 (Androidからの発信)
+            if (targetServiceUuid != null) {
+                val pUuid = ParcelUuid.fromString(targetServiceUuid)
+                val serviceDataBytes = record.serviceData[pUuid]
+                if (serviceDataBytes != null) {
+                    token = String(serviceDataBytes, Charsets.UTF_8).trim()
+                }
+            }
+
+            // 2. Local Name から抽出 (iOSからの発信)
+            if (token.isNullOrEmpty()) {
+                val deviceName = record.deviceName
+                if (deviceName != null) {
+                    // iOSは31バイト制限回避のため Local Name にトークンをそのまま格納している
+                    token = deviceName.trim()
+                }
+            }
+
+            // バリデーション (8文字 または 16文字)
+            if (token != null && (token.length == 8 || token.length == 16)) {
+                eventSink?.success(
+                    mapOf(
+                        "ephemeralId" to token,
+                        "rssi" to result.rssi,
+                        "timestampMs" to System.currentTimeMillis()
+                    )
                 )
-            )
+            }
         }
 
         override fun onScanFailed(errorCode: Int) {
