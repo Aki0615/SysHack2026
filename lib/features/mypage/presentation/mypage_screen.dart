@@ -11,6 +11,7 @@ import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/user/data/tech_tag_catalog.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
 
@@ -857,10 +858,7 @@ class _TechTagSection extends StatelessWidget {
         const _SectionHeading('TECH TAG'),
         const SizedBox(height: PasslySpace.s8),
         if (isEditing)
-          _EditField(
-            controller: controller,
-            hint: 'カンマ / スラッシュ / 空白区切りで入力 (例: Go, Flutter)',
-          )
+          _TechTagPicker(controller: controller)
         else
           _TagWrap(tags: _parseTags(fallbackTechStack)),
       ],
@@ -874,6 +872,146 @@ class _TechTagSection extends StatelessWidget {
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();
+  }
+}
+
+/// 事前定義タグ ([TechTagCatalog]) からタップで選択する編集用ピッカー。
+///
+/// [controller] のテキスト (カンマ区切り) が選択状態のソース。タップで
+/// タグを追加 / 削除して `controller.text` を書き換える。
+class _TechTagPicker extends StatelessWidget {
+  final TextEditingController controller;
+  const _TechTagPicker({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        final selected = _parseSelected(value.text);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < TechTagCatalog.categories.length; i++) ...[
+              if (i > 0) const SizedBox(height: PasslySpace.s12),
+              _CategoryBlock(
+                category: TechTagCatalog.categories[i],
+                selected: selected,
+                onToggle: (tag) => _toggle(selected, tag),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  void _toggle(Set<String> current, String tag) {
+    final normalized = TechTagCatalog.normalize(tag);
+    final next = Set<String>.from(current);
+    if (next.contains(normalized)) {
+      next.remove(normalized);
+    } else {
+      next.add(normalized);
+    }
+    controller.text = next.join(', ');
+  }
+
+  /// カタログとカタログ外の混在に対応し、カタログ内タグは正式表記に正規化する。
+  Set<String> _parseSelected(String raw) {
+    if (raw.trim().isEmpty) return <String>{};
+    return raw
+        .split(RegExp(r'[,、/／・\s]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .map(TechTagCatalog.normalize)
+        .toSet();
+  }
+}
+
+class _CategoryBlock extends StatelessWidget {
+  final TechTagCategory category;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+
+  const _CategoryBlock({
+    required this.category,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          category.label,
+          style: const TextStyle(
+            fontFamily: PasslyFont.family,
+            color: PasslyText.secondary,
+            fontSize: 12,
+            fontWeight: PasslyFont.semibold,
+            height: 14.4 / 12,
+          ),
+        ),
+        const SizedBox(height: PasslySpace.s8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final tag in category.tags)
+              _SelectableTagChip(
+                label: tag,
+                selected: selected.contains(tag),
+                onTap: () => onToggle(tag),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// 選択可能なタグチップ。selected=true でアクティブ表示。
+class _SelectableTagChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SelectableTagChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? PasslyBrand.primaryLight : PasslyBg.surface,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(
+            color: selected ? PasslyBrand.primaryLight : PasslyBorder.strong,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: PasslyFont.family,
+            color: selected ? Colors.white : AppColors.textPrimary,
+            fontSize: 12,
+            fontWeight: PasslyFont.medium,
+            height: 14.4 / 12,
+          ),
+        ),
+      ),
+    );
   }
 }
 
