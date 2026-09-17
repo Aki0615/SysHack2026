@@ -17,6 +17,7 @@ import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
 import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
+import 'package:syshack2026/features/ble/domain/power_mode_notifier.dart';
 
 /// メイン画面（4タブのBottomNavigationBar）
 /// ログイン後に表示される画面で、BLEすれ違い機能のライフサイクルを管理する
@@ -294,7 +295,17 @@ class _MainScreenState extends ConsumerState<MainScreen>
       });
     }
 
+    // ホーム画面右上の電源モードトグル（☀️ 通常使用 / 🌙 ポケット中）の状態を監視
+    final powerMode = ref.watch(powerModeProvider);
+    // 設定画面のポケットモード（省電力）設定の有効フラグを監視
     final pocketModeEnabled = ref.watch(settingsNotifierProvider).value?.isPocketModeEnabled ?? true;
+
+    // 近接センサーによる画面暗転の適用判定:
+    // 1. 近接センサーが物体を検知（_isNear）
+    // 2. ホーム画面のモードが「ポケット中」（powerMode == PowerMode.pocket）
+    // 3. 設定画面でポケットモード機能自体が有効（pocketModeEnabled）
+    // 上記のすべてを満たす場合のみ画面を暗転・タッチ無効化する
+    final shouldBlackoutScreen = _isNear && (powerMode == PowerMode.pocket) && pocketModeEnabled;
 
     return Stack(
       children: [
@@ -304,7 +315,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
           body: widget.navigationShell,
           bottomNavigationBar: _buildBottomNav(context),
         ),
-        if (_isNear && pocketModeEnabled)
+        if (shouldBlackoutScreen)
           Positioned.fill(
             child: AbsorbPointer(
               absorbing: true,
