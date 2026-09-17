@@ -53,6 +53,7 @@ dependencies:
   wakelock_plus: ^1.8.0
   proximity_sensor: ^2.0.0
   crypto: ^3.0.7
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

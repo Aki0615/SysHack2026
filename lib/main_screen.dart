@@ -16,6 +16,7 @@ import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
 
 /// メイン画面（4タブのBottomNavigationBar）
 /// ログイン後に表示される画面で、BLEすれ違い機能のライフサイクルを管理する
@@ -286,11 +287,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     final pendingState = ref.watch(encounterNotifierProvider);
     final pendingCount = pendingState.asData?.value.length ?? 0;
+    // 未確認のすれ違い結果が存在する場合のみ、UI描画後に結果画面へ遷移
     if (pendingCount > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _navigateToEncounterIfPending(reason: 'build_pending_exists');
+        _navigateToEncounterIfPending(reason: 'build_completed');
       });
     }
+
+    final pocketModeEnabled = ref.watch(settingsNotifierProvider).value?.isPocketModeEnabled ?? true;
 
     return Stack(
       children: [
@@ -300,7 +304,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
           body: widget.navigationShell,
           bottomNavigationBar: _buildBottomNav(context),
         ),
-        if (_isNear)
+        if (_isNear && pocketModeEnabled)
           Positioned.fill(
             child: AbsorbPointer(
               absorbing: true,
