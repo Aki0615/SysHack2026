@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/level_display_card.dart';
 import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/common/widgets/recent_encounter_card.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
-import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/home/domain/home_notifier.dart';
 import 'package:syshack2026/features/home/domain/recent_encounter.dart';
+import 'package:syshack2026/features/home/presentation/widgets/power_mode_toggle.dart';
 import 'package:syshack2026/features/home/presentation/widgets/today_encounter_hero_card.dart';
 import 'package:syshack2026/features/user/domain/level_info.dart';
 
 /// ホーム画面 (Figma node 1110:2434 準拠)。
 ///
-/// 上から順に: PasslyHeader.home / TodayEncounterHeroCard /
+/// 上から順に: PasslyHeader (title + [PowerModeToggle]) / TodayEncounterHeroCard /
 /// LevelDisplayCard / 「最近の出会い」タイトル + RecentEncounterCard 一覧。
+///
+/// 元は右上に自分アバターを配置していたが、いつきさんの要望で撤去し、
+/// 代わりに擬似フォアグラウンド ON/OFF を切り替える [PowerModeToggle] を配置。
+/// マイページへは下部の PasslyBottomNav 「マイページ」タブから遷移する。
 ///
 /// ボトムナビは [MainScreen] 側で `PasslyBottomNav` として全タブ共通で描画する。
 class HomeScreen extends ConsumerWidget {
@@ -25,7 +28,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeNotifierProvider);
-    final user = ref.watch(authNotifierProvider).value;
 
     return Scaffold(
       backgroundColor: PasslyBg.defaultBg,
@@ -33,10 +35,10 @@ class HomeScreen extends ConsumerWidget {
       // これでヘッダーの白背景がステータスバー / Dynamic Island 領域まで届く。
       body: Column(
         children: [
-          PasslyHeader.home(
-            avatarUrl: user?.iconUrl.isNotEmpty == true ? user!.iconUrl : null,
-            // アバタータップでマイページタブに遷移。
-            onAvatarTap: () => context.go('/mypage'),
+          const PasslyHeader(
+            title: 'おかえり！',
+            subtitle: '今日の出会いを見てみよう',
+            trailing: [PowerModeToggle()],
           ),
           Expanded(
             child: homeState.when(
