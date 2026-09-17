@@ -50,3 +50,7 @@ app.*.map.json
 !**/.env.example
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Local Debug & agent & memo Entry Points
+/debug/
+.agents
