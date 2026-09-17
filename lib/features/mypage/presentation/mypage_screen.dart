@@ -4,22 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:syshack2026/common/widgets/level_display_card.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
-import 'package:syshack2026/features/home/domain/home_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
-import 'package:syshack2026/features/user/domain/level_info.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
 
 /// 自分のプロフィール画面 (Figma node 1300:1805 準拠)。
 ///
-/// 上から: カバー写真 (背景) + 半透明ヘッダー (戻る / 編集ペン) + アバター +
-/// 名前 / 一言 + LevelDisplayCard + ABOUT / TECH TAG / LINK。
+/// 上から: カバー写真 (背景) + 半透明ヘッダー (歯車 / 編集ペン) + アバター +
+/// 名前 / 一言 / 組織チップ + ABOUT / TECH TAG / LINK / QR。
 ///
 /// 編集ペンをタップすると同じ画面で編集モードに切り替わる (テキストは TextField 化)。
 /// 保存すると PATCH /users/:id を呼んで再取得する。
@@ -42,6 +40,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
 
   late final TextEditingController _nameCtrl;
   late final TextEditingController _oneWordCtrl;
+  late final TextEditingController _affiliationCtrl;
   late final TextEditingController _aboutCtrl;
   late final TextEditingController _techStackCtrl;
   late final TextEditingController _twitterCtrl;
@@ -54,6 +53,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     super.initState();
     _nameCtrl = TextEditingController();
     _oneWordCtrl = TextEditingController();
+    _affiliationCtrl = TextEditingController();
     _aboutCtrl = TextEditingController();
     _techStackCtrl = TextEditingController();
     _twitterCtrl = TextEditingController();
@@ -66,6 +66,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _oneWordCtrl.dispose();
+    _affiliationCtrl.dispose();
     _aboutCtrl.dispose();
     _techStackCtrl.dispose();
     _twitterCtrl.dispose();
@@ -78,6 +79,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   void _enterEditMode(UserModel user) {
     _nameCtrl.text = user.name;
     _oneWordCtrl.text = user.oneWord;
+    _affiliationCtrl.text = user.affiliation;
     _aboutCtrl.text = user.about;
     _techStackCtrl.text = user.techStack;
     _twitterCtrl.text = user.twitterUrl;
@@ -101,6 +103,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       await repo.updateUser(user.id, {
         'name': _nameCtrl.text.isEmpty ? '未設定' : _nameCtrl.text,
         'one_word': _oneWordCtrl.text,
+        'affiliation': _affiliationCtrl.text,
         'about': _aboutCtrl.text,
         'tech_stack': _techStackCtrl.text,
         'twitter_url': _twitterCtrl.text,
@@ -221,7 +224,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authNotifierProvider).value;
-    final homeState = ref.watch(homeNotifierProvider);
 
     if (user == null) {
       return const Scaffold(
@@ -229,10 +231,6 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final totalEncounters =
-        homeState.asData?.value.totalEncounters ?? 0;
-    final levelInfo = LevelInfo.compute(totalEncounters);
 
     return Scaffold(
       backgroundColor: PasslyBg.defaultBg,
@@ -258,22 +256,11 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   isEditing: _isEditing,
                   fallbackName: user.name,
                   fallbackOneWord: user.oneWord,
+                  fallbackAffiliation: user.affiliation,
                   nameCtrl: _nameCtrl,
                   oneWordCtrl: _oneWordCtrl,
+                  affiliationCtrl: _affiliationCtrl,
                 ),
-                // LevelDisplayCard は編集対象ではないので、編集モード時は非表示。
-                if (!_isEditing) ...[
-                  const SizedBox(height: PasslySpace.s20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: LevelDisplayCard(
-                      count: totalEncounters,
-                      remaining: levelInfo.remaining,
-                      currentLevel: levelInfo.level,
-                      progress: levelInfo.progress,
-                    ),
-                  ),
-                ],
                 const SizedBox(height: PasslySpace.s24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 21),
@@ -305,6 +292,14 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                     onOpen: _launchExternalUrl,
                   ),
                 ),
+                // QR コードは編集モード中は非表示 (編集対象ではないため)。
+                if (!_isEditing) ...[
+                  const SizedBox(height: PasslySpace.s24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 21),
+                    child: _QrShareSection(userId: user.id),
+                  ),
+                ],
                 if (_isEditing) ...[
                   const SizedBox(height: PasslySpace.s24),
                   Padding(
@@ -699,15 +694,19 @@ class _NameSection extends StatelessWidget {
   final bool isEditing;
   final String fallbackName;
   final String fallbackOneWord;
+  final String fallbackAffiliation;
   final TextEditingController nameCtrl;
   final TextEditingController oneWordCtrl;
+  final TextEditingController affiliationCtrl;
 
   const _NameSection({
     required this.isEditing,
     required this.fallbackName,
     required this.fallbackOneWord,
+    required this.fallbackAffiliation,
     required this.nameCtrl,
     required this.oneWordCtrl,
+    required this.affiliationCtrl,
   });
 
   @override
@@ -720,6 +719,8 @@ class _NameSection extends StatelessWidget {
             _EditField(controller: nameCtrl, hint: '名前'),
             const SizedBox(height: PasslySpace.s8),
             _EditField(controller: oneWordCtrl, hint: '一言'),
+            const SizedBox(height: PasslySpace.s8),
+            _EditField(controller: affiliationCtrl, hint: '組織 / 所属 (例: 愛工大)'),
           ],
         ),
       );
@@ -751,7 +752,50 @@ class _NameSection extends StatelessWidget {
             height: 16.8 / 14,
           ),
         ),
+        if (fallbackAffiliation.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _AffiliationChip(text: fallbackAffiliation),
+        ],
       ],
+    );
+  }
+}
+
+/// 組織 / 所属を表す小さめのチップ (Figma node 1242:1429 のタグと同構造)。
+class _AffiliationChip extends StatelessWidget {
+  final String text;
+  const _AffiliationChip({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: PasslyBg.surface,
+        borderRadius: BorderRadius.circular(100),
+        border: Border.all(color: PasslyBorder.strong, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.corporate_fare,
+            size: 14,
+            color: PasslyText.secondary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              fontFamily: PasslyFont.family,
+              color: AppColors.textPrimary,
+              fontSize: 12,
+              fontWeight: PasslyFont.medium,
+              height: 14.4 / 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1172,6 +1216,134 @@ class _EditActionButtons extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// プロフィールを QR コードで共有するセクション。
+///
+/// スキーム: `passly://profile/:userId` (アプリで受けたら該当プロフィール
+/// に遷移する想定。当面はスキャン → コピーで手入力運用でも実質機能する)。
+class _QrShareSection extends StatelessWidget {
+  final String userId;
+
+  const _QrShareSection({required this.userId});
+
+  static const double _previewSize = 140;
+  static const double _expandedSize = 280;
+
+  String get _data => 'passly://profile/$userId';
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeading('QR'),
+        const SizedBox(height: PasslySpace.s8),
+        Center(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _showExpanded(context),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: PasslyBg.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: PasslyBorder.strong, width: 1),
+              ),
+              child: Column(
+                children: [
+                  QrImageView(
+                    data: _data,
+                    size: _previewSize,
+                    backgroundColor: Colors.white,
+                    eyeStyle: const QrEyeStyle(
+                      eyeShape: QrEyeShape.square,
+                      color: AppColors.textPrimary,
+                    ),
+                    dataModuleStyle: const QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.square,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'タップで拡大',
+                    style: TextStyle(
+                      fontFamily: PasslyFont.family,
+                      color: PasslyText.secondary,
+                      fontSize: 11,
+                      fontWeight: PasslyFont.medium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showExpanded(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: PasslyBg.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                QrImageView(
+                  data: _data,
+                  size: _expandedSize,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: AppColors.textPrimary,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '@$userId',
+                  style: const TextStyle(
+                    fontFamily: PasslyFont.family,
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: PasslyFont.medium,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'このコードをスキャンしてプロフィール共有',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: PasslyFont.family,
+                    color: PasslyText.secondary,
+                    fontSize: 12,
+                    fontWeight: PasslyFont.regular,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('閉じる'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
