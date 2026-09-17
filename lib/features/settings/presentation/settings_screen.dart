@@ -9,6 +9,7 @@ import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
+import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
 
 /// アプリの設定画面。マイページ右上の歯車ボタンから遷移する。
 ///
@@ -49,10 +50,25 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     _ToggleRow(
                       title: 'すれ違いを検知する',
-                      subtitle:
-                          'オフにすると Bluetooth のスキャン / 発信を一時停止します',
+                      subtitle: 'オフにすると Bluetooth のスキャン / 発信を一時停止します',
                       value: bleActive,
-                      onChanged: (next) => _toggleBle(context, ref, next),
+                      onChanged: (val) => _toggleBle(context, ref, val),
+                    ),
+                    const _Divider(),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final pocketModeState = ref.watch(settingsNotifierProvider);
+                        final isEnabled = pocketModeState.value?.isPocketModeEnabled ?? true;
+                        
+                        return _ToggleRow(
+                          title: 'ポケットモード (省電力)',
+                          subtitle: '端末がポケット等にある際に画面を暗転させ、バッテリー消費を抑えます',
+                          value: isEnabled,
+                          onChanged: (val) {
+                            ref.read(settingsNotifierProvider.notifier).setPocketModeEnabled(val);
+                          },
+                        );
+                      },
                     ),
                   ],
                 ),
