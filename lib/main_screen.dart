@@ -16,7 +16,6 @@ import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
-import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
 import 'package:syshack2026/features/ble/domain/power_mode_notifier.dart';
 
 /// メイン画面（4タブのBottomNavigationBar）
@@ -51,23 +50,61 @@ class _MainScreenState extends ConsumerState<MainScreen>
     // ログイン済みならBLEを自動開始
     _startBleIfLoggedIn();
     _checkBatteryOptimizationOnce();
-    _initProximitySensor();
+    // 起動時の電源モード（☀️ 通常 / 🌙 ポケット）に応じて近接センサー監視を初期化
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncProximitySensorWithMode();
+    });
   }
 
-  void _initProximitySensor() {
+  /// 現在の電源モード（☀️ 通常 / 🌙 ポケット）に応じて近接センサー監視を同期する
+  ///
+  /// - ☀️ 通常使用モード (normal):
+  ///   近接センサーの購読を停止 (cancel) し、iOS ネイティブ側の自動画面消灯
+  ///   (UIDevice.isProximityMonitoringEnabled) を完全に解除する。
+  ///   これにより通話中や通常操作中に画面が真っ黒になる現象を根本から防止する。
+  /// - 🌙 ポケット中モード (pocket):
+  ///   近接センサーの購読を開始し、UIDevice.isProximityMonitoringEnabled = true を有効化して
+  ///   ポケット収納時の省電力暗転（ブラックアウト＆タッチ無効化）を作動させる。
+  void _syncProximitySensorWithMode() {
+    if (!mounted) return;
+    final mode = ref.read(powerModeProvider);
+    if (mode == PowerMode.pocket) {
+      _startProximitySensor();
+    } else {
+      _stopProximitySensor();
+    }
+  }
+
+  /// 近接センサー監視の開始（🌙 ポケット中モード時）
+  void _startProximitySensor() {
+    if (_proximitySubscription != null) return;
     _proximitySubscription = ProximitySensor.events.listen((int event) {
       if (!mounted) return;
       setState(() {
         _isNear = (event > 0);
       });
     });
+    debugPrint('近接センサー監視を開始しました（🌙 ポケット中: isProximityMonitoringEnabled=true）');
+  }
+
+  /// 近接センサー監視の停止（☀️ 通常使用モード時: OSの自動消灯を解除）
+  void _stopProximitySensor() {
+    if (_proximitySubscription == null) return;
+    _proximitySubscription?.cancel();
+    _proximitySubscription = null;
+    if (_isNear) {
+      setState(() {
+        _isNear = false;
+      });
+    }
+    debugPrint('近接センサー監視を停止しました（☀️ 通常使用: isProximityMonitoringEnabled=false）');
   }
 
   @override
   void dispose() {
-    // アプリ完全終了時にBLEを停止
+    // アプリ完全終了時にBLEおよび近接センサーを停止
     WidgetsBinding.instance.removeObserver(this);
-    _proximitySubscription?.cancel();
+    _stopProximitySensor();
     WakelockPlus.disable();
     _stopBle();
     super.dispose();
@@ -295,17 +332,22 @@ class _MainScreenState extends ConsumerState<MainScreen>
       });
     }
 
+    // ホーム画面右上の電源モードトグル（☀️ 通常使用 / 🌙 ポケット中）の変更を検知して近接センサー監視を即時切り替え
+    ref.listen<PowerMode>(powerModeProvider, (previous, next) {
+      if (previous != next) {
+        _syncProximitySensorWithMode();
+      }
+    });
+
     // ホーム画面右上の電源モードトグル（☀️ 通常使用 / 🌙 ポケット中）の状態を監視
     final powerMode = ref.watch(powerModeProvider);
-    // 設定画面のポケットモード（省電力）設定の有効フラグを監視
-    final pocketModeEnabled = ref.watch(settingsNotifierProvider).value?.isPocketModeEnabled ?? true;
 
-    // 近接センサーによる画面暗転の適用判定:
-    // 1. 近接センサーが物体を検知（_isNear）
-    // 2. ホーム画面のモードが「ポケット中」（powerMode == PowerMode.pocket）
-    // 3. 設定画面でポケットモード機能自体が有効（pocketModeEnabled）
-    // 上記のすべてを満たす場合のみ画面を暗転・タッチ無効化する
-    final shouldBlackoutScreen = _isNear && (powerMode == PowerMode.pocket) && pocketModeEnabled;
+    // 近接センサーによる省電力暗転（ブラックアウト）の適用判定:
+    // - ☀️ 通常使用モード (powerMode == PowerMode.normal):
+    //   近接センサーの監視自体が停止されているため暗転せず、通常通り操作可能。
+    // - 🌙 ポケット中モード (powerMode == PowerMode.pocket):
+    //   近接センサーが反応した時(_isNear == true)のみ、画面を真っ黒にしてタッチを無効化（ポケット誤動作防止・OLED省電力化）する。
+    final shouldBlackoutScreen = _isNear && (powerMode == PowerMode.pocket);
 
     return Stack(
       children: [

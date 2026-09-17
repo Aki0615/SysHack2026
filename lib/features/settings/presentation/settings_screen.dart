@@ -10,6 +10,7 @@ import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
 import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
+import 'package:syshack2026/features/ble/domain/power_mode_notifier.dart';
 
 /// アプリの設定画面。マイページ右上の歯車ボタンから遷移する。
 ///
@@ -57,14 +58,19 @@ class SettingsScreen extends ConsumerWidget {
                     const _Divider(),
                     Consumer(
                       builder: (context, ref, child) {
-                        final pocketModeState = ref.watch(settingsNotifierProvider);
-                        final isEnabled = pocketModeState.value?.isPocketModeEnabled ?? true;
-                        
+                        final powerMode = ref.watch(powerModeProvider);
+                        final isPocket = powerMode == PowerMode.pocket;
+
                         return _ToggleRow(
                           title: 'ポケットモード (省電力)',
                           subtitle: '端末がポケット等にある際に画面を暗転させ、バッテリー消費を抑えます',
-                          value: isEnabled,
+                          value: isPocket,
                           onChanged: (val) {
+                            // ホーム画面のトグル状態 (☀️ / 🌙) を更新
+                            ref.read(powerModeProvider.notifier).set(
+                              val ? PowerMode.pocket : PowerMode.normal,
+                            );
+                            // 設定値の永続化
                             ref.read(settingsNotifierProvider.notifier).setPocketModeEnabled(val);
                           },
                         );
