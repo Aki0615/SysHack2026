@@ -57,9 +57,11 @@ class EncounterRepository {
         debugPrint('[Mock] getEphemeralTokens fallback triggered');
         return List.generate(5, (index) {
           // ペイロード制限(31バイト)を超えないように短くする
+          final validFrom = DateTime.now().add(Duration(minutes: 15 * index));
           return EphemeralToken(
             token: 'mock-$index-${DateTime.now().second}',
-            expiresAt: DateTime.now().add(Duration(minutes: 15 * (index + 1))),
+            validFrom: validFrom,
+            expiresAt: validFrom.add(const Duration(minutes: 15)),
           );
         });
       }
@@ -187,31 +189,32 @@ class UnlockedAchievement {
 /// エフェメラルトークン（短期間有効なBLEアドバタイズ用トークン）
 class EphemeralToken {
   final String token;
+  final DateTime validFrom;
   final DateTime expiresAt;
 
-  EphemeralToken({required this.token, required this.expiresAt});
+  EphemeralToken({
+    required this.token,
+    required this.validFrom,
+    required this.expiresAt,
+  });
 
   factory EphemeralToken.fromJson(Map<String, dynamic> json) {
-    DateTime parseExpiresAt() {
-      final expiresAtRaw = json['expires_at'];
-      if (expiresAtRaw is String && expiresAtRaw.isNotEmpty) {
-        return DateTime.parse(expiresAtRaw);
+    DateTime parseTime(String key, {required Duration fallbackOffset}) {
+      final raw = json[key];
+      if (raw is String && raw.isNotEmpty) {
+        return DateTime.parse(raw);
       }
-
-      final expiresInRaw = json['expires_in'];
-      final expiresInSec = int.tryParse(expiresInRaw?.toString() ?? '');
-      if (expiresInSec != null) {
-        return DateTime.now().add(Duration(seconds: expiresInSec));
-      }
-
-      return DateTime.now().add(const Duration(hours: 1));
+      return DateTime.now().add(fallbackOffset);
     }
 
     return EphemeralToken(
       token: json['token'] as String,
-      expiresAt: parseExpiresAt(),
+      validFrom: parseTime('valid_from', fallbackOffset: Duration.zero),
+      expiresAt: parseTime('expires_at', fallbackOffset: const Duration(hours: 1)),
     );
   }
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
+  bool get isFuture => DateTime.now().isBefore(validFrom);
+  bool get isActive => !isExpired && !isFuture;
 }

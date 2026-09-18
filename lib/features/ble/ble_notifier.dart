@@ -115,37 +115,45 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
 
   void _startTokenRotation() {
     _rotationTimer?.cancel();
-    if (_currentToken == null) return;
-
-    final timeToExpiry = _currentToken!.expiresAt.difference(DateTime.now());
-    if (timeToExpiry.isNegative) {
-      _rotateToken();
-      return;
-    }
-
-    _rotationTimer = Timer(timeToExpiry, _rotateToken);
-  }
-
-  Future<void> _rotateToken() async {
-    if (_tokenPool.isEmpty) {
-      await stopAdvertising();
-      ref.read(notificationServiceProvider).showTokenExhaustedNotification();
-      return;
-    }
+    if (_tokenPool.isEmpty) return;
 
     _tokenPool.removeWhere((t) => t.isExpired);
 
     if (_tokenPool.isEmpty) {
-      await stopAdvertising();
+      stopAdvertising();
       ref.read(notificationServiceProvider).showTokenExhaustedNotification();
       return;
     }
 
-    _currentToken = _tokenPool.first;
-    await _bleService.startAdvertising(ephemeralId: _currentToken!.token);
-    state = state.copyWith(currentEphemeralId: _currentToken!.token);
-    
-    _startTokenRotation();
+    final now = DateTime.now();
+    // 有効期間に入っているトークンを探す
+    final activeToken = _tokenPool.where((t) => t.isActive).firstOrNull;
+
+    if (activeToken != null) {
+      if (_currentToken?.token != activeToken.token) {
+        _currentToken = activeToken;
+        _bleService.startAdvertising(ephemeralId: activeToken.token);
+        state = state.copyWith(currentEphemeralId: activeToken.token);
+      }
+      // 現在のトークンが期限切れになるタイミングで再評価
+      final timeToExpiry = activeToken.expiresAt.difference(now);
+      _rotationTimer = Timer(timeToExpiry, _startTokenRotation);
+    } else {
+      // 現在有効なトークンがない場合（すべて未来のトークン）
+      _currentToken = null;
+      _bleService.stopAdvertising();
+      state = state.copyWith(currentEphemeralId: null);
+
+      // 一番近い未来のトークンが有効になるタイミングで再評価
+      // トークンプールは基本的に時系列順に並んでいる想定
+      final nextTokens = _tokenPool.where((t) => t.isFuture).toList()
+        ..sort((a, b) => a.validFrom.compareTo(b.validFrom));
+      
+      if (nextTokens.isNotEmpty) {
+        final timeToValid = nextTokens.first.validFrom.difference(now);
+        _rotationTimer = Timer(timeToValid, _startTokenRotation);
+      }
+    }
   }
   
   Future<void> stopAdvertising() async {
@@ -173,11 +181,14 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
       final encounterRepo = ref.read(encounterRepositoryProvider);
       _tokenPool = await encounterRepo.getEphemeralTokens(user.id);
       if (_tokenPool.isEmpty) throw Exception('トークンが取得できませんでした');
-      _currentToken = _tokenPool.first;
-      
-      if (_tokenPool.length >= 2) {
-        final warningTime = _tokenPool[_tokenPool.length - 2].expiresAt;
-        await ref.read(notificationServiceProvider).scheduleTokenWarningNotification(warningTime);
+      // 起動直後の評価は _startTokenRotation に任せる
+      if (_tokenPool.isNotEmpty) {
+        // 全トークンのうち、一番最後に期限切れになるトークンの1つ前の期限を警告時刻とする（簡易的）
+        if (_tokenPool.length >= 2) {
+          final sortedTokens = List<EphemeralToken>.from(_tokenPool)..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+          final warningTime = sortedTokens[sortedTokens.length - 2].expiresAt;
+          await ref.read(notificationServiceProvider).scheduleTokenWarningNotification(warningTime);
+        }
       }
       _activeUserId = user.id;
 
@@ -192,15 +203,9 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
         },
       );
 
-      // 3. アドバタイズを開始
-      await _bleService.startAdvertising(
-        ephemeralId: _currentToken!.token,
-      );
-
       state = state.copyWith(
         isScanning: true,
-        isAdvertising: true,
-        currentEphemeralId: _currentToken!.token,
+        isAdvertising: true, // _startTokenRotationで適宜制御される
         lastError: null,
       );
 
