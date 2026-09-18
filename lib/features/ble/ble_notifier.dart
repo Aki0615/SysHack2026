@@ -190,7 +190,8 @@ class BleNotifier extends Notifier<BleState> {
         debugPrint(
           'すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}',
         );
-        // 起動中のホーム表示は固定したいので、この場ではUI再取得しない
+        // もう一方の端末が先に保存した場合は200が返るため、既存の未確認結果を取得する。
+        await ref.read(encounterNotifierProvider.notifier).refresh();
         return;
       }
 
