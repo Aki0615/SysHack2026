@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:shimmer/shimmer.dart';
 import 'package:syshack2026/common/widgets/info_badge_card.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
@@ -35,10 +36,8 @@ class EncounterResultScreen extends ConsumerWidget {
       backgroundColor: AppColors.backgroundGrey,
       body: SafeArea(
         child: encounterState.when(
-          data: (encounters) => _buildContent(context, ref, me, encounters),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
+          data: (encounters) => _EncounterCardStack(encounters: encounters, me: me),
+          loading: () => const _SkeletonLoading(),
           error: (err, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -54,49 +53,155 @@ class EncounterResultScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    UserModel? me,
-    List<EncounterModel> encounters,
-  ) {
-    if (encounters.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) context.go('/home');
-      });
-      return const SizedBox.shrink();
-    }
 
-    // TODO(passly): 複数件の見せ方は未確定。当面は最新 1 件のみ扱う。
-    final encounter = encounters.first;
+}
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 20),
-          _HeroSection(
-            myIconUrl: me?.iconUrl ?? '',
-            encounter: encounter,
-          ),
-          const SizedBox(height: 32),
-          _InfoCards(myTechStack: me?.techStack ?? '', encounter: encounter),
-          const Spacer(),
-          _ActionButtons(
-            targetUserId: encounter.encounteredUser.id,
-            onClose: () async {
-              await ref.read(encounterNotifierProvider.notifier).confirmAll();
-              ref.read(bleNotifierProvider.notifier).resetEncounterCount();
-              if (context.mounted) context.go('/home');
-            },
-          ),
-          const SizedBox(height: 24),
-        ],
+class _SkeletonLoading extends StatelessWidget {
+  const _SkeletonLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Container(width: 50, height: 20, color: Colors.white),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 48), // Skip button space
+          ],
+        ),
       ),
     );
   }
 }
+
+class _EncounterCardStack extends StatefulWidget {
+  final List<EncounterModel> encounters;
+  final UserModel? me;
+  const _EncounterCardStack({required this.encounters, required this.me});
+
+  @override
+  State<_EncounterCardStack> createState() => _EncounterCardStackState();
+}
+
+class _EncounterCardStackState extends State<_EncounterCardStack> {
+  int _currentIndex = 0;
+
+  void _nextCard() {
+    if (_currentIndex < widget.encounters.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+    }
+  }
+
+  Future<void> _close(WidgetRef ref) async {
+    await ref.read(encounterNotifierProvider.notifier).confirmAll();
+    ref.read(bleNotifierProvider.notifier).resetEncounterCount();
+    if (mounted) context.go('/home');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.encounters.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/home');
+      });
+      return const SizedBox.shrink();
+    }
+    if (_currentIndex >= widget.encounters.length) return const SizedBox.shrink();
+
+    return Consumer(
+      builder: (context, ref, child) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text(
+                '${_currentIndex + 1} / ${widget.encounters.length}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Stack(
+                  children: [
+                    for (int i = widget.encounters.length - 1; i >= _currentIndex; i--)
+                      _buildCard(i, ref),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => _close(ref),
+                child: const Text('スキップ', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _buildCard(int index, WidgetRef ref) {
+    final encounter = widget.encounters[index];
+    final isTop = index == _currentIndex;
+    final offset = (index - _currentIndex) * 8.0;
+
+    return Positioned(
+      top: offset,
+      left: offset,
+      right: offset,
+      bottom: 0,
+      child: IgnorePointer(
+        ignoring: !isTop,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _HeroSection(
+                myIconUrl: widget.me?.iconUrl ?? '',
+                encounter: encounter,
+              ),
+              const SizedBox(height: 32),
+              _InfoCards(myTechStack: widget.me?.techStack ?? '', encounter: encounter),
+              const Spacer(),
+              _ActionButtons(
+                targetUserId: encounter.encounteredUser.id,
+                isLast: index == widget.encounters.length - 1,
+                onNext: _nextCard,
+                onClose: () => _close(ref),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 
 /// タイトル / 重ねアバター / 相手名を中央揃えで配置しつつ、
 /// 周囲に Figma 準拠の装飾（4 つの丸 + 4 つの回転 pill）を Positioned で配置する。
@@ -401,14 +506,19 @@ class _InfoCards extends StatelessWidget {
 
 class _ActionButtons extends StatelessWidget {
   final String targetUserId;
+  final bool isLast;
+  final VoidCallback onNext;
   final Future<void> Function() onClose;
 
-  const _ActionButtons({required this.targetUserId, required this.onClose});
+  const _ActionButtons({
+    required this.targetUserId,
+    required this.isLast,
+    required this.onNext,
+    required this.onClose,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Figma 1155:765/1155:768 準拠: primary は #6BD168 (primary-light)、
-    // ラベル 20px w700、閉じるは surface 白 + secondary テキスト。
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -429,9 +539,13 @@ class _ActionButtons extends StatelessWidget {
         _PillButton(
           backgroundColor: PasslyBg.surface,
           textColor: PasslyText.secondary,
-          label: '閉じる',
+          label: isLast ? '閉じる' : '次へ',
           onTap: () async {
-            await onClose();
+            if (isLast) {
+              await onClose();
+            } else {
+              onNext();
+            }
           },
         ),
       ],

@@ -62,6 +62,26 @@ class BleService {
   //  スキャン（受信）処理
   // ═══════════════════════════════════════════════════════
 
+
+  Future<bool> ensurePermissions() async {
+    if (Platform.isAndroid) {
+      final hasPermissions = await _channel.invokeMethod<bool>('hasRequiredPermissions') ?? false;
+      if (!hasPermissions) {
+        final granted = await _channel.invokeMethod<bool>('requestPermissions') ?? false;
+        if (!granted) {
+          debugPrint('Bluetooth権限が許可されませんでした');
+          return false;
+        }
+      }
+      final isEnabled = await _channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
+      if (!isEnabled) {
+        debugPrint('Bluetoothが無効です');
+        return false;
+      }
+    }
+    return true;
+  }
+
   void startScanning({
     required void Function(String ephemeralId) onEncounterConfirmed,
     required void Function(Object error) onError,
@@ -77,12 +97,18 @@ class BleService {
     _startCleanupTimer();
 
     if (Platform.isAndroid) {
-      _channel
-          .invokeMethod('startScanning', {'serviceUuid': streetPassServiceUuid})
-          .catchError((Object error) {
-            debugPrint('BLEスキャン開始エラー(Android): $error');
-            onError(error);
-          });
+      ensurePermissions().then((granted) {
+        if (!granted) {
+          onError('Bluetooth権限がありません');
+          return;
+        }
+        _channel
+            .invokeMethod('startScanning', {'serviceUuid': streetPassServiceUuid})
+            .catchError((Object error) {
+              debugPrint('BLEスキャン開始エラー(Android): $error');
+              onError(error);
+            });
+      });
 
       _scanSubscription = _eventChannel.receiveBroadcastStream().listen(
         (dynamic event) {
@@ -225,10 +251,10 @@ class BleService {
 
     try {
       if (Platform.isAndroid) {
-        final isEnabled = await _channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
-        if (!isEnabled) {
-          debugPrint('Bluetoothが無効なため、アドバタイズを開始できません');
-          return;
+        final granted = await ensurePermissions();
+        if (!granted) {
+          debugPrint('Bluetooth権限がないため、アドバタイズを開始できません');
+          throw Exception('Bluetooth権限がありません');
         }
       } else {
         final isSupported = await _blePeripheral.isSupported;

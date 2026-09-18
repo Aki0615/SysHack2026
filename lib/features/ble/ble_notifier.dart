@@ -5,6 +5,8 @@ import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 import 'package:syshack2026/features/encounter/data/encounter_repository.dart';
 import 'package:syshack2026/features/ble/ble_service.dart';
+import 'package:syshack2026/features/encounter/data/pending_encounter_repository.dart';
+import 'package:syshack2026/features/notification/notification_service.dart';
 
 /// BLE状態を管理するプロバイダー
 final bleNotifierProvider = NotifierProvider<BleNotifier, BleState>(
@@ -51,22 +53,115 @@ class BleState {
 }
 
 /// BLE機能を統合管理するNotifier
-class BleNotifier extends Notifier<BleState> {
+class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
   late final BleService _bleService;
   EphemeralToken? _currentToken;
   String? _activeUserId;
   Set<String> _knownUnlockedAchievementIds = <String>{};
 
+  List<EphemeralToken> _tokenPool = [];
+  Timer? _rotationTimer;
+  bool _isSyncing = false;
+  bool _hasNotifiedInBackground = false;
+
+
   @override
   BleState build() {
     _bleService = BleService();
+    WidgetsBinding.instance.addObserver(this);
 
-    // Notifierが破棄される時にBLEサービスも停止
     ref.onDispose(() {
+      WidgetsBinding.instance.removeObserver(this);
+      _rotationTimer?.cancel();
       _bleService.dispose();
     });
 
     return const BleState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _hasNotifiedInBackground = false;
+      ref.read(notificationServiceProvider).cancelEncounterReminder();
+      _syncUnsentTokens();
+    } else if (state == AppLifecycleState.paused) {
+      _hasNotifiedInBackground = false;
+    }
+  }
+
+  Future<void> _syncUnsentTokens() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    try {
+      final repo = ref.read(pendingEncounterRepositoryProvider);
+      await repo.removeExpiredTokens();
+      
+      final unsent = await repo.getUnsentTokens();
+      if (unsent.isNotEmpty) {
+        final encounterRepo = ref.read(encounterRepositoryProvider);
+        await encounterRepo.recordEncountersBatch(unsent);
+        await repo.clearUnsentTokens();
+        
+        await ref.read(encounterNotifierProvider.notifier).refresh();
+        debugPrint('ローカル保存分のすれ違いデータを一括同期しました');
+      }
+    } catch (e) {
+      debugPrint('未送信データの同期エラー: $e');
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  void _startTokenRotation() {
+    _rotationTimer?.cancel();
+    if (_tokenPool.isEmpty) return;
+
+    _tokenPool.removeWhere((t) => t.isExpired);
+
+    if (_tokenPool.isEmpty) {
+      stopAdvertising();
+      ref.read(notificationServiceProvider).showTokenExhaustedNotification();
+      return;
+    }
+
+    final now = DateTime.now();
+    // 有効期間に入っているトークンを探す
+    final activeToken = _tokenPool.where((t) => t.isActive).firstOrNull;
+
+    if (activeToken != null) {
+      if (_currentToken?.token != activeToken.token) {
+        _currentToken = activeToken;
+        // トークンが切り替わった場合は、一度停止してから再開する
+        _bleService.stopAdvertising().then((_) {
+          _bleService.startAdvertising(ephemeralId: activeToken.token);
+        });
+        state = state.copyWith(currentEphemeralId: activeToken.token);
+      }
+      // 現在のトークンが期限切れになるタイミングで再評価
+      final timeToExpiry = activeToken.expiresAt.difference(now);
+      _rotationTimer = Timer(timeToExpiry, _startTokenRotation);
+    } else {
+      // 現在有効なトークンがない場合（すべて未来のトークン）
+      _currentToken = null;
+      _bleService.stopAdvertising();
+      state = state.copyWith(currentEphemeralId: null);
+
+      // 一番近い未来のトークンが有効になるタイミングで再評価
+      // トークンプールは基本的に時系列順に並んでいる想定
+      final nextTokens = _tokenPool.where((t) => t.isFuture).toList()
+        ..sort((a, b) => a.validFrom.compareTo(b.validFrom));
+      
+      if (nextTokens.isNotEmpty) {
+        final timeToValid = nextTokens.first.validFrom.difference(now);
+        _rotationTimer = Timer(timeToValid, _startTokenRotation);
+      }
+    }
+  }
+  
+  Future<void> stopAdvertising() async {
+    await _bleService.stopAdvertising();
+    state = state.copyWith(isAdvertising: false);
   }
 
   /// BLEすれ違い機能を開始（スキャン + アドバタイズ）
@@ -85,9 +180,19 @@ class BleNotifier extends Notifier<BleState> {
     }
 
     try {
-      // 1. エフェメラルトークンを取得
+      // 1. エフェメラルトークンプールを取得
       final encounterRepo = ref.read(encounterRepositoryProvider);
-      _currentToken = await encounterRepo.getEphemeralToken(user.id);
+      _tokenPool = await encounterRepo.getEphemeralTokens(user.id);
+      if (_tokenPool.isEmpty) throw Exception('トークンが取得できませんでした');
+      // 起動直後の評価は _startTokenRotation に任せる
+      if (_tokenPool.isNotEmpty) {
+        // 全トークンのうち、一番最後に期限切れになるトークンの1つ前の期限を警告時刻とする（簡易的）
+        if (_tokenPool.length >= 2) {
+          final sortedTokens = List<EphemeralToken>.from(_tokenPool)..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+          final warningTime = sortedTokens[sortedTokens.length - 2].expiresAt;
+          await ref.read(notificationServiceProvider).scheduleTokenWarningNotification(warningTime);
+        }
+      }
       _activeUserId = user.id;
 
       await _initializeAchievementBaseline(user.id, encounterRepo);
@@ -101,21 +206,16 @@ class BleNotifier extends Notifier<BleState> {
         },
       );
 
-      // 3. アドバタイズを開始
-      await _bleService.startAdvertising(
-        ephemeralId: _currentToken!.token,
-      );
-
       state = state.copyWith(
         isScanning: true,
-        isAdvertising: true,
-        currentEphemeralId: _currentToken!.token,
+        isAdvertising: true, // _startTokenRotationで適宜制御される
         lastError: null,
       );
 
-      debugPrint('BLEすれ違い機能を開始しました');
-    } catch (e) {
-      debugPrint('BLE開始エラー: $e');
+      _startTokenRotation();
+      debugPrint('BLEすれ違い機能を開始しました (TokenPool: ${_tokenPool.length}個)');
+    } catch (e, stackTrace) {
+      debugPrint('BLE開始エラー: $e\n$stackTrace');
       state = state.copyWith(lastError: e.toString());
     }
   }
@@ -151,18 +251,27 @@ class BleNotifier extends Notifier<BleState> {
     if (state.isAdvertising || _activeUserId == null) return;
     try {
       final encounterRepo = ref.read(encounterRepositoryProvider);
-      _currentToken = await encounterRepo.getEphemeralToken(_activeUserId!);
-      await _bleService.startAdvertising(
-        ephemeralId: _currentToken!.token,
-      );
-      state = state.copyWith(
-        isAdvertising: true,
-        currentEphemeralId: _currentToken!.token,
-      );
+      _tokenPool = await encounterRepo.getEphemeralTokens(_activeUserId!);
+      if (_tokenPool.isNotEmpty) {
+        _currentToken = _tokenPool.first;
+        await _bleService.startAdvertising(
+          ephemeralId: _currentToken!.token,
+        );
+        state = state.copyWith(
+          isAdvertising: true,
+          currentEphemeralId: _currentToken!.token,
+        );
+        _startTokenRotation();
+      }
       debugPrint('BLEアドバタイズを再開しました（iOSフォアグラウンド復帰）');
     } catch (e) {
       debugPrint('BLEアドバタイズ再開エラー: $e');
     }
+  }
+
+  // デバッグ用: すれ違いをシミュレート
+  Future<void> testSimulateEncounter(String ephemeralId) async {
+    await _handleEncounterConfirmed(ephemeralId);
   }
 
   /// すれ違い確定時の処理
@@ -180,43 +289,49 @@ class BleNotifier extends Notifier<BleState> {
 
       final encounterRepo = ref.read(encounterRepositoryProvider);
 
-      // 1. 受信したエフェメラルトークンをそのままサーバーへ渡して記録
-      final recordResult = await encounterRepo.recordEncounter(
-        myId: myId,
-        targetToken: ephemeralId,
-      );
-
-      if (!recordResult.created) {
-        debugPrint(
-          'すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}',
+      // 1. 受信したエフェメラルトークンをそのままサーバーへ渡して記録を試みる
+      bool isSavedToServer = false;
+      try {
+        final recordResult = await encounterRepo.recordEncounter(
+          myId: myId,
+          targetToken: ephemeralId,
         );
-        // もう一方の端末が先に保存した場合は200が返るため、既存の未確認結果を取得する。
+        isSavedToServer = recordResult.created;
+        if (!isSavedToServer) {
+           debugPrint('すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}');
+           await ref.read(encounterNotifierProvider.notifier).refresh();
+           return;
+        }
+      } catch (e) {
+        // オフライン等でAPI失敗時
+        debugPrint('API送信失敗、ローカルに保存します: $e');
+        final pendingRepo = ref.read(pendingEncounterRepositoryProvider);
+        await pendingRepo.addUnsentToken(ephemeralId, DateTime.now().toUtc());
+      }
+
+      if (isSavedToServer) {
+        // 2. すれ違い画面遷移トリガーのみ更新
+        state = state.copyWith(
+          confirmedEncounterCount: state.confirmedEncounterCount + 1,
+        );
+        await _detectNewlyUnlockedAchievements(myId, encounterRepo);
         await ref.read(encounterNotifierProvider.notifier).refresh();
-        return;
       }
 
-      // 2. すれ違い画面遷移トリガーのみ更新
-      // 起動中のホーム人数は固定にしたいので、Homeの即時更新は行わない
-      state = state.copyWith(
-        confirmedEncounterCount: state.confirmedEncounterCount + 1,
-      );
-
-      await _detectNewlyUnlockedAchievements(myId, encounterRepo);
-
-      await ref.read(encounterNotifierProvider.notifier).refresh();
-
-      // [Phase 4] バックグラウンド動作時のローカル通知（モック）
-      // TODO: flutter_local_notifications を導入して実際の通知を鳴らす
+      // [Phase 4] バックグラウンド動作時のローカル通知
       final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
-      if (isBackground) {
-        debugPrint('🔔 [Local Notification] 新しいすれ違いが発生しました！ (バックグラウンド検知)');
+      if (isBackground && !_hasNotifiedInBackground) {
+        ref.read(notificationServiceProvider).showStreetPassNotification();
+        _hasNotifiedInBackground = true;
       }
+      
+      // 1日後に気づかなかった場合のリマインダーをセット
+      ref.read(notificationServiceProvider).scheduleEncounterReminder();
 
-      debugPrint('すれ違いを記録しました: token=$ephemeralId');
+      debugPrint('すれ違いを処理しました: token=$ephemeralId');
     } catch (e) {
-      debugPrint('すれ違い記録エラー: $e');
+      debugPrint('すれ違い記録の全体エラー: $e');
       state = state.copyWith(lastError: e.toString());
-      // エラーが発生しても継続（次回リトライのためバッファは保持しない設計）
     }
   }
 
