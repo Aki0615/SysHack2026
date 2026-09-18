@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -130,6 +131,26 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(bleNotifierProvider.notifier);
     try {
       if (next) {
+        // 事前権限チェック (ONにする直前)
+        bool granted = true;
+        if (Platform.isAndroid) {
+          final scan = await Permission.bluetoothScan.request();
+          final advertise = await Permission.bluetoothAdvertise.request();
+          final connect = await Permission.bluetoothConnect.request();
+          // Android 11以下の場合は location 等も必要になるが、主力のBLE権限で弾く
+          if (!scan.isGranted || !advertise.isGranted || !connect.isGranted) {
+            granted = false;
+          }
+        } else {
+          final bt = await Permission.bluetooth.request();
+          if (!bt.isGranted) granted = false;
+        }
+
+        if (!granted) {
+          if (context.mounted) _showPermissionDialog(context);
+          return; // 権限がない場合は処理を中断（ONにならない）
+        }
+
         await notifier.start();
         // 成功した場合のみ状態を保存
         await ref.read(settingsNotifierProvider.notifier).setBleEnabled(true);
