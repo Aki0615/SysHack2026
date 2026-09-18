@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
 /// Figma node 1185:1000 「日にちごとのコンポーネント」1 日分のピル。
@@ -51,62 +52,64 @@ class WeekDayPill extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: _pillWidth,
-        height: _pillHeight,
-        decoration: BoxDecoration(
-          color: outerColor,
-          borderRadius: BorderRadius.circular(100),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                width: _pillWidth,
-                height: _pillWidth,
-                decoration: BoxDecoration(
-                  color: innerCircleFill,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: innerCircleStroke,
-                    width: _circleStrokeWidth,
+      child: PressFeedback(
+        child: Container(
+          width: _pillWidth,
+          height: _pillHeight,
+          decoration: BoxDecoration(
+            color: outerColor,
+            borderRadius: BorderRadius.circular(100),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  width: _pillWidth,
+                  height: _pillWidth,
+                  decoration: BoxDecoration(
+                    color: innerCircleFill,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: innerCircleStroke,
+                      width: _circleStrokeWidth,
+                    ),
                   ),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  date.day.toString().padLeft(2, '0'),
-                  style: TextStyle(
-                    fontFamily: PasslyFont.family,
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    height: 19.93 / 16,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 8,
-              child: Center(
-                child: Text(
-                  _weekdayLabel(date.weekday),
-                  style: TextStyle(
-                    fontFamily: PasslyFont.family,
-                    color: textColor,
-                    fontSize: 14,
-                    fontWeight: PasslyFont.medium,
-                    height: 17.44 / 14,
+                  alignment: Alignment.center,
+                  child: Text(
+                    date.day.toString().padLeft(2, '0'),
+                    style: TextStyle(
+                      fontFamily: PasslyFont.family,
+                      color: textColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      height: 19.93 / 16,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 8,
+                child: Center(
+                  child: Text(
+                    _weekdayLabel(date.weekday),
+                    style: TextStyle(
+                      fontFamily: PasslyFont.family,
+                      color: textColor,
+                      fontSize: 14,
+                      fontWeight: PasslyFont.medium,
+                      height: 17.44 / 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

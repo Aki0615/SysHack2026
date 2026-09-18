@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// カレンダーの各日付セルを描画するWidget
@@ -23,7 +24,12 @@ class CalendarDayCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(alignment: Alignment.center, child: _buildCellContent()),
+      child: PressFeedback(
+        child: Container(
+          alignment: Alignment.center,
+          child: _buildCellContent(),
+        ),
+      ),
     );
   }
 

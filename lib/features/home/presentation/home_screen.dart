@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/level_display_card.dart';
 import 'package:syshack2026/common/widgets/passly_header.dart';
@@ -43,9 +44,7 @@ class HomeScreen extends ConsumerWidget {
           Expanded(
             child: homeState.when(
               data: (data) => _buildContent(context, ref, data),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: PasslyBrand.primary),
-              ),
+              loading: () => const SizedBox.shrink(),
               error: (_, _) => _buildErrorState(ref),
             ),
           ),
@@ -93,13 +92,16 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 13),
-          ..._buildRecentEncounters(data.recentEncounters),
+          ..._buildRecentEncounters(context, data.recentEncounters),
         ],
       ),
     );
   }
 
-  List<Widget> _buildRecentEncounters(List<RecentEncounter> items) {
+  List<Widget> _buildRecentEncounters(
+    BuildContext context,
+    List<RecentEncounter> items,
+  ) {
     if (items.isEmpty) {
       return [
         Padding(
@@ -125,6 +127,7 @@ class HomeScreen extends ConsumerWidget {
             name: e.name,
             time: _formatTime(e.metAt),
             location: e.eventName,
+            onTap: () => context.push('/profile/${e.userId}'),
           ),
         ),
     ];
@@ -177,4 +180,3 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
-

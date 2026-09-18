@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:syshack2026/common/widgets/passly_icon.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
@@ -137,7 +138,7 @@ class RecentEncounterCard extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: content,
+      child: PressFeedback(child: content),
     );
   }
 }

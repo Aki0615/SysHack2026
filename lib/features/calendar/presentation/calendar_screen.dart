@@ -137,18 +137,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           onNextMonth: _onNextMonth,
         ),
         const SizedBox(height: 8),
-        if (calendarState.isLoading)
-          const Padding(
-            padding: EdgeInsets.all(40),
-            child: CircularProgressIndicator(color: AppColors.primary),
-          )
-        else
-          CalendarGrid(
-            currentMonth: _currentMonth,
-            selectedDay: _selectedDay,
-            encounterDays: calendarState.encounterDays,
-            onDaySelected: _onDaySelected,
-          ),
+        CalendarGrid(
+          currentMonth: _currentMonth,
+          selectedDay: _selectedDay,
+          encounterDays: calendarState.encounterDays,
+          onDaySelected: _onDaySelected,
+        ),
       ],
     );
   }

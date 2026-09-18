@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/core/network/network_activity_provider.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 
@@ -77,6 +78,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           _checkPendingEncounters();
         } else {
           // 未ログイン → ログイン画面
+          enableNetworkActivity(ref);
           context.go('/login');
         }
       },
@@ -86,6 +88,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       },
       error: (_, _) {
         // エラー時はログイン画面へ
+        enableNetworkActivity(ref);
         context.go('/login');
       },
     );
@@ -100,9 +103,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         data: (encounters) {
           if (encounters.isNotEmpty) {
             // 未確認データあり → すれ違い結果画面
+            enableNetworkActivity(ref);
             context.go('/encounter-result');
           } else {
             // 未確認データなし → ホーム画面
+            enableNetworkActivity(ref);
             context.go('/home');
           }
         },
@@ -116,12 +121,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         error: (_, _) {
           // エラー時は安全にホームへ（APIが未実装でも問題なし）
           debugPrint('未確認データの取得でエラー発生、ホーム画面へ遷移');
+          enableNetworkActivity(ref);
           context.go('/home');
         },
       );
     } catch (e) {
       // プロバイダー自体のエラーもキャッチしてホーム画面へ
       debugPrint('encounter チェック中にエラー: $e');
+      enableNetworkActivity(ref);
       context.go('/home');
     }
   }

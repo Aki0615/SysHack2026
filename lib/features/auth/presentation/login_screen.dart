@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/network/network_activity_provider.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 
 /// ログイン画面Widget
@@ -18,6 +19,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    enableNetworkActivity(ref);
+  }
 
   @override
   void dispose() {

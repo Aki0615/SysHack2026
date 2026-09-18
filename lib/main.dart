@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syshack2026/common/router/app_router.dart';
+import 'package:syshack2026/common/widgets/network_activity_indicator.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/core/network/network_sync_provider.dart';
 
 void main() {
@@ -18,7 +20,7 @@ class PasslyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // GoRouterのインスタンスをProviderから取得
     final router = ref.watch(appRouterProvider);
-    
+
     // ネットワーク状態の監視を開始（常駐）
     ref.watch(networkSyncProvider);
 
@@ -39,6 +41,23 @@ class PasslyApp extends ConsumerWidget {
         scaffoldBackgroundColor: AppColors.backgroundDark,
         colorSchemeSeed: Colors.blue,
         useMaterial3: true,
+        highlightColor: Colors.transparent,
+        splashColor: PasslyText.secondary.withValues(alpha: 0.28),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ButtonStyle(overlayColor: _pressedOverlayColor),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: ButtonStyle(overlayColor: _pressedOverlayColor),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: ButtonStyle(overlayColor: _pressedOverlayColor),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: ButtonStyle(overlayColor: _pressedOverlayColor),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(overlayColor: _pressedOverlayColor),
+        ),
         // 日本語フォント設定
         fontFamily: 'Hiragino Sans',
         fontFamilyFallback: const [
@@ -49,6 +68,15 @@ class PasslyApp extends ConsumerWidget {
       ),
       // GoRouterをMaterialAppに接続する
       routerConfig: router,
+      builder: (context, child) =>
+          NetworkActivityIndicator(child: child ?? const SizedBox.shrink()),
     );
   }
 }
+
+final _pressedOverlayColor = WidgetStateProperty.resolveWith<Color?>((states) {
+  if (states.contains(WidgetState.pressed)) {
+    return Colors.transparent;
+  }
+  return null;
+});

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除、コードのネスト解消
@@ -19,14 +20,16 @@ class FriendGridItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => context.push('/profile/$userId'),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildIcon(), // 修正: アイコン構築を分離
-          const SizedBox(height: 8),
-          _buildNameText(),
-        ],
+      child: PressFeedback(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildIcon(), // 修正: アイコン構築を分離
+            const SizedBox(height: 8),
+            _buildNameText(),
+          ],
+        ),
       ),
     );
   }

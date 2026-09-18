@@ -64,9 +64,7 @@ class _EventSearchScreenState extends ConsumerState<EventSearchScreen> {
           Expanded(
             child: eventsAsync.when(
               data: (events) => _buildResults(_filter(events)),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
+              loading: () => const SizedBox.shrink(),
               error: (error, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),

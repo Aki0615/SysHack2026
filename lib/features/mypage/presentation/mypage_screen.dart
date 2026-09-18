@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:syshack2026/features/mypage/presentation/avatar_crop_screen.dart';
 import 'package:syshack2026/common/widgets/passly_glass_circle.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
@@ -336,6 +338,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             SafeArea(
               child: _FloatingHeader(
                 isEditing: _isEditing,
+                coverUrl: user.coverUrl,
+                localCoverPath: _localCoverPath,
                 onEdit: () => _enterEditMode(user),
                 onOpenSettings: () => context.push('/settings'),
                 onOpenQr: () => context.push('/mypage/qr'),
@@ -490,8 +494,9 @@ class _CoverAndAvatar extends StatelessWidget {
                           height: 28,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -634,18 +639,102 @@ class _AvatarFallback extends StatelessWidget {
 ///
 /// マイページはボトムナビタブから開くため戻る先が無く Figma の左上戻る
 /// ボタンは撤去済み。代わりに歯車ボタンから設定画面へ遷移する。
-class _FloatingHeader extends StatelessWidget {
+class _FloatingHeader extends StatefulWidget {
   final bool isEditing;
+  final String coverUrl;
+  final String? localCoverPath;
   final VoidCallback onEdit;
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenQr;
 
   const _FloatingHeader({
     required this.isEditing,
+    required this.coverUrl,
+    required this.localCoverPath,
     required this.onEdit,
     required this.onOpenSettings,
     required this.onOpenQr,
   });
+
+  @override
+  State<_FloatingHeader> createState() => _FloatingHeaderState();
+}
+
+class _FloatingHeaderState extends State<_FloatingHeader> {
+  ImageStream? _imageStream;
+  ImageStreamListener? _imageListener;
+  bool _isLightCover = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _detectCoverBrightness();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FloatingHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.coverUrl != widget.coverUrl ||
+        oldWidget.localCoverPath != widget.localCoverPath) {
+      _removeImageListener();
+      _detectCoverBrightness();
+    }
+  }
+
+  @override
+  void dispose() {
+    _removeImageListener();
+    super.dispose();
+  }
+
+  ImageProvider<Object>? _coverProvider() {
+    final localPath = widget.localCoverPath;
+    if (localPath != null && localPath.isNotEmpty) {
+      return FileImage(File(localPath));
+    }
+    if (widget.coverUrl.isNotEmpty) return NetworkImage(widget.coverUrl);
+    return null;
+  }
+
+  void _detectCoverBrightness() {
+    final provider = _coverProvider();
+    if (provider == null) {
+      if (mounted) setState(() => _isLightCover = false);
+      return;
+    }
+
+    final stream = provider.resolve(const ImageConfiguration());
+    final listener = ImageStreamListener((imageInfo, _) async {
+      final bytes = await imageInfo.image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      if (!mounted || bytes == null) return;
+
+      var totalLuminance = 0.0;
+      var samples = 0;
+      for (var offset = 0; offset + 3 < bytes.lengthInBytes; offset += 16) {
+        final red = bytes.getUint8(offset);
+        final green = bytes.getUint8(offset + 1);
+        final blue = bytes.getUint8(offset + 2);
+        totalLuminance += (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+        samples++;
+      }
+      if (samples == 0) return;
+
+      setState(() => _isLightCover = totalLuminance / samples >= 0.72);
+    });
+    _imageStream = stream;
+    _imageListener = listener;
+    stream.addListener(listener);
+  }
+
+  void _removeImageListener() {
+    final stream = _imageStream;
+    final listener = _imageListener;
+    if (stream != null && listener != null) stream.removeListener(listener);
+    _imageStream = null;
+    _imageListener = null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -657,19 +746,25 @@ class _FloatingHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _EditButton(active: isEditing, onTap: onEdit),
+          _EditButton(
+            active: widget.isEditing,
+            iconColor: _isLightCover ? PasslyText.primary : Colors.white,
+            onTap: widget.onEdit,
+          ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _CircleAssetIconButton(
                 asset: PasslyIcons.addFriend,
-                onTap: onOpenQr,
+                color: _isLightCover ? PasslyText.primary : Colors.white,
+                onTap: widget.onOpenQr,
                 iconSize: 24,
               ),
               const SizedBox(width: 8),
               _CircleAssetIconButton(
                 asset: PasslyIcons.settings,
-                onTap: onOpenSettings,
+                color: _isLightCover ? PasslyText.primary : Colors.white,
+                onTap: widget.onOpenSettings,
                 iconSize: 26,
               ),
             ],
@@ -683,11 +778,13 @@ class _FloatingHeader extends StatelessWidget {
 /// QR 画面と同じフロスト風ガラスサークル (40x40) の SVG アセット版ボタン。
 class _CircleAssetIconButton extends StatelessWidget {
   final String asset;
+  final Color color;
   final VoidCallback onTap;
   final double iconSize;
 
   const _CircleAssetIconButton({
     required this.asset,
+    required this.color,
     required this.onTap,
     required this.iconSize,
   });
@@ -697,11 +794,9 @@ class _CircleAssetIconButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: PasslyGlassCircle(
-        child: PasslyIcon(
-          asset: asset,
-          size: iconSize,
-          color: Colors.white,
+      child: PressFeedback(
+        child: PasslyGlassCircle(
+          child: PasslyIcon(asset: asset, size: iconSize, color: color),
         ),
       ),
     );
@@ -710,21 +805,28 @@ class _CircleAssetIconButton extends StatelessWidget {
 
 class _EditButton extends StatelessWidget {
   final bool active;
+  final Color iconColor;
   final VoidCallback onTap;
 
-  const _EditButton({required this.active, required this.onTap});
+  const _EditButton({
+    required this.active,
+    required this.iconColor,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: PasslyGlassCircle(
-        child: PasslyIcon(
-          asset: PasslyIcons.edit,
-          size: 24,
-          // 編集モード中はブランドカラーで active を表現。
-          color: active ? PasslyBrand.primaryLight : Colors.white,
+      child: PressFeedback(
+        child: PasslyGlassCircle(
+          child: PasslyIcon(
+            asset: PasslyIcons.edit,
+            size: 24,
+            // 編集モード中はブランドカラーで active を表現。
+            color: active ? PasslyBrand.primaryLight : iconColor,
+          ),
         ),
       ),
     );
@@ -1158,7 +1260,10 @@ class _LinkSection extends StatelessWidget {
         if (isEditing)
           Column(
             children: [
-              _EditField(controller: twitterCtrl, hint: 'X (Twitter) ハンドルまたは URL'),
+              _EditField(
+                controller: twitterCtrl,
+                hint: 'X (Twitter) ハンドルまたは URL',
+              ),
               const SizedBox(height: PasslySpace.s8),
               _EditField(controller: githubCtrl, hint: 'GitHub ハンドルまたは URL'),
               const SizedBox(height: PasslySpace.s8),
@@ -1397,4 +1502,3 @@ class _EditActionButtons extends StatelessWidget {
     );
   }
 }
-

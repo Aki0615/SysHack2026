@@ -36,7 +36,8 @@ class EncounterResultScreen extends ConsumerWidget {
       backgroundColor: AppColors.backgroundGrey,
       body: SafeArea(
         child: encounterState.when(
-          data: (encounters) => _EncounterCardStack(encounters: encounters, me: me),
+          data: (encounters) =>
+              _EncounterCardStack(encounters: encounters, me: me),
           loading: () => const _SkeletonLoading(),
           error: (err, _) => Center(
             child: Padding(
@@ -52,8 +53,6 @@ class EncounterResultScreen extends ConsumerWidget {
       ),
     );
   }
-
-
 }
 
 class _SkeletonLoading extends StatelessWidget {
@@ -120,7 +119,8 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
       });
       return const SizedBox.shrink();
     }
-    if (_currentIndex >= widget.encounters.length) return const SizedBox.shrink();
+    if (_currentIndex >= widget.encounters.length)
+      return const SizedBox.shrink();
 
     return Consumer(
       builder: (context, ref, child) {
@@ -130,13 +130,21 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
             children: [
               Text(
                 '${_currentIndex + 1} / ${widget.encounters.length}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondary, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textSecondary,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: Stack(
                   children: [
-                    for (int i = widget.encounters.length - 1; i >= _currentIndex; i--)
+                    for (
+                      int i = widget.encounters.length - 1;
+                      i >= _currentIndex;
+                      i--
+                    )
                       _buildCard(i, ref),
                   ],
                 ),
@@ -145,12 +153,18 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
               // TODO: このスキップボタンは仮置きのため、正式なUIが決まり次第修正する
               TextButton(
                 onPressed: () => _close(ref),
-                child: const Text('スキップ', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+                child: const Text(
+                  'スキップ',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ],
           ),
         );
-      }
+      },
     );
   }
 
@@ -189,7 +203,10 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
               const SizedBox(height: 16),
               Expanded(
                 child: SingleChildScrollView(
-                  child: _InfoCards(myTechStack: widget.me?.techStack ?? '', encounter: encounter),
+                  child: _InfoCards(
+                    myTechStack: widget.me?.techStack ?? '',
+                    encounter: encounter,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -206,7 +223,6 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
     );
   }
 }
-
 
 /// タイトル / 重ねアバター / 相手名を中央揃えで配置しつつ、
 /// 周囲に Figma 準拠の装飾（4 つの丸 + 4 つの回転 pill）を Positioned で配置する。
@@ -235,51 +251,50 @@ class _HeroSection extends StatelessWidget {
             ],
           ),
         ),
-          // 装飾: 4 つの小さな丸（各コーナー付近）
-          const Positioned(
-            right: 28,
-            top: 20,
-            child: _DecoDot(color: Color(0xFFF59E0B)),
-          ),
-          const Positioned(
-            left: 45,
-            top: 55,
-            child: _DecoDot(color: Color(0xFF3AAA3A)),
-          ),
-          const Positioned(
-            right: 40,
-            top: 110,
-            child: _DecoDot(color: Color(0xFFEF4444)),
-          ),
-          const Positioned(
-            left: 30,
-            top: 140,
-            child: _DecoDot(color: Color(0xFF3B82F6)),
-          ),
-          // 装飾: 4 つの回転した pill（Figma tokens 準拠の色）
-          const Positioned(
-            right: 20,
-            top: 50,
-            child: _DecoPill(color: Color(0xFFB7E5B4), rotationDeg: -65),
-          ),
-          const Positioned(
-            left: 10,
-            top: 85,
-            child: _DecoPill(color: Color(0xFF9CA3AF), rotationDeg: -30),
-          ),
-          const Positioned(
-            right: 5,
-            top: 170,
-            child: _DecoPill(color: Color(0xFFC9A6FF), rotationDeg: 30),
-          ),
-          const Positioned(
-            left: 15,
-            top: 210,
-            child: _DecoPill(color: Color(0xFF7CC4FF), rotationDeg: -70),
-          ),
-        ],
-      );
-
+        // 装飾: 4 つの小さな丸（各コーナー付近）
+        const Positioned(
+          right: 28,
+          top: 20,
+          child: _DecoDot(color: Color(0xFFF59E0B)),
+        ),
+        const Positioned(
+          left: 45,
+          top: 55,
+          child: _DecoDot(color: Color(0xFF3AAA3A)),
+        ),
+        const Positioned(
+          right: 40,
+          top: 110,
+          child: _DecoDot(color: Color(0xFFEF4444)),
+        ),
+        const Positioned(
+          left: 30,
+          top: 140,
+          child: _DecoDot(color: Color(0xFF3B82F6)),
+        ),
+        // 装飾: 4 つの回転した pill（Figma tokens 準拠の色）
+        const Positioned(
+          right: 20,
+          top: 50,
+          child: _DecoPill(color: Color(0xFFB7E5B4), rotationDeg: -65),
+        ),
+        const Positioned(
+          left: 10,
+          top: 85,
+          child: _DecoPill(color: Color(0xFF9CA3AF), rotationDeg: -30),
+        ),
+        const Positioned(
+          right: 5,
+          top: 170,
+          child: _DecoPill(color: Color(0xFFC9A6FF), rotationDeg: 30),
+        ),
+        const Positioned(
+          left: 15,
+          top: 210,
+          child: _DecoPill(color: Color(0xFF7CC4FF), rotationDeg: -70),
+        ),
+      ],
+    );
   }
 }
 
@@ -370,11 +385,7 @@ class _AvatarPair extends StatelessWidget {
       height: _avatarSize,
       child: Stack(
         children: [
-          Positioned(
-            left: 0,
-            top: 0,
-            child: _Avatar(iconUrl: myIconUrl),
-          ),
+          Positioned(left: 0, top: 0, child: _Avatar(iconUrl: myIconUrl)),
           Positioned(
             left: _avatarSize - _overlap,
             top: 0,
@@ -424,11 +435,7 @@ class _Avatar extends StatelessWidget {
     return Container(
       color: AppColors.backgroundGrey,
       alignment: Alignment.center,
-      child: const Icon(
-        Icons.person,
-        color: AppColors.textLight,
-        size: 48,
-      ),
+      child: const Icon(Icons.person, color: AppColors.textLight, size: 48),
     );
   }
 }
@@ -466,7 +473,10 @@ class _InfoCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final commonTags = _commonTags(myTechStack, encounter.encounteredUser.techStack);
+    final commonTags = _commonTags(
+      myTechStack,
+      encounter.encounteredUser.techStack,
+    );
     final eventName = encounter.eventName.trim();
 
     return Column(
@@ -493,8 +503,9 @@ class _InfoCards extends StatelessWidget {
   /// 大文字小文字を無視して積集合を返す。表示順は自分側の順序を維持。
   List<String> _commonTags(String mine, String other) {
     final mineTags = _parseTags(mine);
-    final otherTagsLower =
-        _parseTags(other).map((t) => t.toLowerCase()).toSet();
+    final otherTagsLower = _parseTags(
+      other,
+    ).map((t) => t.toLowerCase()).toSet();
     return mineTags
         .where((t) => otherTagsLower.contains(t.toLowerCase()))
         .toList();

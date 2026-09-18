@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
@@ -89,15 +90,17 @@ class _Segment extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Container(
-          width: _diameter,
-          height: _diameter,
-          decoration: BoxDecoration(
-            color: active ? PasslyBrand.primaryLight : Colors.transparent,
-            shape: BoxShape.circle,
+        child: PressFeedback(
+          child: Container(
+            width: _diameter,
+            height: _diameter,
+            decoration: BoxDecoration(
+              color: active ? PasslyBrand.primaryLight : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: iconWidget,
           ),
-          alignment: Alignment.center,
-          child: iconWidget,
         ),
       ),
     );

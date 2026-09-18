@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
 /// Figma node 1300:1627 の「ナビゲーションバー」ComponentSet 4 バリアント
@@ -151,27 +152,29 @@ class _NavItem extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              item.iconAsset,
-              width: 28,
-              height: 28,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontFamily: PasslyFont.family,
-                color: color,
-                fontSize: 7,
-                height: 6 / 7,
-                fontWeight: PasslyFont.semibold,
+        child: PressFeedback(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                item.iconAsset,
+                width: 28,
+                height: 28,
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                item.label,
+                style: TextStyle(
+                  fontFamily: PasslyFont.family,
+                  color: color,
+                  fontSize: 7,
+                  height: 6 / 7,
+                  fontWeight: PasslyFont.semibold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

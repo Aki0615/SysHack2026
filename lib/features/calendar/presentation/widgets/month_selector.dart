@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 
 /// 表示月を切り替えるヘッダーWidget
@@ -24,11 +25,16 @@ class MonthSelector extends StatelessWidget {
           // 左: ＜ 先月
           GestureDetector(
             onTap: onPreviousMonth,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                '＜ 先月',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            child: const PressFeedback(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  '＜ 先月',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ),
           ),
@@ -44,11 +50,16 @@ class MonthSelector extends StatelessWidget {
           // 右: 次月 ＞
           GestureDetector(
             onTap: onNextMonth,
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                '次月 ＞',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            child: const PressFeedback(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  '次月 ＞',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ),
           ),

@@ -40,9 +40,7 @@ class PlazaScreen extends ConsumerWidget {
             title: 'すれ違い一覧',
             subtitle: '友達検索も',
             trailing: [
-              _HeaderSearchIcon(
-                onTap: () => context.push('/plaza/search'),
-              ),
+              _HeaderSearchIcon(onTap: () => context.push('/plaza/search')),
             ],
           ),
           Expanded(
@@ -123,14 +121,8 @@ class _CloseFriendsSection extends StatelessWidget {
         const SizedBox(height: PasslySpace.s12),
         async.when(
           data: (users) => _list(context, users),
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: CircularProgressIndicator(color: PasslyBrand.primary),
-            ),
-          ),
-          error: (_, _) =>
-              const _EmptyMessage(text: '親しい人の取得に失敗しました'),
+          loading: () => const SizedBox.shrink(),
+          error: (_, _) => const _EmptyMessage(text: '親しい人の取得に失敗しました'),
         ),
       ],
     );
@@ -183,14 +175,8 @@ class _PastEncountersSection extends StatelessWidget {
           _list(context, data.recentEncounters),
         ],
       ),
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(
-          child: CircularProgressIndicator(color: PasslyBrand.primary),
-        ),
-      ),
-      error: (_, _) =>
-          const _EmptyMessage(text: 'すれ違い履歴の取得に失敗しました'),
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const _EmptyMessage(text: 'すれ違い履歴の取得に失敗しました'),
     );
   }
 

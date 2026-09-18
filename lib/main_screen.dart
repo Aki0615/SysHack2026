@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:syshack2026/common/widgets/passly_bottom_nav.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/core/network/network_activity_provider.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
@@ -47,6 +48,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   @override
   void initState() {
     super.initState();
+    enableNetworkActivity(ref);
     // アプリのライフサイクルイベントを監視
     WidgetsBinding.instance.addObserver(this);
     // ログイン済みならBLEを自動開始
@@ -152,7 +154,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
     if (user == null) return;
 
     // 設定でOFFになっている場合は自動開始しない
-    final isBleEnabled = ref.read(settingsNotifierProvider).value?.isBleEnabled ?? true;
+    final isBleEnabled =
+        ref.read(settingsNotifierProvider).value?.isBleEnabled ?? true;
     if (!isBleEnabled) return;
 
     if (_bleStarted && _lastBleUserId == user.id) return;
@@ -381,7 +384,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    final isBleEnabled = ref.watch(settingsNotifierProvider).value?.isBleEnabled ?? true;
+    final isBleEnabled =
+        ref.watch(settingsNotifierProvider).value?.isBleEnabled ?? true;
 
     return SafeArea(
       top: false,
@@ -398,9 +402,13 @@ class _MainScreenState extends ConsumerState<MainScreen>
               Positioned(
                 right: 0,
                 bottom: 70, // ナビゲーションバーの上に浮かせる
-                child: IgnorePointer( // ボタンに干渉しないように
+                child: IgnorePointer(
+                  // ボタンに干渉しないように
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.error,
                       borderRadius: BorderRadius.circular(12),
