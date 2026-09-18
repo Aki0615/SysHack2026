@@ -29,7 +29,6 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
 
   Size? _imageSize;
   bool _isSaving = false;
-  bool _initialTransformApplied = false;
   String? _errorMessage;
 
   @override
@@ -53,30 +52,21 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
       final height = frame.image.height.toDouble();
       frame.image.dispose();
       if (!mounted) return;
+      // 最初の描画前に「枠を覆う(cover)＋中央寄せ」の初期変換をコントローラーへ
+      // 適用しておく。これで初回フレームから正しいスケール・位置で表示され、
+      // タップ（ジェスチャ）不要になる。
+      final viewportSize = _computeViewportSize(context);
+      final scale = math.max(viewportSize / width, viewportSize / height);
+      final dx = (viewportSize - width * scale) / 2;
+      final dy = (viewportSize - height * scale) / 2;
+      _controller.value = Matrix4.identity()
+        ..translate(dx, dy)
+        ..scale(scale);
       setState(() => _imageSize = Size(width, height));
     } catch (e) {
       if (!mounted) return;
       setState(() => _errorMessage = '画像の読み込みに失敗しました: $e');
     }
-  }
-
-  /// 画像サイズと調整エリアのサイズの両方が揃った最初のフレームで一度だけ、
-  /// 画像が正方形の枠をちょうど覆うように(BoxFit.cover相当)
-  /// スケール・中央寄せする。ユーザーはそこから位置とズームを調整できる。
-  void _applyInitialTransformIfNeeded(double viewportSize) {
-    final imgSize = _imageSize;
-    if (imgSize == null || _initialTransformApplied) return;
-    _initialTransformApplied = true;
-
-    final scale = math.max(
-      viewportSize / imgSize.width,
-      viewportSize / imgSize.height,
-    );
-    final dx = (viewportSize - imgSize.width * scale) / 2;
-    final dy = (viewportSize - imgSize.height * scale) / 2;
-    _controller.value = Matrix4.identity()
-      ..translate(dx, dy)
-      ..scale(scale);
   }
 
   /// 調整エリア(正方形)の一辺の長さを、画面サイズいっぱいに使えるように計算する。
@@ -132,16 +122,6 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
   Widget build(BuildContext context) {
     final ready = _imageSize != null;
     final viewportSize = _computeViewportSize(context);
-
-    if (ready && !_initialTransformApplied) {
-      // build中に直接コントローラーへ反映すると InteractiveViewer 側の
-      // リスナーが同フレーム内で再ビルドを要求してしまう可能性があるため、
-      // 1フレーム後に適用する。
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _applyInitialTransformIfNeeded(viewportSize);
-      });
-    }
 
     return Scaffold(
       backgroundColor: Colors.black,
