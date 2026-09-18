@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 
 // 修正: 不要なコメントの削除とコードの最小化
@@ -42,21 +43,23 @@ class TabSwitchButton extends StatelessWidget {
   Widget _buildTabButton(String title, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.divider,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected
-                ? AppColors.backgroundWhite
-                : AppColors.textSecondary,
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: PressFeedback(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.divider,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isSelected
+                  ? AppColors.backgroundWhite
+                  : AppColors.textSecondary,
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ),
       ),

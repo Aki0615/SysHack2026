@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:syshack2026/common/widgets/passly_glass_circle.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
@@ -92,10 +93,7 @@ class PasslyHeader extends StatelessWidget {
 
   /// 相手のプロフィールヘッダー (Figma node 1269:521)。
   /// 円形の戻るボタンのみ。divider・タイトルなし。
-  factory PasslyHeader.otherProfile({
-    Key? key,
-    required VoidCallback onBack,
-  }) {
+  factory PasslyHeader.otherProfile({Key? key, required VoidCallback onBack}) {
     return PasslyHeader(
       key: key,
       leading: PasslyBackButton(onTap: onBack),
@@ -256,18 +254,20 @@ class PasslyBackButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          color: PasslyBorder.divider,
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: const PasslyIcon(
-          asset: PasslyIcons.chevron,
-          size: 24,
-          color: AppColors.textPrimary,
+      child: PressFeedback(
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            color: PasslyBorder.divider,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const PasslyIcon(
+            asset: PasslyIcons.chevron,
+            size: 24,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
     );
@@ -288,18 +288,20 @@ class _SmallBackButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: PasslyBorder.divider,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        alignment: Alignment.center,
-        child: const PasslyIcon(
-          asset: PasslyIcons.chevron,
-          size: 24,
-          color: AppColors.textPrimary,
+      child: PressFeedback(
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: PasslyBorder.divider,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          alignment: Alignment.center,
+          child: const PasslyIcon(
+            asset: PasslyIcons.chevron,
+            size: 24,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
     );
@@ -362,14 +364,16 @@ class _HeaderSearchIcon extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: const SizedBox(
-        width: 40,
-        height: 40,
-        child: Center(
-          child: PasslyIcon(
-            asset: PasslyIcons.search,
-            size: 30,
-            color: AppColors.textPrimary,
+      child: PressFeedback(
+        child: const SizedBox(
+          width: 40,
+          height: 40,
+          child: Center(
+            child: PasslyIcon(
+              asset: PasslyIcons.search,
+              size: 30,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ),
@@ -391,18 +395,20 @@ class _HeaderEditButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: PasslyBorder.divider,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        alignment: Alignment.center,
-        child: const PasslyIcon(
-          asset: PasslyIcons.edit,
-          size: 24,
-          color: AppColors.textPrimary,
+      child: PressFeedback(
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: PasslyBorder.divider,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          alignment: Alignment.center,
+          child: const PasslyIcon(
+            asset: PasslyIcons.edit,
+            size: 24,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
     );
@@ -422,11 +428,13 @@ class _HeaderCloseButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: const PasslyGlassCircle(
-        child: PasslyIcon(
-          asset: PasslyIcons.close,
-          size: 24,
-          color: Colors.white,
+      child: const PressFeedback(
+        child: PasslyGlassCircle(
+          child: PasslyIcon(
+            asset: PasslyIcons.close,
+            size: 24,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -446,11 +454,13 @@ class _HeaderQrScanButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: const PasslyGlassCircle(
-        child: PasslyIcon(
-          asset: PasslyIcons.qrCode,
-          size: 26,
-          color: Colors.white,
+      child: const PressFeedback(
+        child: PasslyGlassCircle(
+          child: PasslyIcon(
+            asset: PasslyIcons.qrCode,
+            size: 26,
+            color: Colors.white,
+          ),
         ),
       ),
     );

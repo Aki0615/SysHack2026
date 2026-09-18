@@ -22,8 +22,7 @@ class FriendSearchScreen extends ConsumerStatefulWidget {
   const FriendSearchScreen({super.key});
 
   @override
-  ConsumerState<FriendSearchScreen> createState() =>
-      _FriendSearchScreenState();
+  ConsumerState<FriendSearchScreen> createState() => _FriendSearchScreenState();
 }
 
 class _FriendSearchScreenState extends ConsumerState<FriendSearchScreen> {
@@ -64,9 +63,7 @@ class _FriendSearchScreenState extends ConsumerState<FriendSearchScreen> {
           Expanded(
             child: closeFriendsAsync.when(
               data: (users) => _buildResults(users),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: PasslyBrand.primary),
-              ),
+              loading: () => const SizedBox.shrink(),
               error: (err, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -111,9 +108,7 @@ class _FriendSearchScreenState extends ConsumerState<FriendSearchScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Text(
-              _query.isEmpty
-                  ? 'まだ親しい人がいません'
-                  : '該当する人はいません',
+              _query.isEmpty ? 'まだ親しい人がいません' : '該当する人はいません',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: PasslyFont.family,

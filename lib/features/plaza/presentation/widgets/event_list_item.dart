@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syshack2026/common/widgets/press_feedback.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 
 class EventListItem extends StatelessWidget {
@@ -19,16 +20,18 @@ class EventListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: _buildDecoration(),
-        child: Row(
-          children: [
-            _buildLeadingIcon(),
-            const SizedBox(width: 12),
-            Expanded(child: _buildEventInfo()),
-            const Icon(Icons.chevron_right, color: AppColors.textDisabled),
-          ],
+      child: PressFeedback(
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: _buildDecoration(),
+          child: Row(
+            children: [
+              _buildLeadingIcon(),
+              const SizedBox(width: 12),
+              Expanded(child: _buildEventInfo()),
+              const Icon(Icons.chevron_right, color: AppColors.textDisabled),
+            ],
+          ),
         ),
       ),
     );

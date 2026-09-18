@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/core/network/network_activity_provider.dart';
 
 /// セキュアストレージのプロバイダー（ユーザーID・認証トークン保存に使用）
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
@@ -30,6 +31,7 @@ final dioProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
+        startNetworkActivity(ref);
         final token = await ref
             .read(secureStorageProvider)
             .read(key: authTokenStorageKey);
@@ -38,7 +40,12 @@ final dioProvider = Provider<Dio>((ref) {
         }
         handler.next(options);
       },
+      onResponse: (response, handler) {
+        finishNetworkActivity(ref);
+        handler.next(response);
+      },
       onError: (error, handler) async {
+        finishNetworkActivity(ref);
         if (error.response?.statusCode == 401) {
           // トークンが無効・期限切れの場合はセッションを破棄してログイン画面へ戻す
           // (AuthNotifier.logout()がストレージ削除+状態更新を行い、

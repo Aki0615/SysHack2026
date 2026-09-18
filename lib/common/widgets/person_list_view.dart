@@ -53,9 +53,7 @@ class PersonListView extends StatelessWidget {
           Expanded(
             child: itemsAsync.when(
               data: (items) => _buildList(items),
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              ),
+              loading: () => const SizedBox.shrink(),
               error: (error, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
