@@ -146,4 +146,5 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
 
   /// 未確認データが存在するか
   bool get hasPending => (state.value ?? []).isNotEmpty;
+
 }

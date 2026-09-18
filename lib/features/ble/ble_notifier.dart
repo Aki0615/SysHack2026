@@ -132,7 +132,10 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
     if (activeToken != null) {
       if (_currentToken?.token != activeToken.token) {
         _currentToken = activeToken;
-        _bleService.startAdvertising(ephemeralId: activeToken.token);
+        // トークンが切り替わった場合は、一度停止してから再開する
+        _bleService.stopAdvertising().then((_) {
+          _bleService.startAdvertising(ephemeralId: activeToken.token);
+        });
         state = state.copyWith(currentEphemeralId: activeToken.token);
       }
       // 現在のトークンが期限切れになるタイミングで再評価
