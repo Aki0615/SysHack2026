@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -79,8 +80,28 @@ class AuthRepository {
 
   /// ユーザー情報を取得する（GET /users/:id）
   Future<UserModel> _fetchUser(String id) async {
-    final response = await _dio.get('/users/$id');
-    return UserModel.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final response = await _dio.get('/users/$id');
+      // オフライン起動時のために、最新のプロフィールJSONをローカルにキャッシュ
+      await _storage.write(key: 'cached_user_profile_$id', value: jsonEncode(response.data));
+      return UserModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      // ネットワークエラーで取得できない場合、キャッシュがあればそれを返す
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.unknown) {
+        final cachedStr = await _storage.read(key: 'cached_user_profile_$id');
+        if (cachedStr != null) {
+          try {
+            final json = jsonDecode(cachedStr) as Map<String, dynamic>;
+            return UserModel.fromJson(json);
+          } catch (_) {
+            // キャッシュが壊れている場合は無視して再スロー
+          }
+        }
+      }
+      rethrow; // その他のエラーやキャッシュがない場合はそのまま投げる
+    }
   }
 
   /// 保存済みユーザーIDの有無を確認する
