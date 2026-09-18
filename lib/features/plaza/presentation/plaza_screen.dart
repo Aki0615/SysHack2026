@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/passly_header.dart';
+import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/common/widgets/recent_encounter_card.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
@@ -243,7 +244,8 @@ class _EmptyMessage extends StatelessWidget {
   }
 }
 
-/// Figma 1517:3110 準拠: 35px の検索アイコン (拡大鏡)。
+/// 40x40 の検索アイコン。カレンダーヘッダーと同じ [PasslyIcons.search] を使い、
+/// アプリ全体でアイコンの見た目 / タップサイズを統一する。
 class _HeaderSearchIcon extends StatelessWidget {
   final VoidCallback onTap;
   const _HeaderSearchIcon({required this.onTap});
@@ -254,12 +256,14 @@ class _HeaderSearchIcon extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: const SizedBox(
-        width: 35,
-        height: 35,
-        child: Icon(
-          Icons.search,
-          color: AppColors.textPrimary,
-          size: 30,
+        width: 40,
+        height: 40,
+        child: Center(
+          child: PasslyIcon(
+            asset: PasslyIcons.search,
+            size: 30,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
     );

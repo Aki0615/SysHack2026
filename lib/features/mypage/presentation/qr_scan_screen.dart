@@ -76,7 +76,7 @@ class _QrScanScreenState extends State<QrScanScreen> {
           const _ScanGuideOverlay(),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(19, 12, 19, 0),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: GestureDetector(

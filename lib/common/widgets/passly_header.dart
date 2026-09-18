@@ -274,9 +274,10 @@ class PasslyBackButton extends StatelessWidget {
   }
 }
 
-/// 検索ヘッダー用の一回り小さい角丸戻るボタン。
+/// 検索ヘッダー用の戻るボタン。
 ///
-/// Figma node 1297:873 準拠: 22.84x22.84 角丸11.42 divider 背景。
+/// Figma は 22.84x22.84 だが、他のヘッダーボタンと同じタップサイズに
+/// 合わせて 40x40 に拡大 (chevron 24)。角丸は half-height。
 class _SmallBackButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -288,16 +289,16 @@ class _SmallBackButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: 23,
-        height: 23,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: PasslyBorder.divider,
-          borderRadius: BorderRadius.circular(11.42),
+          borderRadius: BorderRadius.circular(20),
         ),
         alignment: Alignment.center,
         child: const PasslyIcon(
           asset: PasslyIcons.chevron,
-          size: 16,
+          size: 24,
           color: AppColors.textPrimary,
         ),
       ),
@@ -350,7 +351,7 @@ class _AvatarFallback extends StatelessWidget {
   }
 }
 
-/// カレンダーヘッダーの検索アイコン (Figma node 1191:1108, 35px)。
+/// カレンダーヘッダーの検索アイコン。40x40 のタップターゲット + 30px SVG。
 class _HeaderSearchIcon extends StatelessWidget {
   final VoidCallback? onTap;
 
@@ -362,8 +363,8 @@ class _HeaderSearchIcon extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: const SizedBox(
-        width: 35,
-        height: 35,
+        width: 40,
+        height: 40,
         child: Center(
           child: PasslyIcon(
             asset: PasslyIcons.search,
@@ -472,9 +473,11 @@ class _HeaderSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Figma は 32 高 / 12.6px 文字だが、他のヘッダーボタンと同じタップサイズ
+    // (40 高) + 読みやすいフォント (14px) に合わせて拡大。
     return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
         color: PasslyBorder.divider,
         borderRadius: BorderRadius.circular(90),
@@ -484,19 +487,19 @@ class _HeaderSearchField extends StatelessWidget {
         children: [
           const PasslyIcon(
             asset: PasslyIcons.search,
-            size: 18,
+            size: 20,
             color: AppColors.textSecondary,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: controller,
               onSubmitted: onSubmitted,
               onChanged: onChanged,
               style: const TextStyle(
-                fontSize: 12.6,
+                fontSize: 14,
                 color: AppColors.textPrimary,
-                height: 15.14 / 12.6,
+                height: 16.8 / 14,
               ),
               decoration: InputDecoration(
                 isDense: true,
@@ -504,7 +507,7 @@ class _HeaderSearchField extends StatelessWidget {
                 border: InputBorder.none,
                 hintText: hintText,
                 hintStyle: const TextStyle(
-                  fontSize: 12.6,
+                  fontSize: 14,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w400,
                 ),
