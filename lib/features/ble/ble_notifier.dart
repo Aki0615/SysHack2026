@@ -84,13 +84,13 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _hasNotifiedInBackground = false;
       ref.read(notificationServiceProvider).cancelEncounterReminder();
-      _syncUnsentTokens();
+      syncUnsentTokens();
     } else if (state == AppLifecycleState.paused) {
       _hasNotifiedInBackground = false;
     }
   }
 
-  Future<void> _syncUnsentTokens() async {
+  Future<void> syncUnsentTokens() async {
     if (_isSyncing) return;
     _isSyncing = true;
     try {

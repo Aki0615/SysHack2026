@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syshack2026/common/router/app_router.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
+import 'package:syshack2026/core/network/network_sync_provider.dart';
 
 void main() {
   // Riverpodの状態管理スコープでアプリ全体をラップ
@@ -17,6 +18,9 @@ class PasslyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // GoRouterのインスタンスをProviderから取得
     final router = ref.watch(appRouterProvider);
+    
+    // ネットワーク状態の監視を開始（常駐）
+    ref.watch(networkSyncProvider);
 
     return MaterialApp.router(
       title: 'Passly',
