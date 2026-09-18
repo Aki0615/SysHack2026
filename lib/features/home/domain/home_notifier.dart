@@ -66,6 +66,7 @@ final homeNotifierProvider = AsyncNotifierProvider<HomeNotifier, HomeState>(
 class HomeNotifier extends AsyncNotifier<HomeState> {
   @override
   FutureOr<HomeState> build() async {
+    ref.watch(authNotifierProvider.select((s) => s.value?.id)); // ユーザー切替時に状態を作り直す
     return await _fetchHomeData();
   }
 
