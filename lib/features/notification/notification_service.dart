@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'dart:io';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -13,6 +16,11 @@ class NotificationService {
 
   Future<void> initialize() async {
     if (_initialized) return;
+
+    // タイムゾーンの初期化
+    tz.initializeTimeZones();
+    final String timeZoneName = (await FlutterTimezone.getLocalTimezone()).identifier;
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     // Android初期化設定
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -71,10 +79,10 @@ class NotificationService {
     return const NotificationDetails(android: androidDetails, iOS: iosDetails);
   }
 
-  /// バックグラウンドでの初回すれ違い検知時に呼ばれる
+  /// バックグラウンドでの初回すれ違い検知時に呼ばれる（即時発火）
   Future<void> showStreetPassNotification() async {
     await initialize();
-    debugPrint('[NotificationService] 🔔 すれ違いを検知しました！（バックグラウンド）');
+    debugPrint('[NotificationService] 🔔 すれ違いを検知しました！（バックグラウンド即時通知）');
     await _plugin.show(
       id: 0,
       title: 'すれ違いを検知しました！',
@@ -83,15 +91,43 @@ class NotificationService {
     );
   }
 
-  /// オフライン用トークンが枯渇し、アドバタイズが継続できなくなった時に呼ばれる
-  Future<void> showTokenExhaustedNotification() async {
+  /// オフライン用トークンがラスト1個になる日時に合わせて発火するスケジュール通知
+  Future<void> scheduleTokenWarningNotification(DateTime warningTime) async {
     await initialize();
-    debugPrint('[NotificationService] ⚠️ オフライン用トークンが枯渇しました。アプリを開いて継続してください。');
-    await _plugin.show(
-      id: 1,
-      title: 'オフラインすれ違いの停止',
-      body: 'トークンが枯渇したためアドバタイズを停止しました。アプリを開いて通信を再開してください。',
+    debugPrint('[NotificationService] ⏰ トークン枯渇予告をスケジュールしました: $warningTime');
+    await _plugin.zonedSchedule(
+      id: 1, // ID=1 (上書き可能)
+      title: 'オフラインすれ違いの停止予告',
+      body: 'オフライン用の通信トークンが残り1回分です。次回利用分がないため、アプリを開いて補充してください。',
+      scheduledDate: tz.TZDateTime.from(warningTime, tz.local),
       notificationDetails: _getDetails(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
+  }
+
+  /// すれ違いがある状態で1日アプリを開かなかった場合に発火するスケジュール通知
+  Future<void> scheduleEncounterReminder() async {
+    await initialize();
+    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(days: 1));
+    debugPrint('[NotificationService] ⏰ 1日後のすれ違いリマインダーをスケジュールしました: $scheduledTime');
+    await _plugin.zonedSchedule(
+      id: 2, // ID=2
+      title: 'すれ違いデータがあります',
+      body: '未確認のすれ違い通信があります！アプリを開いて結果を確認してみましょう。',
+      scheduledDate: scheduledTime,
+      notificationDetails: _getDetails(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
+  /// リマインダー通知をキャンセルする（アプリを開いた時などに呼ぶ）
+  Future<void> cancelEncounterReminder() async {
+    debugPrint('[NotificationService] 🚫 リマインダー通知をキャンセルしました');
+    await _plugin.cancel(id: 2);
+  }
+
+  /// デバッグ用 (以前の互換性維持)
+  Future<void> showTokenExhaustedNotification() async {
+    await scheduleTokenWarningNotification(DateTime.now().add(const Duration(seconds: 5)));
   }
 }
