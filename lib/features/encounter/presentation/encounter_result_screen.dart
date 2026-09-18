@@ -142,6 +142,7 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
                 ),
               ),
               const SizedBox(height: 16),
+              // TODO: このスキップボタンは仮置きのため、正式なUIが決まり次第修正する
               TextButton(
                 onPressed: () => _close(ref),
                 child: const Text('スキップ', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
