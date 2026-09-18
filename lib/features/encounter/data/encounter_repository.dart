@@ -17,7 +17,7 @@ class EncounterRepository {
   /// プライバシー保護のため、一定時間ごとに新しいトークンを取得してアドバタイズに使用
   Future<EphemeralToken> getEphemeralToken(String userId) async {
     try {
-      final response = await _dio.get('/users/$userId/ephemeral-token');
+      final response = await _dio.get('/users/$userId/ephemeral-tokens');
       return EphemeralToken.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception('エフェメラルトークンの取得に失敗: ${e.message}');
@@ -114,7 +114,12 @@ class EncounterRepository {
 
     for (var i = 0; i < encounters.length; i += chunkSize) {
       final end = (i + chunkSize < encounters.length) ? i + chunkSize : encounters.length;
-      final chunk = encounters.sublist(i, end);
+      
+      // バックエンドの仕様に合わせてキーをスネークケースに変換
+      final chunk = encounters.sublist(i, end).map((e) => {
+        'target_token': e['ephemeralId'],
+        'encountered_at': e['encounteredAt'],
+      }).toList();
 
       try {
         await _dio.post(
