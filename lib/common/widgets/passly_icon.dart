@@ -17,6 +17,27 @@ abstract final class PasslyIcons {
 
   /// akar-icons:fire。プロフィールのすれ違いピルなどで primary-light 着色で使用。
   static const String fire = 'assets/images/icons/fire.svg';
+
+  /// ep:setting。マイページヘッダー右の歯車ボタンで使用。
+  static const String settings = 'assets/images/icons/settings.svg';
+
+  /// fluent-mdl2:add-friend。マイページヘッダーの QR / 友だち追加ボタンで使用。
+  static const String addFriend = 'assets/images/icons/add_friend.svg';
+
+  /// 30x30 X 型クローズアイコン (白 fill)。QR 画面ヘッダーの閉じるボタンで使用。
+  static const String close = 'assets/images/icons/close.svg';
+
+  /// mage:qr-code。QR 画面ヘッダーの QR スキャン起動ボタンで使用。
+  static const String qrCode = 'assets/images/icons/qr_code.svg';
+
+  /// humbleicons:share。QR 画面のシェアアクションで使用。
+  static const String share = 'assets/images/icons/share.svg';
+
+  /// bitcoin-icons:link-outline。QR 画面のリンクコピーアクションで使用。
+  static const String link = 'assets/images/icons/link.svg';
+
+  /// fluent:arrow-download-32-light。QR 画面の画像保存アクションで使用。
+  static const String download = 'assets/images/icons/download.svg';
 }
 
 /// Passly の SVG アイコン描画ラッパ。

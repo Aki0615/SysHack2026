@@ -31,7 +31,7 @@
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>すれ違い通信にBluetoothを利用します。</string>
 	<key>NSCameraUsageDescription</key>
-	<string>プロフィール画像の撮影に使用します。</string>
+	<string>プロフィール画像の撮影と QR コードの読み取りに使用します。</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>動画撮影時にマイクを使用します。</string>
 	<key>NSPhotoLibraryUsageDescription</key>

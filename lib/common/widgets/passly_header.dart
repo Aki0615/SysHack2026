@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'package:syshack2026/common/widgets/passly_glass_circle.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
 /// Passly 共通ヘッダー。
 ///
-/// Figma のヘッダー ComponentSet (node 1191:1101) の 6 バリアントを
+/// Figma のヘッダー ComponentSet (node 1191:1101) の 7 バリアントを
 /// 名前付きコンストラクタで提供する:
 /// - [PasslyHeader.home]           : おかえり！+ サブタイトル + アバター
 /// - [PasslyHeader.calendar]       : カレンダー + サブタイトル + 検索 + アバター
@@ -14,6 +15,7 @@ import 'package:syshack2026/core/constants/passly_tokens.dart';
 /// - [PasslyHeader.myProfile]      : 戻る + 編集ペン
 /// - [PasslyHeader.search]         : 戻る（角丸小）+ 検索フィールド
 /// - [PasslyHeader.encounteredList]: その日に出会った人 + サブタイトル
+/// - [PasslyHeader.qr]             : 透明背景 + 閉じる + QR スキャン (node 1528:4372)
 ///
 /// 既存のフレキシブル API（title / subtitle / leading / centerContent / trailing）は
 /// そのまま利用可能。既存呼び出し側との後方互換を保つ。
@@ -37,6 +39,10 @@ class PasslyHeader extends StatelessWidget {
   /// 下線 divider を表示するか
   final bool showBottomDivider;
 
+  /// ヘッダーの背景色。QR 画面のようにグラデーション背景の上に載せたい場合は
+  /// `Colors.transparent` を指定する。
+  final Color backgroundColor;
+
   const PasslyHeader({
     super.key,
     this.leading,
@@ -45,6 +51,7 @@ class PasslyHeader extends StatelessWidget {
     this.centerContent,
     this.trailing = const [],
     this.showBottomDivider = true,
+    this.backgroundColor = AppColors.backgroundWhite,
   }) : assert(
          title != null || centerContent != null || leading != null,
          'PasslyHeader には title / centerContent / leading のいずれかを与える必要があります',
@@ -143,6 +150,25 @@ class PasslyHeader extends StatelessWidget {
     return PasslyHeader(key: key, title: title, subtitle: subtitle);
   }
 
+  /// QR 画面ヘッダー (Figma node 1528:4372)。
+  ///
+  /// 透明背景 (divider なし) + 左端に 30x30 X (閉じる) + 右端に 30x30 mage:qr-code
+  /// (QR スキャン起動)。マイページの QR 画面のようにグラデーション背景の上に
+  /// 重ねる用途を想定。
+  factory PasslyHeader.qr({
+    Key? key,
+    required VoidCallback onClose,
+    required VoidCallback onOpenScan,
+  }) {
+    return PasslyHeader(
+      key: key,
+      leading: _HeaderCloseButton(onTap: onClose),
+      trailing: [_HeaderQrScanButton(onTap: onOpenScan)],
+      showBottomDivider: false,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 白背景 + divider は SafeArea の外側 (DecoratedBox) に置く。
@@ -151,7 +177,7 @@ class PasslyHeader extends StatelessWidget {
     // 呼び出し側が SafeArea 内に置いていた場合は top padding が 0 になるだけ。
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
+        color: backgroundColor,
         border: showBottomDivider
             ? const Border(
                 bottom: BorderSide(color: AppColors.divider, width: 1),
@@ -218,7 +244,8 @@ class PasslyHeader extends StatelessWidget {
 
 /// Figma のプロフィール系ヘッダーで使う「丸型グレー背景の戻るボタン」。
 ///
-/// Figma node 1269:520 準拠: 30x30 divider 背景 + chevron (左向き)。
+/// Figma node 1269:520 では 30x30 だが、他アプリと比べて指で押しづらいので
+/// タップターゲット 40x40 (icon 24px) に拡大して実装している。
 class PasslyBackButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -230,8 +257,8 @@ class PasslyBackButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: 30,
-        height: 30,
+        width: 40,
+        height: 40,
         decoration: const BoxDecoration(
           color: PasslyBorder.divider,
           shape: BoxShape.circle,
@@ -239,7 +266,7 @@ class PasslyBackButton extends StatelessWidget {
         alignment: Alignment.center,
         child: const PasslyIcon(
           asset: PasslyIcons.chevron,
-          size: 20,
+          size: 24,
           color: AppColors.textPrimary,
         ),
       ),
@@ -351,7 +378,8 @@ class _HeaderSearchIcon extends StatelessWidget {
 
 /// 自分プロフィールヘッダーの編集ペンボタン (Figma node 1300:1909)。
 ///
-/// 30x30 角丸15 divider 背景 + 24px ペンアイコン。
+/// Figma は 30x30 / icon 20 だが、他アプリ相当のタップサイズに合わせて
+/// 40x40 / icon 24 に拡大。
 class _HeaderEditButton extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -363,17 +391,65 @@ class _HeaderEditButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: 30,
-        height: 30,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           color: PasslyBorder.divider,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(20),
         ),
         alignment: Alignment.center,
         child: const PasslyIcon(
           asset: PasslyIcons.edit,
-          size: 20,
+          size: 24,
           color: AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+/// QR 画面ヘッダー左端の閉じるボタン (Figma node 1528:4374)。
+///
+/// 40x40 円形のフロスト風ガラスボタン + 中央に白い X アイコン (24px)。
+class _HeaderCloseButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _HeaderCloseButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: const PasslyGlassCircle(
+        child: PasslyIcon(
+          asset: PasslyIcons.close,
+          size: 24,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+/// QR 画面ヘッダー右端の QR スキャン起動ボタン (Figma node 1528:4381)。
+///
+/// 40x40 円形のフロスト風ガラスボタン + 中央 26x26 の mage:qr-code (白)。
+class _HeaderQrScanButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _HeaderQrScanButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: const PasslyGlassCircle(
+        child: PasslyIcon(
+          asset: PasslyIcons.qrCode,
+          size: 26,
+          color: Colors.white,
         ),
       ),
     );

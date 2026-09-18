@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:syshack2026/common/widgets/passly_glass_circle.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/mypage/domain/mypage_editing_provider.dart';
 import 'package:syshack2026/features/user/data/tech_tag_catalog.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
@@ -88,10 +89,12 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     _portfolioCtrl.text = user.portfolioUrl;
     _connpassCtrl.text = user.connpassUrl;
     setState(() => _isEditing = true);
+    ref.read(myPageEditingProvider.notifier).set(true);
   }
 
   void _cancelEdit() {
     setState(() => _isEditing = false);
+    ref.read(myPageEditingProvider.notifier).set(false);
   }
 
   Future<void> _saveAll() async {
@@ -116,6 +119,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
       await ref.read(authNotifierProvider.notifier).refresh();
       if (!mounted) return;
       setState(() => _isEditing = false);
+      ref.read(myPageEditingProvider.notifier).set(false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -242,6 +246,9 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // カバー画像が Dynamic Island / 時計に隠されないよう
+                // ステータスバー分だけ上に伸ばす (画面上端まで背景を敷き詰めつつ、
+                // アバター等の重要要素はステータスバーより下に置く)。
                 _CoverAndAvatar(
                   coverUrl: user.coverUrl,
                   iconUrl: user.iconUrl,
@@ -251,6 +258,7 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                   isUploadingCover: _isUploadingCover,
                   onEditAvatar: _isEditing ? _pickAndUploadAvatar : null,
                   onEditCover: _isEditing ? _pickAndUploadCover : null,
+                  extraTopHeight: MediaQuery.of(context).padding.top,
                 ),
                 const SizedBox(height: 16),
                 _NameSection(
@@ -293,14 +301,8 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
                     onOpen: _launchExternalUrl,
                   ),
                 ),
-                // QR コードは編集モード中は非表示 (編集対象ではないため)。
-                if (!_isEditing) ...[
-                  const SizedBox(height: PasslySpace.s24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 21),
-                    child: _QrShareSection(userId: user.id),
-                  ),
-                ],
+                // QR カードはヘッダー右の「友だち追加」ボタンから開ける専用画面
+                // (/mypage/qr) に移動したため、プロフィール本文からは撤去。
                 if (_isEditing) ...[
                   const SizedBox(height: PasslySpace.s24),
                   Padding(
@@ -315,14 +317,18 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
               ],
             ),
           ),
-          // 半透明のヘッダー: 歯車 + 編集ペン。カバー写真の上に配置する。
-          SafeArea(
-            child: _FloatingHeader(
-              isEditing: _isEditing,
-              onEdit: () => _enterEditMode(user),
-              onOpenSettings: () => context.push('/settings'),
+          // 半透明のヘッダー: 編集ペン + (QR / 友だち追加) + 歯車。
+          // カバー写真の上に配置する。編集モード中は非表示 (画面下に
+          // キャンセル / 保存ボタンが出るので操作は損なわれない)。
+          if (!_isEditing)
+            SafeArea(
+              child: _FloatingHeader(
+                isEditing: _isEditing,
+                onEdit: () => _enterEditMode(user),
+                onOpenSettings: () => context.push('/settings'),
+                onOpenQr: () => context.push('/mypage/qr'),
+              ),
             ),
-          ),
           if (_isSaving)
             Container(
               color: Colors.black26,
@@ -347,6 +353,11 @@ class _CoverAndAvatar extends StatelessWidget {
   final VoidCallback? onEditAvatar;
   final VoidCallback? onEditCover;
 
+  /// 画面上端 (ステータスバー / Dynamic Island の下) までカバーを伸ばすための
+  /// 追加高さ。呼び出し側で MediaQuery.padding.top を渡す。0 だとカバーは
+  /// SafeArea 下端から始まる従来動作。
+  final double extraTopHeight;
+
   const _CoverAndAvatar({
     required this.coverUrl,
     required this.iconUrl,
@@ -356,17 +367,20 @@ class _CoverAndAvatar extends StatelessWidget {
     required this.isUploadingCover,
     required this.onEditAvatar,
     required this.onEditCover,
+    this.extraTopHeight = 0,
   });
 
-  // カバー写真の高さ (Figma: -85 → 190 = 275)。
-  static const double _coverHeight = 190;
+  // カバー写真の基本高さ (Figma: -85 → 190 = 275)。実際の高さはこれに
+  // extraTopHeight を足したもの。
+  static const double _baseCoverHeight = 190;
   static const double _avatarSize = 100;
 
   @override
   Widget build(BuildContext context) {
+    final coverHeight = _baseCoverHeight + extraTopHeight;
     return SizedBox(
       // アバターが半分下にせり出す分だけ余白を確保。
-      height: _coverHeight + _avatarSize / 2,
+      height: coverHeight + _avatarSize / 2,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -375,7 +389,7 @@ class _CoverAndAvatar extends StatelessWidget {
             right: 0,
             top: 0,
             child: SizedBox(
-              height: _coverHeight,
+              height: coverHeight,
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
@@ -435,7 +449,7 @@ class _CoverAndAvatar extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: _coverHeight - _avatarSize / 2,
+            top: coverHeight - _avatarSize / 2,
             left: 0,
             right: 0,
             child: Center(
@@ -601,8 +615,8 @@ class _AvatarFallback extends StatelessWidget {
   }
 }
 
-/// Figma のヘッダー (node 1300:1904) 準拠: 上端にせり出したカバー写真の上に、
-/// 歯車 + 編集ペン (それぞれ 30x30 角丸15) を右端に並べる透明ヘッダー。
+/// Figma のヘッダー (node 1300:1904) 準拠: カバー写真の上に配置する
+/// 透明ヘッダー。左端に編集ペン、右端に「友だち追加 (QR) + 歯車」を並べる。
 ///
 /// マイページはボトムナビタブから開くため戻る先が無く Figma の左上戻る
 /// ボタンは撤去済み。代わりに歯車ボタンから設定画面へ遷移する。
@@ -610,25 +624,41 @@ class _FloatingHeader extends StatelessWidget {
   final bool isEditing;
   final VoidCallback onEdit;
   final VoidCallback onOpenSettings;
+  final VoidCallback onOpenQr;
 
   const _FloatingHeader({
     required this.isEditing,
     required this.onEdit,
     required this.onOpenSettings,
+    required this.onOpenQr,
   });
 
   @override
   Widget build(BuildContext context) {
-    // 編集ペンを左端、歯車を右端に配置。
+    // 編集ペンを左端、右端に「友だち追加 (QR) + 歯車」を横並びに配置。
+    // Figma node 1477:2922 準拠: 左右のグループを spaceBetween で振り分け、
+    // 右グループ内のアイコン間は 6px。
     return Padding(
       padding: const EdgeInsets.fromLTRB(19, 12, 19, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _EditButton(active: isEditing, onTap: onEdit),
-          _CircleIconButton(
-            icon: Icons.settings_outlined,
-            onTap: onOpenSettings,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _CircleAssetIconButton(
+                asset: PasslyIcons.addFriend,
+                onTap: onOpenQr,
+                iconSize: 24,
+              ),
+              const SizedBox(width: 8),
+              _CircleAssetIconButton(
+                asset: PasslyIcons.settings,
+                onTap: onOpenSettings,
+                iconSize: 26,
+              ),
+            ],
           ),
         ],
       ),
@@ -636,27 +666,29 @@ class _FloatingHeader extends StatelessWidget {
   }
 }
 
-/// 歯車ボタンなど、divider 背景 + 角丸 15 の 30x30 円形ボタン。
-class _CircleIconButton extends StatelessWidget {
-  final IconData icon;
+/// QR 画面と同じフロスト風ガラスサークル (40x40) の SVG アセット版ボタン。
+class _CircleAssetIconButton extends StatelessWidget {
+  final String asset;
   final VoidCallback onTap;
+  final double iconSize;
 
-  const _CircleIconButton({required this.icon, required this.onTap});
+  const _CircleAssetIconButton({
+    required this.asset,
+    required this.onTap,
+    required this.iconSize,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: PasslyBorder.divider,
-          borderRadius: BorderRadius.circular(15),
+      child: PasslyGlassCircle(
+        child: PasslyIcon(
+          asset: asset,
+          size: iconSize,
+          color: Colors.white,
         ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: AppColors.textPrimary, size: 18),
       ),
     );
   }
@@ -673,18 +705,12 @@ class _EditButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: active ? PasslyBrand.primarySurface : PasslyBorder.divider,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        alignment: Alignment.center,
+      child: PasslyGlassCircle(
         child: PasslyIcon(
           asset: PasslyIcons.edit,
-          size: 20,
-          color: active ? PasslyBrand.primary : AppColors.textPrimary,
+          size: 24,
+          // 編集モード中はブランドカラーで active を表現。
+          color: active ? PasslyBrand.primaryLight : Colors.white,
         ),
       ),
     );
@@ -1358,130 +1384,3 @@ class _EditActionButtons extends StatelessWidget {
   }
 }
 
-/// プロフィールを QR コードで共有するセクション。
-///
-/// スキーム: `passly://profile/:userId` (アプリで受けたら該当プロフィール
-/// に遷移する想定。当面はスキャン → コピーで手入力運用でも実質機能する)。
-class _QrShareSection extends StatelessWidget {
-  final String userId;
-
-  const _QrShareSection({required this.userId});
-
-  static const double _previewSize = 140;
-  static const double _expandedSize = 280;
-
-  String get _data => 'passly://profile/$userId';
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _SectionHeading('QR'),
-        const SizedBox(height: PasslySpace.s8),
-        Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _showExpanded(context),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: PasslyBg.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: PasslyBorder.strong, width: 1),
-              ),
-              child: Column(
-                children: [
-                  QrImageView(
-                    data: _data,
-                    size: _previewSize,
-                    backgroundColor: Colors.white,
-                    eyeStyle: const QrEyeStyle(
-                      eyeShape: QrEyeShape.square,
-                      color: AppColors.textPrimary,
-                    ),
-                    dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'タップで拡大',
-                    style: TextStyle(
-                      fontFamily: PasslyFont.family,
-                      color: PasslyText.secondary,
-                      fontSize: 11,
-                      fontWeight: PasslyFont.medium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showExpanded(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: PasslyBg.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                QrImageView(
-                  data: _data,
-                  size: _expandedSize,
-                  backgroundColor: Colors.white,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: AppColors.textPrimary,
-                  ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '@$userId',
-                  style: const TextStyle(
-                    fontFamily: PasslyFont.family,
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: PasslyFont.medium,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'このコードをスキャンしてプロフィール共有',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: PasslyFont.family,
-                    color: PasslyText.secondary,
-                    fontSize: 12,
-                    fontWeight: PasslyFont.regular,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('閉じる'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
