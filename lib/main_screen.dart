@@ -12,6 +12,7 @@ import 'package:syshack2026/common/widgets/passly_bottom_nav.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
+import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 import 'package:syshack2026/features/mypage/domain/mypage_editing_provider.dart';
@@ -149,6 +150,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
   Future<void> _startBleIfLoggedIn() async {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) return;
+
+    // 設定でOFFになっている場合は自動開始しない
+    final isBleEnabled = ref.read(settingsNotifierProvider).value?.isBleEnabled ?? true;
+    if (!isBleEnabled) return;
 
     if (_bleStarted && _lastBleUserId == user.id) return;
 
@@ -376,14 +381,49 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    // Figma node 1110:2434 準拠: 15px 側方インセット + 下方 15px でピル型ナビを浮かせる。
+    final isBleEnabled = ref.watch(settingsNotifierProvider).value?.isBleEnabled ?? true;
+
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-        child: PasslyBottomNav(
-          currentIndex: widget.navigationShell.currentIndex,
-          onTap: (index) => _onTap(context, index),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            PasslyBottomNav(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: (index) => _onTap(context, index),
+            ),
+            if (!isBleEnabled)
+              Positioned(
+                right: 0,
+                bottom: 70, // ナビゲーションバーの上に浮かせる
+                child: IgnorePointer( // ボタンに干渉しないように
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'すれ違い検知がオフになっているよ！！',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

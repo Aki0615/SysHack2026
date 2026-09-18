@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,8 +29,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bleState = ref.watch(bleNotifierProvider);
-    final bleActive = bleState.isScanning || bleState.isAdvertising;
+    final settingsState = ref.watch(settingsNotifierProvider).value;
+    final bleActive = settingsState?.isBleEnabled ?? true;
 
     return Scaffold(
       backgroundColor: PasslyBg.defaultBg,
@@ -129,26 +131,78 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(bleNotifierProvider.notifier);
     try {
       if (next) {
+        // 事前権限チェック (ONにする直前)
+        bool granted = true;
+        if (Platform.isAndroid) {
+          final scan = await Permission.bluetoothScan.request();
+          final advertise = await Permission.bluetoothAdvertise.request();
+          final connect = await Permission.bluetoothConnect.request();
+          // Android 11以下の場合は location 等も必要になるが、主力のBLE権限で弾く
+          if (!scan.isGranted || !advertise.isGranted || !connect.isGranted) {
+            granted = false;
+          }
+        } else {
+          final bt = await Permission.bluetooth.request();
+          if (!bt.isGranted) granted = false;
+        }
+
+        if (!granted) {
+          if (context.mounted) _showPermissionDialog(context);
+          return; // 権限がない場合は処理を中断（ONにならない）
+        }
+
         await notifier.start();
+        // 成功した場合のみ状態を保存
+        await ref.read(settingsNotifierProvider.notifier).setBleEnabled(true);
       } else {
         await notifier.stop();
+        // 成功した場合のみ状態を保存
+        await ref.read(settingsNotifierProvider.notifier).setBleEnabled(false);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                next
-                    ? 'すれ違い検知の開始に失敗しました: $e'
-                    : 'すれ違い検知の停止に失敗しました: $e',
+        final errorMsg = e.toString();
+        if (next && errorMsg.contains('権限')) {
+          _showPermissionDialog(context);
+        } else {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(
+                  next
+                      ? 'すれ違い検知の開始に失敗しました: $e'
+                      : 'すれ違い検知の停止に失敗しました: $e',
+                ),
+                backgroundColor: PasslyState.error,
               ),
-              backgroundColor: PasslyState.error,
-            ),
-          );
+            );
+        }
       }
     }
+  }
+
+  void _showPermissionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bluetooth等の権限が必要です'),
+        content: const Text('すれ違い通信をオンにするには、設定画面からBluetooth（または位置情報）へのアクセスを許可してください。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('設定を開く'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _launchUrl(String url) async {
