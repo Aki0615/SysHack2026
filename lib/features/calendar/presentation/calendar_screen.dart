@@ -6,6 +6,7 @@ import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/encounter_bubble.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/month_selector.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/calendar_grid.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// カレンダー画面本体Widget
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -22,7 +23,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = AppTime.nowLocal();
     _currentMonth = DateTime(now.year, now.month);
 
     // 初回データ取得

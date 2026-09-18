@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
   return CalendarRepository(ref.read(dioProvider));
@@ -32,8 +33,11 @@ class CalendarRepository {
 
     return data.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).where(
       (event) {
-        final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
-        if (startAt == null) return false;
+        final startAtUtc = DateTime.tryParse(
+          event['start_at']?.toString() ?? '',
+        );
+        if (startAtUtc == null) return false;
+        final startAt = AppTime.toAppLocal(startAtUtc);
         return startAt.year == month.year && startAt.month == month.month;
       },
     ).toList();
@@ -104,8 +108,9 @@ class CalendarRepository {
     for (final raw in rawDays) {
       if (raw is! Map) continue;
       final map = Map<String, dynamic>.from(raw);
-      final date = DateTime.tryParse(map['date']?.toString() ?? '');
-      if (date == null) continue;
+      final dateUtc = DateTime.tryParse(map['date']?.toString() ?? '');
+      if (dateUtc == null) continue;
+      final date = AppTime.toAppLocal(dateUtc);
       result[DateTime(date.year, date.month, date.day)] = _normalizeDayData(
         map,
       );

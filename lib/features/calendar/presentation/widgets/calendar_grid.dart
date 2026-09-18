@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/calendar_day_cell.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// 曜日ヘッダーと日付セルで構成されるカレンダーグリッド
 class CalendarGrid extends StatelessWidget {
@@ -96,7 +97,7 @@ class CalendarGrid extends StatelessWidget {
 
         final day = index - emptyCellsBefore + 1;
         final date = DateTime(currentMonth.year, currentMonth.month, day);
-        final now = DateTime.now();
+        final now = AppTime.nowLocal();
         final isToday =
             date.year == now.year &&
             date.month == now.month &&

@@ -70,10 +70,7 @@ class MyPageQrScreen extends ConsumerWidget {
                           children: [
                             _QrCard(userId: userId, userName: userName),
                             const SizedBox(height: PasslySpace.s8),
-                            _ActionRow(
-                              userId: userId,
-                              userName: userName,
-                            ),
+                            _ActionRow(userId: userId, userName: userName),
                           ],
                         ),
                       ),
@@ -87,7 +84,6 @@ class MyPageQrScreen extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 /// Figma node 1529:4395: 白背景の QR カード。
@@ -227,10 +223,7 @@ class _Circle extends StatelessWidget {
     return Container(
       width: diameter,
       height: diameter,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
@@ -352,11 +345,7 @@ class _ActionCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            PasslyIcon(
-              asset: asset,
-              size: 22,
-              color: AppColors.textPrimary,
-            ),
+            PasslyIcon(asset: asset, size: 22, color: AppColors.textPrimary),
             const SizedBox(height: 4),
             // Figma は 9px だがラベル文字数を変えた結果 "プロフィールをシェア"
             // (10 文字) が入らないので 10.5px + 最大 2 行で折り返す。

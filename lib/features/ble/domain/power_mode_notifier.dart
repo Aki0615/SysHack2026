@@ -10,15 +10,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// TODO(passly): 実際の擬似フォアグラウンド ON/OFF 切替は BLE 側 (いつき担当) で
 /// [bleNotifierProvider] や WakelockPlus を powerModeProvider に応じて分岐させる形で
 /// 統合予定。現状は UI 状態のみを保持する。
-enum PowerMode {
-  normal,
-  pocket,
-}
+enum PowerMode { normal, pocket }
 
 /// ホーム画面トップ右のトグルボタンで切り替える動作モード。
 /// アプリ内メモリのみ (再起動でリセット)。恒久化は次回追加。
-final powerModeProvider =
-    NotifierProvider<PowerModeNotifier, PowerMode>(PowerModeNotifier.new);
+final powerModeProvider = NotifierProvider<PowerModeNotifier, PowerMode>(
+  PowerModeNotifier.new,
+);
 
 class PowerModeNotifier extends Notifier<PowerMode> {
   @override

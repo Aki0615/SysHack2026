@@ -83,7 +83,10 @@ class AuthRepository {
     try {
       final response = await _dio.get('/users/$id');
       // オフライン起動時のために、最新のプロフィールJSONをローカルにキャッシュ
-      await _storage.write(key: 'cached_user_profile_$id', value: jsonEncode(response.data));
+      await _storage.write(
+        key: 'cached_user_profile_$id',
+        value: jsonEncode(response.data),
+      );
       return UserModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       // ネットワークエラーで取得できない場合、キャッシュがあればそれを返す

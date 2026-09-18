@@ -6,7 +6,9 @@ import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 
 /// ネットワーク接続状態を監視し、オンライン復帰時に自動同期処理を走らせるプロバイダー
 final networkSyncProvider = Provider<void>((ref) {
-  final subscription = InternetConnection().onStatusChange.listen((InternetStatus status) {
+  final subscription = InternetConnection().onStatusChange.listen((
+    InternetStatus status,
+  ) {
     if (status == InternetStatus.connected) {
       debugPrint('インターネット接続が回復しました。自動同期を開始します。');
       // 未送信のすれ違いデータを一括送信

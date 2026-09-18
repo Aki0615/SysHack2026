@@ -12,6 +12,7 @@ import 'package:syshack2026/features/home/domain/recent_encounter.dart';
 import 'package:syshack2026/features/home/presentation/widgets/power_mode_toggle.dart';
 import 'package:syshack2026/features/home/presentation/widgets/today_encounter_hero_card.dart';
 import 'package:syshack2026/features/user/domain/level_info.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// ホーム画面 (Figma node 1110:2434 準拠)。
 ///
@@ -147,9 +148,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   static String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return AppTime.formatHHMM(dt);
   }
 
   Widget _buildErrorState(WidgetRef ref) {

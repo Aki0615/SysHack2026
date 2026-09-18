@@ -6,7 +6,6 @@ import 'package:syshack2026/features/home/data/home_repository.dart';
 import 'package:syshack2026/features/encounter/data/encounter_repository.dart';
 import 'package:syshack2026/features/encounter/data/pending_encounter_repository.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
-import 'package:syshack2026/features/encounter/domain/daily_limit_service.dart';
 
 /// 未確認すれ違いデータの状態を管理するプロバイダー
 final encounterNotifierProvider =
@@ -79,25 +78,14 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
     final myId = _currentUserId;
     if (myId == null) return;
 
-    final limitService = ref.read(dailyLimitServiceProvider);
-    await limitService.resetIfNewDay();
-
-    if (!await limitService.canEncounter()) {
-      debugPrint('本日のすれ違い上限に達しています');
-      return;
-    }
-
     try {
       final repo = ref.read(encounterRepositoryProvider);
-      // API仕様書通り my_id, target_id のみを送信する (eventIdは送らない)
       final result = await repo.recordEncounter(
         myId: myId,
         targetId: targetUserId,
       );
-      if (result.created) {
-        await limitService.increment();
-      } else {
-        debugPrint('すれ違いは新規保存されませんでした: ${result.message ?? 'no message'}');
+      if (!result.created) {
+        debugPrint('すれ違いは新規保存されませんでした (すでにすれ違っている等): ${result.message ?? 'no message'}');
       }
       state = AsyncValue.data(await _fetchPendingEncounters());
     } catch (e) {
@@ -146,5 +134,4 @@ class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
 
   /// 未確認データが存在するか
   bool get hasPending => (state.value ?? []).isNotEmpty;
-
 }

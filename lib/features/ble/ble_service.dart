@@ -16,11 +16,9 @@ class DetectedDevice {
   final List<DateTime> detectionTimes;
   bool isConfirmed;
 
-  DetectedDevice({
-    required this.ephemeralId,
-    required DateTime firstDetection,
-  })  : detectionTimes = [firstDetection],
-        isConfirmed = false;
+  DetectedDevice({required this.ephemeralId, required DateTime firstDetection})
+    : detectionTimes = [firstDetection],
+      isConfirmed = false;
 
   void addDetection(DateTime time) {
     detectionTimes.add(time);
@@ -38,7 +36,9 @@ class BleService {
   BleService._internal();
 
   static const MethodChannel _channel = MethodChannel('syshack/ble');
-  static const EventChannel _eventChannel = EventChannel('syshack/ble/scan_results');
+  static const EventChannel _eventChannel = EventChannel(
+    'syshack/ble/scan_results',
+  );
 
   final FlutterBlePeripheral _blePeripheral = FlutterBlePeripheral();
 
@@ -62,18 +62,20 @@ class BleService {
   //  スキャン（受信）処理
   // ═══════════════════════════════════════════════════════
 
-
   Future<bool> ensurePermissions() async {
     if (Platform.isAndroid) {
-      final hasPermissions = await _channel.invokeMethod<bool>('hasRequiredPermissions') ?? false;
+      final hasPermissions =
+          await _channel.invokeMethod<bool>('hasRequiredPermissions') ?? false;
       if (!hasPermissions) {
-        final granted = await _channel.invokeMethod<bool>('requestPermissions') ?? false;
+        final granted =
+            await _channel.invokeMethod<bool>('requestPermissions') ?? false;
         if (!granted) {
           debugPrint('Bluetooth権限が許可されませんでした');
           return false;
         }
       }
-      final isEnabled = await _channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
+      final isEnabled =
+          await _channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
       if (!isEnabled) {
         debugPrint('Bluetoothが無効です');
         return false;
@@ -103,7 +105,9 @@ class BleService {
           return;
         }
         _channel
-            .invokeMethod('startScanning', {'serviceUuid': streetPassServiceUuid})
+            .invokeMethod('startScanning', {
+              'serviceUuid': streetPassServiceUuid,
+            })
             .catchError((Object error) {
               debugPrint('BLEスキャン開始エラー(Android): $error');
               onError(error);
@@ -180,7 +184,8 @@ class BleService {
   /// iOS専用: ScanResultからエフェメラルIDを抽出
   String? _extractEphemeralId(ScanResult result) {
     // 1. Service Data から抽出 (Androidからの発信)
-    final serviceDataBytes = result.advertisementData.serviceData[Guid(streetPassServiceUuid)];
+    final serviceDataBytes =
+        result.advertisementData.serviceData[Guid(streetPassServiceUuid)];
     if (serviceDataBytes != null && serviceDataBytes.isNotEmpty) {
       final token = String.fromCharCodes(serviceDataBytes).trim();
       if (token.length == 8 || token.length == 16) {
@@ -220,7 +225,7 @@ class BleService {
     _cleanupTimer = null;
     await _scanSubscription?.cancel();
     _scanSubscription = null;
-    
+
     if (Platform.isAndroid) {
       try {
         await _channel.invokeMethod('stopScanning');
@@ -230,7 +235,7 @@ class BleService {
     } else {
       await FlutterBluePlus.stopScan();
     }
-    
+
     _detectionBuffer.clear();
     debugPrint('BLEスキャンを停止しました');
   }
@@ -297,7 +302,7 @@ class BleService {
     } else {
       // iOS用実装 (Plan C: トークンをそのままLocal Nameに乗せる)
       final localName = ephemeralId;
-      
+
       final advertiseData = AdvertiseData(
         serviceUuids: [streetPassServiceUuid],
         localName: localName,
@@ -324,7 +329,7 @@ class BleService {
     } else {
       await _blePeripheral.stop();
     }
-    
+
     _currentEphemeralId = newEphemeralId;
     await _startAdvertisingWithId(newEphemeralId);
     debugPrint('アドバタイズIDを更新しました: $newEphemeralId');
@@ -336,13 +341,13 @@ class BleService {
     try {
       _tokenRefreshTimer?.cancel();
       _tokenRefreshTimer = null;
-      
+
       if (Platform.isAndroid) {
         await _channel.invokeMethod('stopAdvertising');
       } else {
         await _blePeripheral.stop();
       }
-      
+
       _isAdvertising = false;
       _currentEphemeralId = null;
       debugPrint('BLEアドバタイズを停止しました');

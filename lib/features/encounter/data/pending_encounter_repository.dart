@@ -66,7 +66,10 @@ class PendingEncounterRepository {
   static const _unsentTokensKey = 'unsent_ephemeral_tokens';
 
   /// 未送信のトークンと遭遇時刻をローカルに保存
-  Future<void> addUnsentToken(String ephemeralId, DateTime encounteredAt) async {
+  Future<void> addUnsentToken(
+    String ephemeralId,
+    DateTime encounteredAt,
+  ) async {
     final tokens = await getUnsentTokens();
     tokens.add({
       'ephemeralId': ephemeralId,
@@ -101,7 +104,7 @@ class PendingEncounterRepository {
     final validTokens = tokens.where((token) {
       final encounteredAtStr = token['encounteredAt'] as String?;
       if (encounteredAtStr == null) return false;
-      
+
       try {
         final encounteredAt = DateTime.parse(encounteredAtStr).toUtc();
         final difference = now.difference(encounteredAt);
@@ -114,7 +117,10 @@ class PendingEncounterRepository {
 
     // 削除された要素があれば更新する
     if (validTokens.length != tokens.length) {
-      await _storage.write(key: _unsentTokensKey, value: jsonEncode(validTokens));
+      await _storage.write(
+        key: _unsentTokensKey,
+        value: jsonEncode(validTokens),
+      );
     }
   }
 }

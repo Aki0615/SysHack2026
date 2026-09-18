@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/event/data/event_repository.dart';
 import 'package:syshack2026/features/event/domain/event_model.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// イベント詳細画面のプロバイダー。
 ///
@@ -199,7 +200,9 @@ class EventDetailScreen extends ConsumerWidget {
     );
   }
 
-  static String _formatDateRange(DateTime start, DateTime? end) {
+  static String _formatDateRange(DateTime startUtc, DateTime? endUtc) {
+    final start = AppTime.toAppLocal(startUtc);
+    final end = endUtc != null ? AppTime.toAppLocal(endUtc) : null;
     final startStr =
         '${start.year}/${start.month.toString().padLeft(2, '0')}/${start.day.toString().padLeft(2, '0')} '
         '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}';

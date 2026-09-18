@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syshack2026/features/calendar/data/calendar_repository.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// カレンダー画面のデータ状態
 class CalendarState {
@@ -79,8 +80,11 @@ class CalendarNotifier extends Notifier<CalendarState> {
 
       // 参加予定イベントを日付にマージ（イベントだけ登録された日を作る）
       for (final event in monthEvents) {
-        final startAt = DateTime.tryParse(event['start_at']?.toString() ?? '');
-        if (startAt == null) continue;
+        final startAtUtc = DateTime.tryParse(
+          event['start_at']?.toString() ?? '',
+        );
+        if (startAtUtc == null) continue;
+        final startAt = AppTime.toAppLocal(startAtUtc);
         final date = DateTime(startAt.year, startAt.month, startAt.day);
 
         final existing = newEncounterDays[date] ?? const <String, dynamic>{};

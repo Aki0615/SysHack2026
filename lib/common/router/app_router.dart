@@ -22,6 +22,7 @@ import 'package:syshack2026/features/mypage/presentation/qr_scan_screen.dart';
 import 'package:syshack2026/features/mypage/presentation/stamp_card_screen.dart';
 import 'package:syshack2026/features/settings/presentation/settings_screen.dart';
 import 'package:syshack2026/main_screen.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// GoRouterのリフレッシュ用Notifier
 class RouterNotifier extends ChangeNotifier {
@@ -117,7 +118,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/encounters/day/:date',
         builder: (context, state) {
           final raw = state.pathParameters['date'] ?? '';
-          final date = DateTime.tryParse(raw) ?? DateTime.now();
+          final date = DateTime.tryParse(raw) ?? AppTime.nowLocal();
           return DailyEncounterListScreen(date: date);
         },
       ),

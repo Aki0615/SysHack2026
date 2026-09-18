@@ -10,6 +10,7 @@ import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/avatar_group_section.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/day_event_card.dart';
 import 'package:syshack2026/common/widgets/week_day_pill.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// 週表示のカレンダー画面（新規デフォルト）。
 ///
@@ -32,7 +33,7 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = AppTime.nowLocal();
     _selectedDate = DateTime(now.year, now.month, now.day);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,38 +93,35 @@ class _WeekCalendarScreenState extends ConsumerState<WeekCalendarScreen> {
       body: Column(
         children: [
           PasslyHeader.calendar(onSearchTap: _openEventSearch),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(15, 24, 15, 120),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _MonthNavigation(
-                      month: _selectedDate,
-                      onPrev: _goToPreviousMonth,
-                      onNext: _goToNextMonth,
-                      onOpenMonthView: () => context.push('/calendar/month'),
-                    ),
-                    const SizedBox(height: 8),
-                    _WeekStrip(
-                      selectedDate: _selectedDate,
-                      onSelect: _onDayTap,
-                    ),
-                    const SizedBox(height: 24),
-                    _EventCardSection(
-                      dayData: dayData,
-                      selectedDate: _selectedDate,
-                    ),
-                    const SizedBox(height: 24),
-                    _EncounterSection(
-                      selectedDate: _selectedDate,
-                      dayData: dayData,
-                    ),
-                    _CloseFriendSection(closeFriendsAsync: closeFriendsAsync),
-                  ],
-                ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(15, 24, 15, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _MonthNavigation(
+                    month: _selectedDate,
+                    onPrev: _goToPreviousMonth,
+                    onNext: _goToNextMonth,
+                    onOpenMonthView: () => context.push('/calendar/month'),
+                  ),
+                  const SizedBox(height: 8),
+                  _WeekStrip(selectedDate: _selectedDate, onSelect: _onDayTap),
+                  const SizedBox(height: 24),
+                  _EventCardSection(
+                    dayData: dayData,
+                    selectedDate: _selectedDate,
+                  ),
+                  const SizedBox(height: 24),
+                  _EncounterSection(
+                    selectedDate: _selectedDate,
+                    dayData: dayData,
+                  ),
+                  _CloseFriendSection(closeFriendsAsync: closeFriendsAsync),
+                ],
               ),
             ),
+          ),
         ],
       ),
     );

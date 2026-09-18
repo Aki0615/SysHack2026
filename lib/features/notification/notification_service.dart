@@ -11,7 +11,8 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -19,7 +20,8 @@ class NotificationService {
 
     // タイムゾーンの初期化
     tz.initializeTimeZones();
-    final String timeZoneName = (await FlutterTimezone.getLocalTimezone()).identifier;
+    final String timeZoneName =
+        (await FlutterTimezone.getLocalTimezone()).identifier;
     tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     // Android初期化設定
@@ -29,28 +31,31 @@ class NotificationService {
     // iOS初期化設定
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsDarwin,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsDarwin,
+        );
 
-    await _plugin.initialize(
-      settings: initializationSettings,
-    );
+    await _plugin.initialize(settings: initializationSettings);
 
     // 権限リクエスト
     if (Platform.isAndroid) {
-      final androidImplementation = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final androidImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await androidImplementation?.requestNotificationsPermission();
     } else if (Platform.isIOS) {
-      final iosImplementation = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+      final iosImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       await iosImplementation?.requestPermissions(
         alert: true,
         badge: true,
@@ -108,8 +113,12 @@ class NotificationService {
   /// すれ違いがある状態で1日アプリを開かなかった場合に発火するスケジュール通知
   Future<void> scheduleEncounterReminder() async {
     await initialize();
-    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(days: 1));
-    debugPrint('[NotificationService] ⏰ 1日後のすれ違いリマインダーをスケジュールしました: $scheduledTime');
+    final scheduledTime = tz.TZDateTime.now(
+      tz.local,
+    ).add(const Duration(days: 1));
+    debugPrint(
+      '[NotificationService] ⏰ 1日後のすれ違いリマインダーをスケジュールしました: $scheduledTime',
+    );
     await _plugin.zonedSchedule(
       id: 2, // ID=2
       title: 'すれ違いデータがあります',
@@ -128,6 +137,8 @@ class NotificationService {
 
   /// デバッグ用 (以前の互換性維持)
   Future<void> showTokenExhaustedNotification() async {
-    await scheduleTokenWarningNotification(DateTime.now().add(const Duration(seconds: 5)));
+    await scheduleTokenWarningNotification(
+      DateTime.now().add(const Duration(seconds: 5)),
+    );
   }
 }
