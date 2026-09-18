@@ -61,4 +61,60 @@ class PendingEncounterRepository {
     final jsonStr = jsonEncode(encounters.map((e) => e.toJson()).toList());
     await _storage.write(key: _key, value: jsonStr);
   }
+
+  // --- オフライン保存用 (未送信トークン) ---
+  static const _unsentTokensKey = 'unsent_ephemeral_tokens';
+
+  /// 未送信のトークンと遭遇時刻をローカルに保存
+  Future<void> addUnsentToken(String ephemeralId, DateTime encounteredAt) async {
+    final tokens = await getUnsentTokens();
+    tokens.add({
+      'ephemeralId': ephemeralId,
+      'encounteredAt': encounteredAt.toUtc().toIso8601String(),
+    });
+    await _storage.write(key: _unsentTokensKey, value: jsonEncode(tokens));
+  }
+
+  /// 未送信のトークン一覧を取得
+  Future<List<Map<String, dynamic>>> getUnsentTokens() async {
+    final data = await _storage.read(key: _unsentTokensKey);
+    if (data == null) return [];
+    try {
+      final List<dynamic> decoded = jsonDecode(data);
+      return decoded.cast<Map<String, dynamic>>();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// 未送信のトークン一覧を全消去
+  Future<void> clearUnsentTokens() async {
+    await _storage.delete(key: _unsentTokensKey);
+  }
+
+  /// 遭遇から48時間以上経過した古いトークンを削除
+  Future<void> removeExpiredTokens() async {
+    final tokens = await getUnsentTokens();
+    if (tokens.isEmpty) return;
+
+    final now = DateTime.now().toUtc();
+    final validTokens = tokens.where((token) {
+      final encounteredAtStr = token['encounteredAt'] as String?;
+      if (encounteredAtStr == null) return false;
+      
+      try {
+        final encounteredAt = DateTime.parse(encounteredAtStr).toUtc();
+        final difference = now.difference(encounteredAt);
+        // 48時間以内のデータのみ残す
+        return difference.inHours < 48;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+
+    // 削除された要素があれば更新する
+    if (validTokens.length != tokens.length) {
+      await _storage.write(key: _unsentTokensKey, value: jsonEncode(validTokens));
+    }
+  }
 }

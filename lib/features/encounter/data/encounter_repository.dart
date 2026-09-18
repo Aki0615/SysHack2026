@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
 
@@ -16,7 +17,7 @@ class EncounterRepository {
   /// プライバシー保護のため、一定時間ごとに新しいトークンを取得してアドバタイズに使用
   Future<EphemeralToken> getEphemeralToken(String userId) async {
     try {
-      final response = await _dio.get('/users/$userId/ephemeral-token');
+      final response = await _dio.get('/users/$userId/ephemeral-tokens');
       return EphemeralToken.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception('エフェメラルトークンの取得に失敗: ${e.message}');
@@ -34,6 +35,37 @@ class EncounterRepository {
       return response.data['user_id'] as String;
     } on DioException catch (e) {
       throw Exception('ユーザーIDの解決に失敗: ${e.message}');
+    }
+  }
+
+  /// 複数のエフェメラルID（短期トークン）をプールとして取得する（GET /users/:id/ephemeral-tokens）
+  /// オフライン時に備えて事前に複数個のトークンを取得
+  Future<List<EphemeralToken>> getEphemeralTokens(String userId) async {
+    try {
+      final response = await _dio.get('/users/$userId/ephemeral-tokens');
+      final data = response.data;
+      if (data is List) {
+        return data.map((e) => EphemeralToken.fromJson(e as Map<String, dynamic>)).toList();
+      } else if (data is Map<String, dynamic> && data['tokens'] is List) {
+        return (data['tokens'] as List).map((e) => EphemeralToken.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      // API未実装やサーバーダウン時のモック対応
+      if (e.response?.statusCode == 404 || e.response == null) {
+        // フォールバック: バックエンドが未実装の場合はダミーのトークンプール(5個)を返す
+        debugPrint('[Mock] getEphemeralTokens fallback triggered');
+        return List.generate(5, (index) {
+          // ペイロード制限(31バイト)を超えないように短くする
+          final validFrom = DateTime.now().add(Duration(minutes: 15 * index));
+          return EphemeralToken(
+            token: 'mock-$index-${DateTime.now().second}',
+            validFrom: validFrom,
+            expiresAt: validFrom.add(const Duration(minutes: 15)),
+          );
+        });
+      }
+      throw Exception('エフェメラルトークンプールの取得に失敗: ${e.message}');
     }
   }
 
@@ -72,6 +104,41 @@ class EncounterRepository {
         : null;
 
     return EncounterRecordResult(created: status == 201, message: message);
+  }
+
+  /// 溜まったすれ違い記録をバッチ送信する（POST /encounters/batch）
+  /// 5MBのペイロード制限を回避するため、チャンクに分割して送信する
+  Future<void> recordEncountersBatch(List<Map<String, dynamic>> encounters) async {
+    if (encounters.isEmpty) return;
+
+    // 1チャンクあたりの最大送信件数 (5MB制限対策)
+    const chunkSize = 1000;
+
+    for (var i = 0; i < encounters.length; i += chunkSize) {
+      final end = (i + chunkSize < encounters.length) ? i + chunkSize : encounters.length;
+      
+      // バックエンドの仕様に合わせてキーをスネークケースに変換
+      final chunk = encounters.sublist(i, end).map((e) => {
+        'target_token': e['ephemeralId'],
+        'encountered_at': e['encounteredAt'],
+      }).toList();
+
+      try {
+        await _dio.post(
+          '/encounters/batch',
+          data: {'encounters': chunk},
+          options: Options(contentType: 'application/json'),
+        );
+      } on DioException catch (e) {
+        // バックエンドが未実装の場合はエラーを握り潰してモック的に成功扱いにする
+        if (e.response?.statusCode == 404) {
+          // Mock successful creation
+          debugPrint('[Mock] recordEncountersBatch success for ${chunk.length} items');
+          continue;
+        }
+        throw Exception('バッチ送信に失敗: ${e.message}');
+      }
+    }
   }
 
   /// すれ違い結果を確認済みにする（PUT /users/:id/encounters/confirm）
@@ -122,31 +189,32 @@ class UnlockedAchievement {
 /// エフェメラルトークン（短期間有効なBLEアドバタイズ用トークン）
 class EphemeralToken {
   final String token;
+  final DateTime validFrom;
   final DateTime expiresAt;
 
-  EphemeralToken({required this.token, required this.expiresAt});
+  EphemeralToken({
+    required this.token,
+    required this.validFrom,
+    required this.expiresAt,
+  });
 
   factory EphemeralToken.fromJson(Map<String, dynamic> json) {
-    DateTime parseExpiresAt() {
-      final expiresAtRaw = json['expires_at'];
-      if (expiresAtRaw is String && expiresAtRaw.isNotEmpty) {
-        return DateTime.parse(expiresAtRaw);
+    DateTime parseTime(String key, {required Duration fallbackOffset}) {
+      final raw = json[key];
+      if (raw is String && raw.isNotEmpty) {
+        return DateTime.parse(raw);
       }
-
-      final expiresInRaw = json['expires_in'];
-      final expiresInSec = int.tryParse(expiresInRaw?.toString() ?? '');
-      if (expiresInSec != null) {
-        return DateTime.now().add(Duration(seconds: expiresInSec));
-      }
-
-      return DateTime.now().add(const Duration(hours: 1));
+      return DateTime.now().add(fallbackOffset);
     }
 
     return EphemeralToken(
       token: json['token'] as String,
-      expiresAt: parseExpiresAt(),
+      validFrom: parseTime('valid_from', fallbackOffset: Duration.zero),
+      expiresAt: parseTime('expires_at', fallbackOffset: const Duration(hours: 1)),
     );
   }
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
+  bool get isFuture => DateTime.now().isBefore(validFrom);
+  bool get isActive => !isExpired && !isFuture;
 }

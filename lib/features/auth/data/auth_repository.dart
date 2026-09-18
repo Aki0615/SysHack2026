@@ -59,8 +59,14 @@ class AuthRepository {
     );
 
     final String userId = response.data['user_id'] as String;
+    final String? token = response.data['token'] as String?;
     // ユーザーIDをローカルに保存（永続ログイン等に使用）
     await _storage.write(key: 'user_id', value: userId);
+    // 認証トークン(JWT)を保存。dio_client.dartのインターセプターが
+    // 保護されたAPI呼び出し時にAuthorization: Bearerとして自動付与する。
+    if (token != null && token.isNotEmpty) {
+      await _storage.write(key: authTokenStorageKey, value: token);
+    }
 
     // 認証成功後、ユーザー情報を取得して返す
     return await _fetchUser(userId);
@@ -96,8 +102,9 @@ class AuthRepository {
     }
   }
 
-  /// ログアウト（ユーザーIDを削除）
+  /// ログアウト（ユーザーID・認証トークンを削除）
   Future<void> logout() async {
     await _storage.delete(key: 'user_id');
+    await _storage.delete(key: authTokenStorageKey);
   }
 }
