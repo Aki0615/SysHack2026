@@ -1,3 +1,7 @@
+import 'dart:io' show Platform;
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
@@ -27,34 +31,67 @@ class PasslyBottomNav extends StatelessWidget {
   });
 
   static const double _height = 64;
+  static const double _radius = 32;
+
+  static bool get _supportsLiquidGlass {
+    if (kIsWeb) return false;
+    return Platform.isIOS;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // iOS 26 相当のリキッドグラス質感を持たせるため、
-    // `liquid_glass_renderer` の LiquidGlass (RoundedSuperellipse) で背景を描く。
-    return LiquidGlassLayer(
-      settings: const LiquidGlassSettings(
-        thickness: 22,
-        blur: 10,
-        glassColor: Color(0x33FFFFFF),
-        lightIntensity: 1.4,
-      ),
-      child: LiquidGlass(
-        // 高さ 64 のピル形状なので borderRadius は half-height (32) にする。
-        shape: const LiquidRoundedSuperellipse(borderRadius: 32),
-        child: SizedBox(
+    final row = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        for (int i = 0; i < items.length; i++)
+          _NavItem(
+            item: items[i],
+            active: i == currentIndex,
+            onTap: () => onTap(i),
+          ),
+      ],
+    );
+
+    // iOS: liquid_glass_renderer で本物のリキッドグラス。
+    // Android: SkSL がコンパイルできない / レイヤーが上下反転して描画される
+    // 既知バグを避けるため BackdropFilter + 半透明白のピル型に fallback。
+    if (_supportsLiquidGlass) {
+      return LiquidGlassLayer(
+        settings: const LiquidGlassSettings(
+          thickness: 22,
+          blur: 10,
+          glassColor: Color(0x33FFFFFF),
+          lightIntensity: 1.4,
+        ),
+        child: LiquidGlass(
+          shape: const LiquidRoundedSuperellipse(borderRadius: _radius),
+          child: SizedBox(height: _height, child: row),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(_radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
           height: _height,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              for (int i = 0; i < items.length; i++)
-                _NavItem(
-                  item: items[i],
-                  active: i == currentIndex,
-                  onTap: () => onTap(i),
-                ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(_radius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.5),
+              width: 0.6,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF858E85).withValues(alpha: 0.18),
+                blurRadius: 20,
+                offset: const Offset(0, 2),
+              ),
             ],
           ),
+          child: row,
         ),
       ),
     );

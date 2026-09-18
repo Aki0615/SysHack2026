@@ -636,10 +636,10 @@ class _FloatingHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 編集ペンを左端、右端に「友だち追加 (QR) + 歯車」を横並びに配置。
-    // Figma node 1477:2922 準拠: 左右のグループを spaceBetween で振り分け、
-    // 右グループ内のアイコン間は 6px。
+    // 他画面のヘッダー (PasslyHeader) と横方向の位置を揃えるため
+    // 左右 20 のパディングに統一する。
     return Padding(
-      padding: const EdgeInsets.fromLTRB(19, 12, 19, 0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
