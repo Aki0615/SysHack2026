@@ -142,6 +142,7 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
                 ),
               ),
               const SizedBox(height: 16),
+              // TODO: このスキップボタンは仮置きのため、正式なUIが決まり次第修正する
               TextButton(
                 onPressed: () => _close(ref),
                 child: const Text('スキップ', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
@@ -185,9 +186,13 @@ class _EncounterCardStackState extends State<_EncounterCardStack> {
                 myIconUrl: widget.me?.iconUrl ?? '',
                 encounter: encounter,
               ),
-              const SizedBox(height: 32),
-              _InfoCards(myTechStack: widget.me?.techStack ?? '', encounter: encounter),
-              const Spacer(),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: _InfoCards(myTechStack: widget.me?.techStack ?? '', encounter: encounter),
+                ),
+              ),
+              const SizedBox(height: 8),
               _ActionButtons(
                 targetUserId: encounter.encounteredUser.id,
                 isLast: index == widget.encounters.length - 1,
@@ -213,25 +218,23 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 320,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // メインコンテンツを中央に
-          Positioned.fill(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const _TitleSection(),
-                const SizedBox(height: 40),
-                _AvatarPair(myIconUrl: myIconUrl, encounter: encounter),
-                const SizedBox(height: 32),
-                _EncounteredName(name: encounter.encounteredUser.name),
-              ],
-            ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // メインコンテンツを自然な高さで配置
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const _TitleSection(),
+              const SizedBox(height: 20),
+              _AvatarPair(myIconUrl: myIconUrl, encounter: encounter),
+              const SizedBox(height: 20),
+              _EncounteredName(name: encounter.encounteredUser.name),
+            ],
           ),
+        ),
           // 装飾: 4 つの小さな丸（各コーナー付近）
           const Positioned(
             right: 28,
@@ -275,8 +278,8 @@ class _HeroSection extends StatelessWidget {
             child: _DecoPill(color: Color(0xFF7CC4FF), rotationDeg: -70),
           ),
         ],
-      ),
-    );
+      );
+
   }
 }
 
@@ -437,14 +440,19 @@ class _EncounteredName extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      name.isEmpty ? '名前未設定' : name,
-      textAlign: TextAlign.center,
-      style: const TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 20,
-        fontWeight: FontWeight.w900,
-        height: 24 / 20,
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 64),
+      child: SingleChildScrollView(
+        child: Text(
+          name.isEmpty ? '名前未設定' : name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            height: 24 / 20,
+          ),
+        ),
       ),
     );
   }
