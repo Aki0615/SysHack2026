@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:syshack2026/features/mypage/presentation/avatar_crop_screen.dart';
 import 'package:syshack2026/common/widgets/passly_glass_circle.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
@@ -150,14 +151,25 @@ class _MyPageScreenState extends ConsumerState<MyPageScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
+    if (!mounted) return;
+
+    // 縦横比が画面と異なる画像でも、アイコンにしたい部分をユーザー自身が
+    // 選べるように、アップロード前に位置調整画面を挟む。
+    final croppedPath = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => AvatarCropScreen(imagePath: picked.path),
+      ),
+    );
+    if (croppedPath == null) return; // 調整画面でキャンセルされた
+    if (!mounted) return;
 
     setState(() {
-      _localAvatarPath = picked.path;
+      _localAvatarPath = croppedPath;
       _isUploadingAvatar = true;
     });
     try {
       final repo = ref.read(userRepositoryProvider);
-      await repo.uploadAvatar(user.id, picked.path);
+      await repo.uploadAvatar(user.id, croppedPath);
       await ref.read(authNotifierProvider.notifier).refresh();
       if (!mounted) return;
       setState(() {
@@ -458,9 +470,11 @@ class _CoverAndAvatar extends StatelessWidget {
                 height: _avatarSize,
                 child: Stack(
                   children: [
-                    _AvatarCircle(
-                      url: iconUrl,
-                      localPath: localAvatarPath,
+                    Positioned.fill(
+                      child: _AvatarCircle(
+                        url: iconUrl,
+                        localPath: localAvatarPath,
+                      ),
                     ),
                     if (isUploadingAvatar)
                       Container(
