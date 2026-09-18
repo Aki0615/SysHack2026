@@ -18,6 +18,12 @@ class RecentEncounterCard extends StatelessWidget {
   /// 場所表示 (例: "SysHack2026")。
   final String location;
 
+  /// 所属表示 (例: "◯◯大学 / ◯◯サークル")。
+  ///
+  /// 空でない場合は [time]/[location] の代わりに名前の下に 1 行で表示される。
+  /// 「親しい人」など時刻/場所より所属を出したいカードで指定する。
+  final String affiliation;
+
   final VoidCallback? onTap;
 
   const RecentEncounterCard({
@@ -26,6 +32,7 @@ class RecentEncounterCard extends StatelessWidget {
     required this.name,
     required this.time,
     required this.location,
+    this.affiliation = '',
     this.onTap,
   });
 
@@ -70,24 +77,24 @@ class RecentEncounterCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 7.92),
-                Row(
-                  children: [
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        fontFamily: PasslyFont.family,
-                        color: PasslyText.secondary,
-                        fontSize: 11.88,
-                        fontWeight: PasslyFont.regular,
-                        height: 14.26 / 11.88,
-                      ),
+                if (affiliation.isNotEmpty)
+                  Text(
+                    affiliation,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: PasslyFont.family,
+                      color: PasslyText.secondary,
+                      fontSize: 11.88,
+                      fontWeight: PasslyFont.regular,
+                      height: 14.26 / 11.88,
                     ),
-                    const SizedBox(width: 19.81),
-                    Flexible(
-                      child: Text(
-                        location,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  )
+                else
+                  Row(
+                    children: [
+                      Text(
+                        time,
                         style: const TextStyle(
                           fontFamily: PasslyFont.family,
                           color: PasslyText.secondary,
@@ -96,9 +103,23 @@ class RecentEncounterCard extends StatelessWidget {
                           height: 14.26 / 11.88,
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 19.81),
+                      Flexible(
+                        child: Text(
+                          location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: PasslyFont.family,
+                            color: PasslyText.secondary,
+                            fontSize: 11.88,
+                            fontWeight: PasslyFont.regular,
+                            height: 14.26 / 11.88,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
