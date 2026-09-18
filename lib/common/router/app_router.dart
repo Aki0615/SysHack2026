@@ -11,6 +11,7 @@ import 'package:syshack2026/features/encounter/presentation/encounter_result_scr
 import 'package:syshack2026/features/event/presentation/event_detail_screen.dart';
 import 'package:syshack2026/features/event/presentation/event_search_screen.dart';
 import 'package:syshack2026/features/home/presentation/home_screen.dart';
+import 'package:syshack2026/features/plaza/presentation/friend_search_screen.dart';
 import 'package:syshack2026/features/plaza/presentation/plaza_screen.dart';
 import 'package:syshack2026/features/plaza/presentation/profile_screen.dart';
 import 'package:syshack2026/features/calendar/presentation/calendar_screen.dart';
@@ -111,6 +112,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/close-friends',
         builder: (context, state) => const CloseFriendListScreen(),
+      ),
+
+      // 広場ヘッダーの検索アイコンから開く「友達検索」画面
+      GoRoute(
+        path: '/plaza/search',
+        builder: (context, state) => const FriendSearchScreen(),
       ),
 
       // 月表示のカレンダー画面（週表示から「月表示はこちら」で遷移）
