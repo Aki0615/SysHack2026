@@ -14,6 +14,7 @@ import 'package:syshack2026/core/network/dio_client.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
+import 'package:syshack2026/features/mypage/domain/mypage_editing_provider.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_model.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
 import 'package:syshack2026/features/ble/domain/power_mode_notifier.dart';
@@ -349,13 +350,17 @@ class _MainScreenState extends ConsumerState<MainScreen>
     //   近接センサーが反応した時(_isNear == true)のみ、画面を真っ黒にしてタッチを無効化（ポケット誤動作防止・OLED省電力化）する。
     final shouldBlackoutScreen = _isNear && (powerMode == PowerMode.pocket);
 
+    // マイページ編集中はボトムナビを非表示にして、編集操作 (キャンセル / 保存)
+    // に集中できるようにする。
+    final hideBottomNav = ref.watch(myPageEditingProvider);
+
     return Stack(
       children: [
         Scaffold(
           backgroundColor: AppColors.backgroundWhite,
           extendBody: true, // タブバーの背後まで画面を広げる
           body: widget.navigationShell,
-          bottomNavigationBar: _buildBottomNav(context),
+          bottomNavigationBar: hideBottomNav ? null : _buildBottomNav(context),
         ),
         if (shouldBlackoutScreen)
           Positioned.fill(

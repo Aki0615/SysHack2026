@@ -16,7 +16,9 @@ import 'package:syshack2026/features/plaza/presentation/plaza_screen.dart';
 import 'package:syshack2026/features/plaza/presentation/profile_screen.dart';
 import 'package:syshack2026/features/calendar/presentation/calendar_screen.dart';
 import 'package:syshack2026/features/calendar/presentation/week_calendar_screen.dart';
+import 'package:syshack2026/features/mypage/presentation/mypage_qr_screen.dart';
 import 'package:syshack2026/features/mypage/presentation/mypage_screen.dart';
+import 'package:syshack2026/features/mypage/presentation/qr_scan_screen.dart';
 import 'package:syshack2026/features/mypage/presentation/stamp_card_screen.dart';
 import 'package:syshack2026/features/settings/presentation/settings_screen.dart';
 import 'package:syshack2026/main_screen.dart';
@@ -96,6 +98,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // マイページヘッダーの「友だち追加 (QR)」ボタンから開く QR 画面
+      GoRoute(
+        path: '/mypage/qr',
+        builder: (context, state) => const MyPageQrScreen(),
+      ),
+
+      // QR 表示画面ヘッダーのスキャナアイコンから開く QR コード読み取り画面
+      GoRoute(
+        path: '/mypage/qr/scan',
+        builder: (context, state) => const QrScanScreen(),
       ),
 
       // 指定日のすれ違い相手一覧画面

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
 
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 
@@ -26,33 +27,35 @@ class PasslyBottomNav extends StatelessWidget {
   });
 
   static const double _height = 64;
-  static const double _radius = 118;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: _height,
-      decoration: BoxDecoration(
-        color: PasslyBg.surface,
-        borderRadius: BorderRadius.circular(_radius),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF858E85).withValues(alpha: 0.25),
-            blurRadius: 23.6,
-            offset: const Offset(0, 1.18),
-          ),
-        ],
+    // iOS 26 相当のリキッドグラス質感を持たせるため、
+    // `liquid_glass_renderer` の LiquidGlass (RoundedSuperellipse) で背景を描く。
+    return LiquidGlassLayer(
+      settings: const LiquidGlassSettings(
+        thickness: 22,
+        blur: 10,
+        glassColor: Color(0x33FFFFFF),
+        lightIntensity: 1.4,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          for (int i = 0; i < items.length; i++)
-            _NavItem(
-              item: items[i],
-              active: i == currentIndex,
-              onTap: () => onTap(i),
-            ),
-        ],
+      child: LiquidGlass(
+        // 高さ 64 のピル形状なので borderRadius は half-height (32) にする。
+        shape: const LiquidRoundedSuperellipse(borderRadius: 32),
+        child: SizedBox(
+          height: _height,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              for (int i = 0; i < items.length; i++)
+                _NavItem(
+                  item: items[i],
+                  active: i == currentIndex,
+                  onTap: () => onTap(i),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
