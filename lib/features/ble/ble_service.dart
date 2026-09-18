@@ -38,7 +38,7 @@ class BleService {
   BleService._internal();
 
   static const MethodChannel _channel = MethodChannel('syshack/ble');
-  static const EventChannel _eventChannel = EventChannel('syshack/ble/scan_events');
+  static const EventChannel _eventChannel = EventChannel('syshack/ble/scan_results');
 
   final FlutterBlePeripheral _blePeripheral = FlutterBlePeripheral();
 

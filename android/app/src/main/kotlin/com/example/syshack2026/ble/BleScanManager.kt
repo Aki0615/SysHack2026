@@ -93,20 +93,26 @@ class BleScanManager(private val context: Context) {
                 }
             }
 
-            // 2. Local Name から抽出 (iOSからの発信)
+            // 2. Local Name から抽出 (iOSからの発信)。iOSはLocal Nameにトークンを格納する。
+            //    "SP_" プレフィックス付きなら剥がす(無くても許容)。
             if (token.isNullOrEmpty()) {
-                val deviceName = record.deviceName
-                if (deviceName != null) {
-                    // iOSは31バイト制限回避のため Local Name にトークンをそのまま格納している
-                    token = deviceName.trim()
+                val deviceName = record.deviceName?.trim()
+                if (!deviceName.isNullOrEmpty()) {
+                    token = if (deviceName.startsWith("SP_")) deviceName.substring(3) else deviceName
                 }
             }
 
-            // バリデーション (8文字 または 16文字)
-            if (token != null && (token.length == 8 || token.length == 16)) {
+            // バリデーション: エフェメラルトークンは16進文字列(8桁 or 16桁)。
+            // 長さだけでなく16進かどうかも検証し、近隣の無関係なBLE端末名
+            // (例:「Slackの住人」= ちょうど8文字だが16進ではない)を確実に除外する(2026-09-19)。
+            val t = token
+            val isHexToken = t != null &&
+                (t.length == 8 || t.length == 16) &&
+                t.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+            if (isHexToken) {
                 eventSink?.success(
                     mapOf(
-                        "ephemeralId" to token,
+                        "ephemeralId" to t,
                         "rssi" to result.rssi,
                         "timestampMs" to System.currentTimeMillis()
                     )
