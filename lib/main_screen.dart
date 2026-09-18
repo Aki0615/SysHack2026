@@ -376,14 +376,50 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    // Figma node 1110:2434 準拠: 15px 側方インセット + 下方 15px でピル型ナビを浮かせる。
+    final bleState = ref.watch(bleNotifierProvider);
+    final bleActive = bleState.isScanning || bleState.isAdvertising;
+
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-        child: PasslyBottomNav(
-          currentIndex: widget.navigationShell.currentIndex,
-          onTap: (index) => _onTap(context, index),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            PasslyBottomNav(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: (index) => _onTap(context, index),
+            ),
+            if (!bleActive)
+              Positioned(
+                right: 0,
+                bottom: 70, // ナビゲーションバーの上に浮かせる
+                child: IgnorePointer( // ボタンに干渉しないように
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'すれ違い検知がオフになっているよ！！',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

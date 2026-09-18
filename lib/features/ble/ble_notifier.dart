@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -180,6 +182,12 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
     }
 
     try {
+      // 0. 事前権限チェック
+      if (Platform.isAndroid) {
+        final granted = await _bleService.ensurePermissions();
+        if (!granted) throw Exception('Bluetooth権限がありません');
+      }
+
       // 1. エフェメラルトークンプールを取得
       final encounterRepo = ref.read(encounterRepositoryProvider);
       _tokenPool = await encounterRepo.getEphemeralTokens(user.id);
@@ -217,6 +225,7 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
     } catch (e, stackTrace) {
       debugPrint('BLE開始エラー: $e\n$stackTrace');
       state = state.copyWith(lastError: e.toString());
+      rethrow;
     }
   }
 

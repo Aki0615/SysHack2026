@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -135,20 +136,48 @@ class SettingsScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                next
-                    ? 'すれ違い検知の開始に失敗しました: $e'
-                    : 'すれ違い検知の停止に失敗しました: $e',
+        final errorMsg = e.toString();
+        if (next && errorMsg.contains('権限')) {
+          _showPermissionDialog(context);
+        } else {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(
+                  next
+                      ? 'すれ違い検知の開始に失敗しました: $e'
+                      : 'すれ違い検知の停止に失敗しました: $e',
+                ),
+                backgroundColor: PasslyState.error,
               ),
-              backgroundColor: PasslyState.error,
-            ),
-          );
+            );
+        }
       }
     }
+  }
+
+  void _showPermissionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bluetooth等の権限が必要です'),
+        content: const Text('すれ違い通信をオンにするには、設定画面からBluetooth（または位置情報）へのアクセスを許可してください。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: const Text('設定を開く'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _launchUrl(String url) async {
