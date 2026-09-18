@@ -28,8 +28,8 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bleState = ref.watch(bleNotifierProvider);
-    final bleActive = bleState.isScanning || bleState.isAdvertising;
+    final settingsState = ref.watch(settingsNotifierProvider).value;
+    final bleActive = settingsState?.isBleEnabled ?? true;
 
     return Scaffold(
       backgroundColor: PasslyBg.defaultBg,
@@ -131,8 +131,12 @@ class SettingsScreen extends ConsumerWidget {
     try {
       if (next) {
         await notifier.start();
+        // 成功した場合のみ状態を保存
+        await ref.read(settingsNotifierProvider.notifier).setBleEnabled(true);
       } else {
         await notifier.stop();
+        // 成功した場合のみ状態を保存
+        await ref.read(settingsNotifierProvider.notifier).setBleEnabled(false);
       }
     } catch (e) {
       if (context.mounted) {

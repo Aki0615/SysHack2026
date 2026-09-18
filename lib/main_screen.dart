@@ -12,6 +12,7 @@ import 'package:syshack2026/common/widgets/passly_bottom_nav.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
+import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/encounter/domain/encounter_notifier.dart';
 import 'package:syshack2026/features/mypage/domain/mypage_editing_provider.dart';
@@ -149,6 +150,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
   Future<void> _startBleIfLoggedIn() async {
     final user = ref.read(authNotifierProvider).value;
     if (user == null) return;
+
+    // 設定でOFFになっている場合は自動開始しない
+    final isBleEnabled = ref.read(settingsNotifierProvider).value?.isBleEnabled ?? true;
+    if (!isBleEnabled) return;
 
     if (_bleStarted && _lastBleUserId == user.id) return;
 
@@ -376,8 +381,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 
   Widget _buildBottomNav(BuildContext context) {
-    final bleState = ref.watch(bleNotifierProvider);
-    final bleActive = bleState.isScanning || bleState.isAdvertising;
+    final isBleEnabled = ref.watch(settingsNotifierProvider).value?.isBleEnabled ?? true;
 
     return SafeArea(
       top: false,
@@ -390,7 +394,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
               currentIndex: widget.navigationShell.currentIndex,
               onTap: (index) => _onTap(context, index),
             ),
-            if (!bleActive)
+            if (!isBleEnabled)
               Positioned(
                 right: 0,
                 bottom: 70, // ナビゲーションバーの上に浮かせる
