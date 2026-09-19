@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syshack2026/common/widgets/loading_card_skeleton.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/calendar/domain/calendar_notifier.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/encounter_bubble.dart';
@@ -138,12 +139,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           onNextMonth: _onNextMonth,
         ),
         const SizedBox(height: 8),
-        CalendarGrid(
-          currentMonth: _currentMonth,
-          selectedDay: _selectedDay,
-          encounterDays: calendarState.encounterDays,
-          onDaySelected: _onDaySelected,
-        ),
+        if (calendarState.isLoading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: LoadingCardsSkeleton(),
+          )
+        else
+          CalendarGrid(
+            currentMonth: _currentMonth,
+            selectedDay: _selectedDay,
+            encounterDays: calendarState.encounterDays,
+            onDaySelected: _onDaySelected,
+          ),
       ],
     );
   }

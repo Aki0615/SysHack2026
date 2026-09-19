@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:syshack2026/common/widgets/loading_card_skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:syshack2026/core/constants/app_colors.dart';
@@ -50,7 +51,10 @@ class EventDetailScreen extends ConsumerWidget {
       ),
       body: eventAsync.when(
         data: (event) => _buildContent(context, event),
-        loading: () => const SizedBox.shrink(),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(16),
+          child: LoadingEventCardsSkeleton(),
+        ),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),

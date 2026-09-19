@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:syshack2026/common/widgets/loading_card_skeleton.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/passly_header.dart';
@@ -64,7 +65,10 @@ class _FriendSearchScreenState extends ConsumerState<FriendSearchScreen> {
           Expanded(
             child: closeFriendsAsync.when(
               data: (users) => _buildResults(users),
-              loading: () => const SizedBox.shrink(),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: LoadingCardsSkeleton(),
+              ),
               error: (err, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),

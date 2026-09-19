@@ -29,7 +29,6 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
 
   Size? _imageSize;
   bool _isSaving = false;
-  bool _initialTransformApplied = false;
   String? _errorMessage;
 
   @override
@@ -58,25 +57,6 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
       if (!mounted) return;
       setState(() => _errorMessage = '画像の読み込みに失敗しました: $e');
     }
-  }
-
-  /// 画像サイズと調整エリアのサイズの両方が揃った最初のフレームで一度だけ、
-  /// 画像が正方形の枠をちょうど覆うように(BoxFit.cover相当)
-  /// スケール・中央寄せする。ユーザーはそこから位置とズームを調整できる。
-  void _applyInitialTransformIfNeeded(double viewportSize) {
-    final imgSize = _imageSize;
-    if (imgSize == null || _initialTransformApplied) return;
-    _initialTransformApplied = true;
-
-    final scale = math.max(
-      viewportSize / imgSize.width,
-      viewportSize / imgSize.height,
-    );
-    final dx = (viewportSize - imgSize.width * scale) / 2;
-    final dy = (viewportSize - imgSize.height * scale) / 2;
-    _controller.value = Matrix4.identity()
-      ..translate(dx, dy)
-      ..scale(scale);
   }
 
   /// 調整エリア(正方形)の一辺の長さを、画面サイズいっぱいに使えるように計算する。
@@ -131,16 +111,6 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
   Widget build(BuildContext context) {
     final ready = _imageSize != null;
     final viewportSize = _computeViewportSize(context);
-
-    if (ready && !_initialTransformApplied) {
-      // build中に直接コントローラーへ反映すると InteractiveViewer 側の
-      // リスナーが同フレーム内で再ビルドを要求してしまう可能性があるため、
-      // 1フレーム後に適用する。
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _applyInitialTransformIfNeeded(viewportSize);
-      });
-    }
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -197,15 +167,15 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
                           child: ClipRect(
                             child: InteractiveViewer(
                               transformationController: _controller,
-                              minScale: 0.3,
+                              minScale: 1.0,
                               maxScale: 6,
-                              boundaryMargin: const EdgeInsets.all(1000),
+                              boundaryMargin: EdgeInsets.zero,
                               child: SizedBox(
-                                width: _imageSize!.width,
-                                height: _imageSize!.height,
+                                width: viewportSize,
+                                height: viewportSize,
                                 child: Image.file(
                                   File(widget.imagePath),
-                                  fit: BoxFit.fill,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),
