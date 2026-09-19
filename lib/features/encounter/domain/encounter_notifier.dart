@@ -17,6 +17,7 @@ final encounterNotifierProvider =
 class EncounterNotifier extends AsyncNotifier<List<EncounterModel>> {
   @override
   FutureOr<List<EncounterModel>> build() async {
+    ref.watch(authNotifierProvider.select((s) => s.value?.id)); // ユーザー切替時に状態を作り直す
     // 起動時も含め、未確認データはそのまま全件表示対象にする
     // （アプリ非起動中のすれ違いを次回起動時に確実に表示するため）
     return await _fetchPendingEncounters();
