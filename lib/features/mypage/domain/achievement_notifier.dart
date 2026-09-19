@@ -11,7 +11,9 @@ final achievementNotifierProvider =
 class AchievementNotifier extends AsyncNotifier<AchievementResponse> {
   @override
   FutureOr<AchievementResponse> build() async {
-    ref.watch(authNotifierProvider.select((s) => s.value?.id)); // ユーザー切替時に状態を作り直す
+    ref.watch(
+      authNotifierProvider.select((s) => s.value?.id),
+    ); // ユーザー切替時に状態を作り直す
     return _fetch();
   }
 

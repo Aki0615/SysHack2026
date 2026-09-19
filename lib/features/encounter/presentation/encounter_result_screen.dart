@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:syshack2026/common/widgets/encounter_loading_skeleton.dart';
 import 'package:syshack2026/common/widgets/info_badge_card.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
@@ -473,9 +472,9 @@ class _InfoCards extends StatelessWidget {
   /// 大文字小文字を無視して積集合を返す。表示順は自分側の順序を維持。
   List<String> _commonTags(String mine, String other) {
     final mineTags = _parseTags(mine);
-    final otherTagsLower = _parseTags(
-      other,
-    ).map((t) => t.toLowerCase()).toSet();
+    final otherTagsLower = _parseTags(other)
+        .map((t) => t.toLowerCase())
+        .toSet();
     return mineTags
         .where((t) => otherTagsLower.contains(t.toLowerCase()))
         .toList();

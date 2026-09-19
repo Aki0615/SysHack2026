@@ -113,9 +113,8 @@ class NotificationService {
   /// すれ違いがある状態で1日アプリを開かなかった場合に発火するスケジュール通知
   Future<void> scheduleEncounterReminder() async {
     await initialize();
-    final scheduledTime = tz.TZDateTime.now(
-      tz.local,
-    ).add(const Duration(days: 1));
+    final scheduledTime = tz.TZDateTime.now(tz.local)
+        .add(const Duration(days: 1));
     debugPrint(
       '[NotificationService] ⏰ 1日後のすれ違いリマインダーをスケジュールしました: $scheduledTime',
     );

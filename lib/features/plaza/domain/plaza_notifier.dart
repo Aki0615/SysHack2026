@@ -17,7 +17,9 @@ final plazaEventNotifierProvider =
 class PlazaNotifier extends AsyncNotifier<List<UserModel>> {
   @override
   FutureOr<List<UserModel>> build() async {
-    ref.watch(authNotifierProvider.select((s) => s.value?.id)); // ユーザー切替時に状態を作り直す
+    ref.watch(
+      authNotifierProvider.select((s) => s.value?.id),
+    ); // ユーザー切替時に状態を作り直す
     return await _fetchEncounters();
   }
 
@@ -55,7 +57,9 @@ class PlazaNotifier extends AsyncNotifier<List<UserModel>> {
 class PlazaEventNotifier extends AsyncNotifier<List<Map<String, dynamic>>> {
   @override
   FutureOr<List<Map<String, dynamic>>> build() async {
-    ref.watch(authNotifierProvider.select((s) => s.value?.id)); // ユーザー切替時に状態を作り直す
+    ref.watch(
+      authNotifierProvider.select((s) => s.value?.id),
+    ); // ユーザー切替時に状態を作り直す
     return await _fetchEvents();
   }
 
