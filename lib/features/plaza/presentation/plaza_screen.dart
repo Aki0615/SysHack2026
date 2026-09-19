@@ -12,6 +12,7 @@ import 'package:syshack2026/features/close_friend/domain/close_friend_list_notif
 import 'package:syshack2026/features/home/domain/home_notifier.dart';
 import 'package:syshack2026/features/home/domain/recent_encounter.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// 広場画面 (Figma node 1517:3046 準拠)。
 ///
@@ -140,16 +141,19 @@ class _CloseFriendsSection extends StatelessWidget {
           RecentEncounterCard(
             avatarUrl: users[i].iconUrl.isNotEmpty ? users[i].iconUrl : null,
             name: users[i].name,
-            time: '',
-            location: '',
-            affiliation: users[i].affiliation.trim().isEmpty
-                ? '所属未設定'
-                : users[i].affiliation,
+            time: _formatTime(users[i].lastEncounter?.metAt),
+            location: users[i].lastEncounter?.eventName ?? '',
+            affiliation: users[i].affiliation,
             onTap: () => context.push('/profile/${users[i].id}'),
           ),
         ],
       ],
     );
+  }
+
+  static String _formatTime(DateTime? dt) {
+    if (dt == null) return '';
+    return AppTime.formatHHMM(dt);
   }
 }
 
@@ -189,16 +193,17 @@ class _PastEncountersSection extends StatelessWidget {
                 ? encounters[i].iconUrl
                 : null,
             name: encounters[i].name,
-            time: '',
-            location: '',
-            affiliation: encounters[i].affiliation.trim().isEmpty
-                ? '所属未設定'
-                : encounters[i].affiliation,
+            time: _formatTime(encounters[i].metAt),
+            location: encounters[i].eventName,
             onTap: () => context.push('/profile/${encounters[i].userId}'),
           ),
         ],
       ],
     );
+  }
+
+  static String _formatTime(DateTime dt) {
+    return AppTime.formatHHMM(dt);
   }
 }
 
