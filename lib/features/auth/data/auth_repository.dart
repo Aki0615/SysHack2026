@@ -47,6 +47,18 @@ class AuthRepository {
     );
   }
 
+  /// パスワードを変更する（PATCH /users/:id/password）。
+  Future<void> changePassword({
+    required String userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _dio.patch(
+      '/users/$userId/password',
+      data: {'current_password': currentPassword, 'new_password': newPassword},
+    );
+  }
+
   /// ログイン通信API（POST /login）
   /// ログイン成功後、返却されたuser_idを保存し、そのIDでプロフィールを取得します
   Future<UserModel> login({
