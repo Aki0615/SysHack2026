@@ -18,8 +18,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordConfirmationController = TextEditingController();
   final _connpassController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isPasswordConfirmationVisible = false;
   String? _errorMessage;
 
   /// UserModel.role は API 互換のため送信し続ける必要があるが、フロントの
@@ -32,6 +34,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordConfirmationController.dispose();
     _connpassController.dispose();
     super.dispose();
   }
@@ -250,6 +253,62 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               validator: (v) {
                 if (v == null || v.isEmpty) return 'パスワードを入力してください';
                 if (v.length < 6) return '6文字以上で入力してください';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _passwordConfirmationController,
+              obscureText: !_isPasswordConfirmationVisible,
+              style: const TextStyle(color: AppColors.textPrimary),
+              onChanged: (_) => _clearErrorIfNeeded(),
+              decoration: InputDecoration(
+                labelText: 'パスワード（確認）',
+                labelStyle: const TextStyle(color: AppColors.textSecondary),
+                prefixIcon: const Icon(
+                  Icons.lock_outline,
+                  color: AppColors.textSecondary,
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordConfirmationVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: AppColors.textSecondary,
+                  ),
+                  onPressed: () => setState(
+                    () => _isPasswordConfirmationVisible =
+                        !_isPasswordConfirmationVisible,
+                  ),
+                ),
+                filled: true,
+                fillColor: AppColors.backgroundGrey,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.divider),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.primary),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return '確認用パスワードを入力してください';
+                if (v != _passwordController.text) {
+                  return 'パスワードが一致しません';
+                }
                 return null;
               },
             ),
