@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -8,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
+import 'package:syshack2026/core/network/password_change_error.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
 import 'package:syshack2026/features/auth/data/auth_repository.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
@@ -57,12 +59,18 @@ class _ChangePasswordDialogState extends ConsumerState<_ChangePasswordDialog> {
           );
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (error) {
       if (!mounted) return;
       setState(() => isSaving = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('パスワードの変更に失敗しました')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is DioException && isIncorrectCurrentPassword(error)
+                ? '現在のパスワードが正しくありません'
+                : 'パスワードの変更に失敗しました',
+          ),
+        ),
+      );
     }
   }
 
