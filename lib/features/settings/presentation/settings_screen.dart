@@ -9,6 +9,7 @@ import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
 import 'package:syshack2026/features/auth/domain/auth_notifier.dart';
+import 'package:syshack2026/features/auth/data/auth_repository.dart';
 import 'package:syshack2026/features/ble/ble_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
 import 'package:syshack2026/features/settings/domain/settings_notifier.dart';
@@ -86,6 +87,12 @@ class SettingsScreen extends ConsumerWidget {
                 _SectionLabel('その他'),
                 _SettingsCard(
                   children: [
+                    _LinkRow(
+                      icon: Icons.lock_outline,
+                      label: 'パスワードを変更',
+                      onTap: () => _showChangePasswordDialog(context, ref),
+                    ),
+                    const _Divider(),
                     _LinkRow(
                       icon: Icons.description_outlined,
                       label: '利用規約',
@@ -180,6 +187,154 @@ class SettingsScreen extends ConsumerWidget {
         }
       }
     }
+  }
+
+  Future<void> _showChangePasswordDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final formKey = GlobalKey<FormState>();
+    final currentController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmationController = TextEditingController();
+    var isSaving = false;
+    var obscure = true;
+
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('パスワードを変更'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _passwordField(
+                        controller: currentController,
+                        label: '現在のパスワード',
+                        obscure: obscure,
+                        onToggle: () =>
+                            setDialogState(() => obscure = !obscure),
+                      ),
+                      const SizedBox(height: 12),
+                      _passwordField(
+                        controller: newController,
+                        label: '新しいパスワード（6文字以上）',
+                        obscure: obscure,
+                        onToggle: () =>
+                            setDialogState(() => obscure = !obscure),
+                        validator: (value) {
+                          if (value == null || value.length < 6) {
+                            return '6文字以上で入力してください';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _passwordField(
+                        controller: confirmationController,
+                        label: '確認用パスワード',
+                        obscure: obscure,
+                        onToggle: () =>
+                            setDialogState(() => obscure = !obscure),
+                        validator: (value) {
+                          if (value != newController.text) {
+                            return 'パスワードが一致しません';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSaving
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('キャンセル'),
+                ),
+                FilledButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          setDialogState(() => isSaving = true);
+                          try {
+                            final user = ref.read(authNotifierProvider).value;
+                            if (user == null) return;
+                            await ref
+                                .read(authRepositoryProvider)
+                                .changePassword(
+                                  userId: user.id,
+                                  currentPassword: currentController.text,
+                                  newPassword: newController.text,
+                                );
+                            if (dialogContext.mounted) {
+                              Navigator.of(dialogContext).pop();
+                            }
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('パスワードを変更しました')),
+                              );
+                            }
+                          } catch (_) {
+                            setDialogState(() => isSaving = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('パスワードの変更に失敗しました'),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('変更する'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } finally {
+      currentController.dispose();
+      newController.dispose();
+      confirmationController.dispose();
+    }
+  }
+
+  Widget _passwordField({
+    required TextEditingController controller,
+    required String label,
+    required bool obscure,
+    required VoidCallback onToggle,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      validator:
+          validator ??
+          (value) => value == null || value.isEmpty ? '入力してください' : null,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixIcon: IconButton(
+          onPressed: onToggle,
+          icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+        ),
+      ),
+    );
   }
 
   void _showPermissionDialog(BuildContext context) {

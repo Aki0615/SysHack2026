@@ -40,11 +40,10 @@ class PowerModeToggle extends ConsumerWidget {
             onTap: () => notifier.set(PowerMode.normal),
           ),
           _Segment(
-            icon: Icons.nightlight_outlined,
+            icon: Icons.backpack_outlined,
             tooltip: 'ポケット中',
             active: mode == PowerMode.pocket,
             onTap: () => notifier.set(PowerMode.pocket),
-            flipHorizontal: true,
           ),
         ],
       ),
@@ -58,15 +57,11 @@ class _Segment extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
-  /// true にすると Icon を水平反転する (月アイコンの向き調整用)。
-  final bool flipHorizontal;
-
   const _Segment({
     required this.icon,
     required this.tooltip,
     required this.active,
     required this.onTap,
-    this.flipHorizontal = false,
   });
 
   static const double _diameter = 28;
@@ -78,13 +73,6 @@ class _Segment extends StatelessWidget {
       size: 16,
       color: active ? Colors.white : AppColors.textSecondary,
     );
-    if (flipHorizontal) {
-      iconWidget = Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.diagonal3Values(-1, 1, 1),
-        child: iconWidget,
-      );
-    }
     return Tooltip(
       message: tooltip,
       child: GestureDetector(
