@@ -17,11 +17,7 @@ class PasslyGlassCircle extends StatelessWidget {
   final double diameter;
   final Widget child;
 
-  const PasslyGlassCircle({
-    super.key,
-    this.diameter = 40,
-    required this.child,
-  });
+  const PasslyGlassCircle({super.key, this.diameter = 40, required this.child});
 
   bool get _supportsLiquidGlass {
     if (kIsWeb) return false;
@@ -120,13 +116,7 @@ class _GlassShinePainter extends CustomPainter {
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.7);
-    canvas.drawArc(
-      rect,
-      5 * math.pi / 4 - 1.13,
-      2.27,
-      false,
-      highlightPaint,
-    );
+    canvas.drawArc(rect, 5 * math.pi / 4 - 1.13, 2.27, false, highlightPaint);
 
     final bottomShinePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.4)
@@ -134,13 +124,7 @@ class _GlassShinePainter extends CustomPainter {
       ..strokeWidth = 1.0
       ..strokeCap = StrokeCap.round
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.6);
-    canvas.drawArc(
-      rect,
-      math.pi / 4 - 0.96,
-      1.92,
-      false,
-      bottomShinePaint,
-    );
+    canvas.drawArc(rect, math.pi / 4 - 0.96, 1.92, false, bottomShinePaint);
   }
 
   @override

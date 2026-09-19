@@ -12,6 +12,7 @@ import 'package:syshack2026/features/close_friend/domain/close_friend_list_notif
 import 'package:syshack2026/features/home/domain/home_notifier.dart';
 import 'package:syshack2026/features/home/domain/recent_encounter.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// 広場画面 (Figma node 1517:3046 準拠)。
 ///
@@ -152,9 +153,7 @@ class _CloseFriendsSection extends StatelessWidget {
 
   static String _formatTime(DateTime? dt) {
     if (dt == null) return '';
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return AppTime.formatHHMM(dt);
   }
 }
 
@@ -204,9 +203,7 @@ class _PastEncountersSection extends StatelessWidget {
   }
 
   static String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return AppTime.formatHHMM(dt);
   }
 }
 

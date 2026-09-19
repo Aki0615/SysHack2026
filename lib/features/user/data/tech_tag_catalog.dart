@@ -33,12 +33,7 @@ class TechTagCatalog {
       'Svelte',
       'Tailwind',
     ]),
-    TechTagCategory('モバイル', [
-      'Flutter',
-      'React Native',
-      'iOS',
-      'Android',
-    ]),
+    TechTagCategory('モバイル', ['Flutter', 'React Native', 'iOS', 'Android']),
     TechTagCategory('バックエンド', [
       'Node.js',
       'Express',
@@ -64,25 +59,12 @@ class TechTagCatalog {
       'Redis',
       'SQLite',
     ]),
-    TechTagCategory('デザイン', [
-      'Figma',
-      'Adobe XD',
-      'Photoshop',
-      'Illustrator',
-    ]),
-    TechTagCategory('その他', [
-      'Git',
-      'GitHub',
-      'GitLab',
-      'Linux',
-      'VSCode',
-    ]),
+    TechTagCategory('デザイン', ['Figma', 'Adobe XD', 'Photoshop', 'Illustrator']),
+    TechTagCategory('その他', ['Git', 'GitHub', 'GitLab', 'Linux', 'VSCode']),
   ];
 
   /// フラットな全タグ (ルックアップや正規化用)。
-  static final List<String> allTags = [
-    for (final c in categories) ...c.tags,
-  ];
+  static final List<String> allTags = [for (final c in categories) ...c.tags];
 
   /// 大文字小文字を無視して事前定義タグにマッチさせる。
   /// カタログ内での正式表記に正規化して返す (見つからなければそのまま返す)。

@@ -45,9 +45,13 @@ class EncounterRepository {
       final response = await _dio.get('/users/$userId/ephemeral-tokens');
       final data = response.data;
       if (data is List) {
-        return data.map((e) => EphemeralToken.fromJson(e as Map<String, dynamic>)).toList();
+        return data
+            .map((e) => EphemeralToken.fromJson(e as Map<String, dynamic>))
+            .toList();
       } else if (data is Map<String, dynamic> && data['tokens'] is List) {
-        return (data['tokens'] as List).map((e) => EphemeralToken.fromJson(e as Map<String, dynamic>)).toList();
+        return (data['tokens'] as List)
+            .map((e) => EphemeralToken.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
       return [];
     } on DioException catch (e) {
@@ -108,20 +112,29 @@ class EncounterRepository {
 
   /// 溜まったすれ違い記録をバッチ送信する（POST /encounters/batch）
   /// 5MBのペイロード制限を回避するため、チャンクに分割して送信する
-  Future<void> recordEncountersBatch(List<Map<String, dynamic>> encounters) async {
+  Future<void> recordEncountersBatch(
+    List<Map<String, dynamic>> encounters,
+  ) async {
     if (encounters.isEmpty) return;
 
     // 1チャンクあたりの最大送信件数 (5MB制限対策)
     const chunkSize = 1000;
 
     for (var i = 0; i < encounters.length; i += chunkSize) {
-      final end = (i + chunkSize < encounters.length) ? i + chunkSize : encounters.length;
-      
+      final end = (i + chunkSize < encounters.length)
+          ? i + chunkSize
+          : encounters.length;
+
       // バックエンドの仕様に合わせてキーをスネークケースに変換
-      final chunk = encounters.sublist(i, end).map((e) => {
-        'target_token': e['ephemeralId'],
-        'encountered_at': e['encounteredAt'],
-      }).toList();
+      final chunk = encounters
+          .sublist(i, end)
+          .map(
+            (e) => {
+              'target_token': e['ephemeralId'],
+              'encountered_at': e['encounteredAt'],
+            },
+          )
+          .toList();
 
       try {
         await _dio.post(
@@ -133,7 +146,9 @@ class EncounterRepository {
         // バックエンドが未実装の場合はエラーを握り潰してモック的に成功扱いにする
         if (e.response?.statusCode == 404) {
           // Mock successful creation
-          debugPrint('[Mock] recordEncountersBatch success for ${chunk.length} items');
+          debugPrint(
+            '[Mock] recordEncountersBatch success for ${chunk.length} items',
+          );
           continue;
         }
         throw Exception('バッチ送信に失敗: ${e.message}');
@@ -210,7 +225,10 @@ class EphemeralToken {
     return EphemeralToken(
       token: json['token'] as String,
       validFrom: parseTime('valid_from', fallbackOffset: Duration.zero),
-      expiresAt: parseTime('expires_at', fallbackOffset: const Duration(hours: 1)),
+      expiresAt: parseTime(
+        'expires_at',
+        fallbackOffset: const Duration(hours: 1),
+      ),
     );
   }
 

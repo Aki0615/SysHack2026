@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/passly_tokens.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// Figma node 1240:1405 「すれ違い日時ピル」。
 ///
@@ -20,13 +21,11 @@ class EncounterMetaPill extends StatelessWidget {
   /// 完全に自由なテキスト。指定した場合は [date] / [location] は無視される。
   final String? text;
 
-  const EncounterMetaPill({
-    super.key,
-    this.date,
-    this.location,
-    this.text,
-  }) : assert(text != null || (date != null && location != null),
-          'text または (date と location) のいずれかを指定してください');
+  const EncounterMetaPill({super.key, this.date, this.location, this.text})
+    : assert(
+        text != null || (date != null && location != null),
+        'text または (date と location) のいずれかを指定してください',
+      );
 
   static const double _height = 52;
   static const double _radius = 100;
@@ -59,10 +58,7 @@ class EncounterMetaPill extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const PasslyIcon(
-            asset: PasslyIcons.fire,
-            size: _iconSize,
-          ),
+          const PasslyIcon(asset: PasslyIcons.fire, size: _iconSize),
           const SizedBox(width: _gap),
           Flexible(
             child: Text(
@@ -83,7 +79,8 @@ class EncounterMetaPill extends StatelessWidget {
     );
   }
 
-  static String _formatDefault(DateTime date, String location) {
+  static String _formatDefault(DateTime dateUtc, String location) {
+    final date = AppTime.toAppLocal(dateUtc);
     return '${date.month}月${date.day}日 $location で出会いました';
   }
 }

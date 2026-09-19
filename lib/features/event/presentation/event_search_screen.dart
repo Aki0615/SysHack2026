@@ -7,6 +7,7 @@ import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/calendar/presentation/widgets/day_event_card.dart';
 import 'package:syshack2026/features/plaza/domain/plaza_notifier.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 /// イベント検索画面。
 ///
@@ -137,7 +138,7 @@ class _ResultCard extends StatelessWidget {
 
     return DayEventCard(
       eventName: event['name']?.toString() ?? '',
-      date: date ?? DateTime.now(),
+      date: date ?? AppTime.nowLocal(),
       location: event['location']?.toString() ?? '',
       participantCount:
           (event['count'] as int?) ?? (event['accepted'] as int?) ?? 0,

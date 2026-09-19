@@ -66,7 +66,6 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
   bool _isSyncing = false;
   bool _hasNotifiedInBackground = false;
 
-
   @override
   BleState build() {
     _bleService = BleService();
@@ -98,13 +97,13 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
     try {
       final repo = ref.read(pendingEncounterRepositoryProvider);
       await repo.removeExpiredTokens();
-      
+
       final unsent = await repo.getUnsentTokens();
       if (unsent.isNotEmpty) {
         final encounterRepo = ref.read(encounterRepositoryProvider);
         await encounterRepo.recordEncountersBatch(unsent);
         await repo.clearUnsentTokens();
-        
+
         await ref.read(encounterNotifierProvider.notifier).refresh();
         debugPrint('ローカル保存分のすれ違いデータを一括同期しました');
       }
@@ -153,14 +152,14 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
       // トークンプールは基本的に時系列順に並んでいる想定
       final nextTokens = _tokenPool.where((t) => t.isFuture).toList()
         ..sort((a, b) => a.validFrom.compareTo(b.validFrom));
-      
+
       if (nextTokens.isNotEmpty) {
         final timeToValid = nextTokens.first.validFrom.difference(now);
         _rotationTimer = Timer(timeToValid, _startTokenRotation);
       }
     }
   }
-  
+
   Future<void> stopAdvertising() async {
     await _bleService.stopAdvertising();
     state = state.copyWith(isAdvertising: false);
@@ -196,9 +195,12 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
       if (_tokenPool.isNotEmpty) {
         // 全トークンのうち、一番最後に期限切れになるトークンの1つ前の期限を警告時刻とする（簡易的）
         if (_tokenPool.length >= 2) {
-          final sortedTokens = List<EphemeralToken>.from(_tokenPool)..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+          final sortedTokens = List<EphemeralToken>.from(_tokenPool)
+            ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
           final warningTime = sortedTokens[sortedTokens.length - 2].expiresAt;
-          await ref.read(notificationServiceProvider).scheduleTokenWarningNotification(warningTime);
+          await ref
+              .read(notificationServiceProvider)
+              .scheduleTokenWarningNotification(warningTime);
         }
       }
       _activeUserId = user.id;
@@ -246,7 +248,6 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
     debugPrint('BLEすれ違い機能を停止しました');
   }
 
-
   /// iOSバックグラウンド移行時のアドバタイズ一時停止
   Future<void> pauseAdvertising() async {
     if (!state.isAdvertising) return;
@@ -263,9 +264,7 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
       _tokenPool = await encounterRepo.getEphemeralTokens(_activeUserId!);
       if (_tokenPool.isNotEmpty) {
         _currentToken = _tokenPool.first;
-        await _bleService.startAdvertising(
-          ephemeralId: _currentToken!.token,
-        );
+        await _bleService.startAdvertising(ephemeralId: _currentToken!.token);
         state = state.copyWith(
           isAdvertising: true,
           currentEphemeralId: _currentToken!.token,
@@ -307,9 +306,11 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
         );
         isSavedToServer = recordResult.created;
         if (!isSavedToServer) {
-           debugPrint('すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}');
-           await ref.read(encounterNotifierProvider.notifier).refresh();
-           return;
+          debugPrint(
+            'すれ違いは新規保存されませんでした: ${recordResult.message ?? 'no message'}',
+          );
+          await ref.read(encounterNotifierProvider.notifier).refresh();
+          return;
         }
       } catch (e) {
         // オフライン等でAPI失敗時
@@ -328,12 +329,13 @@ class BleNotifier extends Notifier<BleState> with WidgetsBindingObserver {
       }
 
       // [Phase 4] バックグラウンド動作時のローカル通知
-      final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
+      final isBackground =
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
       if (isBackground && !_hasNotifiedInBackground) {
         ref.read(notificationServiceProvider).showStreetPassNotification();
         _hasNotifiedInBackground = true;
       }
-      
+
       // 1日後に気づかなかった場合のリマインダーをセット
       ref.read(notificationServiceProvider).scheduleEncounterReminder();
 

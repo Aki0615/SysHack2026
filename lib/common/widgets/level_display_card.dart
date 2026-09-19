@@ -22,8 +22,7 @@ class LevelDisplayCard extends StatelessWidget {
     required this.remaining,
     required this.currentLevel,
     this.progress = 0.69,
-  }) : assert(currentLevel >= 1 && currentLevel <= 4,
-            'currentLevel は 1〜4'),
+  }) : assert(currentLevel >= 1 && currentLevel <= 4, 'currentLevel は 1〜4'),
        assert(progress >= 0 && progress <= 1);
 
   // Figma 原寸 (px)。内部座標はこの値を基準にスケールする。

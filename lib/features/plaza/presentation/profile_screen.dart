@@ -9,6 +9,7 @@ import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
 import 'package:syshack2026/features/user/domain/user_model.dart';
+import 'package:syshack2026/core/utils/app_time.dart';
 
 final profileProvider = FutureProvider.family<UserModel, String>((ref, userId) {
   return ref.read(userRepositoryProvider).getUser(userId);
@@ -340,8 +341,9 @@ class _EncounterCard extends StatelessWidget {
     if (last == null) {
       return 'SysHack2026 で出会いました';
     }
-    final month = last.metAt.month;
-    final day = last.metAt.day;
+    final local = AppTime.toAppLocal(last.metAt);
+    final month = local.month;
+    final day = local.day;
     final eventName = last.eventName.isEmpty ? 'イベント' : last.eventName;
     return '$month月$day日 $eventName で出会いました';
   }

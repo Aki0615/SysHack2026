@@ -80,12 +80,11 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
       final boundary =
           _boundaryKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
-      final pixelRatio = (MediaQuery.of(context).devicePixelRatio)
-          .clamp(1.0, 3.0);
+      final pixelRatio = (MediaQuery.of(
+        context,
+      ).devicePixelRatio).clamp(1.0, 3.0);
       final image = await boundary.toImage(pixelRatio: pixelRatio * 1.5);
-      final byteData = await image.toByteData(
-        format: ui.ImageByteFormat.png,
-      );
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       image.dispose();
       if (byteData == null) {
         throw Exception('画像データの生成に失敗しました');
@@ -144,17 +143,17 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
       body: Center(
         child: !ready
             ? (_errorMessage != null
-                ? Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.white70),
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                : const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ))
+                  ? Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.white70),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ))
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

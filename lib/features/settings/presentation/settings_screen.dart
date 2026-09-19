@@ -69,11 +69,13 @@ class SettingsScreen extends ConsumerWidget {
                           value: isPocket,
                           onChanged: (val) {
                             // ホーム画面のトグル状態 (☀️ / 🌙) を更新
-                            ref.read(powerModeProvider.notifier).set(
-                              val ? PowerMode.pocket : PowerMode.normal,
-                            );
+                            ref
+                                .read(powerModeProvider.notifier)
+                                .set(val ? PowerMode.pocket : PowerMode.normal);
                             // 設定値の永続化
-                            ref.read(settingsNotifierProvider.notifier).setPocketModeEnabled(val);
+                            ref
+                                .read(settingsNotifierProvider.notifier)
+                                .setPocketModeEnabled(val);
                           },
                         );
                       },
@@ -170,9 +172,7 @@ class SettingsScreen extends ConsumerWidget {
             ..showSnackBar(
               SnackBar(
                 content: Text(
-                  next
-                      ? 'すれ違い検知の開始に失敗しました: $e'
-                      : 'すれ違い検知の停止に失敗しました: $e',
+                  next ? 'すれ違い検知の開始に失敗しました: $e' : 'すれ違い検知の停止に失敗しました: $e',
                 ),
                 backgroundColor: PasslyState.error,
               ),
@@ -187,7 +187,9 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Bluetooth等の権限が必要です'),
-        content: const Text('すれ違い通信をオンにするには、設定画面からBluetooth（または位置情報）へのアクセスを許可してください。'),
+        content: const Text(
+          'すれ違い通信をオンにするには、設定画面からBluetooth（または位置情報）へのアクセスを許可してください。',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -277,8 +279,9 @@ class SettingsScreen extends ConsumerWidget {
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: FilledButton.styleFrom(
-                backgroundColor:
-                    isDestructive ? PasslyState.error : PasslyBrand.primary,
+                backgroundColor: isDestructive
+                    ? PasslyState.error
+                    : PasslyBrand.primary,
               ),
               child: Text(confirmLabel),
             ),
@@ -376,11 +379,7 @@ class _LinkRow extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: PasslyText.tertiary,
-              size: 20,
-            ),
+            Icon(Icons.chevron_right, color: PasslyText.tertiary, size: 20),
           ],
         ),
       ),
