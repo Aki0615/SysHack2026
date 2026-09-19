@@ -433,7 +433,7 @@ class _HeaderCloseButton extends StatelessWidget {
           child: PasslyIcon(
             asset: PasslyIcons.close,
             size: 24,
-            color: Colors.white,
+            color: PasslyText.primary,
           ),
         ),
       ),
@@ -459,7 +459,7 @@ class _HeaderQrScanButton extends StatelessWidget {
           child: PasslyIcon(
             asset: PasslyIcons.qrCode,
             size: 26,
-            color: Colors.white,
+            color: PasslyText.primary,
           ),
         ),
       ),
