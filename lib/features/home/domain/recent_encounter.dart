@@ -12,6 +12,7 @@ abstract class RecentEncounter with _$RecentEncounter {
   const factory RecentEncounter({
     @JsonKey(name: 'user_id') required String userId,
     @Default('') String name,
+    @Default('') String affiliation,
     @JsonKey(name: 'icon_url') @Default('') String iconUrl,
     @JsonKey(name: 'met_at') required DateTime metAt,
     @JsonKey(name: 'event_name') @Default('') String eventName,
