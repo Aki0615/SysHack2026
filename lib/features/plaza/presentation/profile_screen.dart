@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:syshack2026/common/widgets/encounter_meta_pill.dart';
+import 'package:syshack2026/common/widgets/loading_card_skeleton.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
 import 'package:syshack2026/features/close_friend/domain/close_friend_list_notifier.dart';
 import 'package:syshack2026/features/user/data/user_repository.dart';
@@ -46,7 +47,10 @@ class ProfileScreen extends ConsumerWidget {
           isCloseFriend: isCloseFriend,
           isBusy: isBusy,
         ),
-        loading: () => const SizedBox.shrink(),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(16),
+          child: LoadingCardsSkeleton(),
+        ),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),

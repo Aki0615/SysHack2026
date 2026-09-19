@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:shimmer/shimmer.dart';
+import 'package:syshack2026/common/widgets/encounter_loading_skeleton.dart';
 import 'package:syshack2026/common/widgets/info_badge_card.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
@@ -38,7 +38,7 @@ class EncounterResultScreen extends ConsumerWidget {
         child: encounterState.when(
           data: (encounters) =>
               _EncounterCardStack(encounters: encounters, me: me),
-          loading: () => const _SkeletonLoading(),
+          loading: () => const EncounterLoadingSkeleton(),
           error: (err, _) => Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -49,36 +49,6 @@ class EncounterResultScreen extends ConsumerWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SkeletonLoading extends StatelessWidget {
-  const _SkeletonLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Container(width: 50, height: 20, color: Colors.white),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-            const SizedBox(height: 48), // Skip button space
-          ],
         ),
       ),
     );
