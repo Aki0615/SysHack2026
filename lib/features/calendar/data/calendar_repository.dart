@@ -1,35 +1,79 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:syshack2026/core/network/dio_client.dart';
 import 'package:syshack2026/core/utils/app_time.dart';
 
 final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
-  return CalendarRepository(ref.read(dioProvider));
+  return CalendarRepository(
+    ref.read(dioProvider),
+    ref.read(secureStorageProvider),
+  );
 });
 
 /// カレンダー画面のデータを取得するリポジトリ
 class CalendarRepository {
   final Dio _dio;
+  final FlutterSecureStorage _storage;
 
-  CalendarRepository(this._dio);
+  CalendarRepository(this._dio, this._storage);
 
   /// 特定の日付のすれ違い数とイベント名を取得する（GET /users/:id/calendar/daily?date=YYYY-MM-DD）
   Future<Map<String, dynamic>> fetchDailyEncounters({
     required String userId,
     required String dateString, // YYYY-MM-DD
   }) async {
-    final response = await _dio.get(
-      '/users/$userId/calendar/daily',
-      queryParameters: {'date': dateString},
-    );
-    return response.data as Map<String, dynamic>;
+    final cacheKey = 'cached_calendar_${userId}_$dateString';
+    try {
+      final response = await _dio.get(
+        '/users/$userId/calendar/daily',
+        queryParameters: {'date': dateString},
+      );
+      final data = response.data as Map<String, dynamic>;
+      await _storage.write(key: cacheKey, value: jsonEncode(data));
+      return data;
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.unknown) {
+        final cachedStr = await _storage.read(key: cacheKey);
+        if (cachedStr != null) {
+          try {
+            return jsonDecode(cachedStr) as Map<String, dynamic>;
+          } catch (_) {}
+        }
+      }
+      rethrow;
+    }
   }
 
   /// 月内のイベント一覧を取得する（GET /events）
   Future<List<Map<String, dynamic>>> fetchMonthEvents(DateTime month) async {
-    final response = await _dio.get('/events');
-    final data = response.data;
-    if (data is! List) return const [];
+    final cacheKey = 'cached_events_${month.year}_${month.month}';
+    List<dynamic>? data;
+
+    try {
+      final response = await _dio.get('/events');
+      data = response.data as List?;
+      if (data != null) {
+        await _storage.write(key: cacheKey, value: jsonEncode(data));
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.unknown) {
+        final cachedStr = await _storage.read(key: cacheKey);
+        if (cachedStr != null) {
+          try {
+            data = jsonDecode(cachedStr) as List?;
+          } catch (_) {}
+        }
+      }
+      if (data == null) rethrow;
+    }
+
+    if (data == null) return const [];
 
     return data.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).where(
       (event) {
