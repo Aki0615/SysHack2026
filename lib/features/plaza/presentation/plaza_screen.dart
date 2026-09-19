@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/passly_header.dart';
+import 'package:syshack2026/common/widgets/loading_card_skeleton.dart';
 import 'package:syshack2026/common/widgets/passly_icon.dart';
 import 'package:syshack2026/common/widgets/recent_encounter_card.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
@@ -121,7 +122,7 @@ class _CloseFriendsSection extends StatelessWidget {
         const SizedBox(height: PasslySpace.s12),
         async.when(
           data: (users) => _list(context, users),
-          loading: () => const SizedBox.shrink(),
+          loading: () => const LoadingCardsSkeleton(count: 2),
           error: (_, _) => const _EmptyMessage(text: '親しい人の取得に失敗しました'),
         ),
       ],
@@ -175,7 +176,7 @@ class _PastEncountersSection extends StatelessWidget {
           _list(context, data.recentEncounters),
         ],
       ),
-      loading: () => const SizedBox.shrink(),
+      loading: () => const LoadingCardsSkeleton(),
       error: (_, _) => const _EmptyMessage(text: 'すれ違い履歴の取得に失敗しました'),
     );
   }

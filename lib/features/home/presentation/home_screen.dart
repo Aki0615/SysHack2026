@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:syshack2026/common/widgets/level_display_card.dart';
+import 'package:syshack2026/common/widgets/loading_card_skeleton.dart';
 import 'package:syshack2026/common/widgets/passly_header.dart';
 import 'package:syshack2026/common/widgets/recent_encounter_card.dart';
 import 'package:syshack2026/core/constants/app_colors.dart';
@@ -44,7 +45,12 @@ class HomeScreen extends ConsumerWidget {
           Expanded(
             child: homeState.when(
               data: (data) => _buildContent(context, ref, data),
-              loading: () => const SizedBox.shrink(),
+              loading: () => _buildContent(
+                context,
+                ref,
+                HomeState.empty(),
+                isLoading: true,
+              ),
               error: (_, _) => _buildErrorState(ref),
             ),
           ),
@@ -53,7 +59,12 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, HomeState data) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    HomeState data, {
+    bool isLoading = false,
+  }) {
     final levelInfo = LevelInfo.compute(data.totalEncounters);
     final avatarUrls = _pickTodayAvatarUrls(data);
 
@@ -92,7 +103,10 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 13),
-          ..._buildRecentEncounters(context, data.recentEncounters),
+          if (isLoading)
+            const LoadingCardsSkeleton()
+          else
+            ..._buildRecentEncounters(context, data.recentEncounters),
         ],
       ),
     );
