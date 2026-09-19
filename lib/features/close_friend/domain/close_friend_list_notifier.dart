@@ -19,7 +19,9 @@ final closeFriendListProvider =
 class CloseFriendListNotifier extends AsyncNotifier<List<UserModel>> {
   @override
   FutureOr<List<UserModel>> build() async {
-    ref.watch(authNotifierProvider.select((s) => s.value?.id)); // ユーザー切替時に状態を作り直す
+    ref.watch(
+      authNotifierProvider.select((s) => s.value?.id),
+    ); // ユーザー切替時に状態を作り直す
     return _fetch();
   }
 
